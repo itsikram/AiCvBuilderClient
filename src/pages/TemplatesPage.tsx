@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { Lock } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
@@ -7,8 +7,12 @@ import { Button } from "@/components/ui/button";
 import { SEO } from "@/components/seo/SEO";
 import api from "@/lib/api";
 import type { Template } from "@/types";
+import { useEffect, useState } from "react";
 
 export default function TemplatesPage() {
+  const navigate = useNavigate();
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
   const { data: templates } = useQuery({
     queryKey: ["templates"],
     queryFn: async () => {
@@ -16,6 +20,26 @@ export default function TemplatesPage() {
       return data.data as Template[];
     },
   });
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        await api.get("/auth/me");
+        setIsAuthenticated(true);
+      } catch {
+        setIsAuthenticated(false);
+      }
+    };
+    checkAuth();
+  }, []);
+
+  const handleUseTemplate = (templateSlug: string) => {
+    if (isAuthenticated) {
+      navigate(`/dashboard/resume/new?template=${templateSlug}`);
+    } else {
+      navigate("/register");
+    }
+  };
 
   return (
     <>
@@ -45,8 +69,8 @@ export default function TemplatesPage() {
                       Premium Only
                     </Button>
                   ) : (
-                    <Button variant="gradient" className="w-full" asChild>
-                      <Link to="/register">Use Template</Link>
+                    <Button variant="gradient" className="w-full" onClick={() => handleUseTemplate(template.slug)}>
+                      Use Template
                     </Button>
                   )}
                 </CardContent>

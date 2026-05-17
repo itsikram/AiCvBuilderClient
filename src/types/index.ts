@@ -6,14 +6,23 @@ export interface ResumeContent {
     location: string;
     linkedin?: string;
     portfolio?: string;
+    github?: string;
+    website?: string;
     summary: string;
   };
   experience: Experience[];
   education: Education[];
   projects: Project[];
   skills: string[];
-  languages: string[];
-  certifications: string[];
+  languages: Language[];
+  certifications: Certification[];
+  awards: Award[];
+  publications: Publication[];
+  volunteerExperience: VolunteerExperience[];
+  references: Reference[];
+  interests: string[];
+  courses: Course[];
+  memberships: Membership[];
   customSections: { title: string; content: string }[];
 }
 
@@ -44,6 +53,75 @@ export interface Project {
   description: string;
   url?: string;
   technologies: string[];
+}
+
+export interface Language {
+  id: string;
+  name: string;
+  proficiency: "native" | "fluent" | "intermediate" | "basic";
+}
+
+export interface Certification {
+  id: string;
+  name: string;
+  issuer: string;
+  date: string;
+  credentialId?: string;
+  credentialUrl?: string;
+}
+
+export interface Award {
+  id: string;
+  title: string;
+  issuer: string;
+  date: string;
+  description?: string;
+}
+
+export interface Publication {
+  id: string;
+  title: string;
+  publisher: string;
+  date: string;
+  url?: string;
+  description?: string;
+}
+
+export interface VolunteerExperience {
+  id: string;
+  organization: string;
+  role: string;
+  startDate: string;
+  endDate?: string;
+  current: boolean;
+  description: string;
+}
+
+export interface Reference {
+  id: string;
+  name: string;
+  position: string;
+  company: string;
+  email?: string;
+  phone?: string;
+  relationship: string;
+}
+
+export interface Course {
+  id: string;
+  name: string;
+  provider: string;
+  date: string;
+  certificateUrl?: string;
+}
+
+export interface Membership {
+  id: string;
+  organization: string;
+  role?: string;
+  startDate: string;
+  endDate?: string;
+  current: boolean;
 }
 
 export interface Resume {
