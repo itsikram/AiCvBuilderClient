@@ -1,0 +1,86 @@
+{
+  "nav": {
+    "home": "Home",
+    "pricing": "Pricing",
+    "blog": "Blog",
+    "contact": "Contact",
+    "login": "Login",
+    "register": "Get Started Free",
+    "dashboard": "Dashboard"
+  },
+  "hero": {
+    "title": "Build Your Dream Career with AI",
+    "subtitle": "Create ATS-optimized resumes, cover letters, and land jobs in Bangladesh & globally",
+    "cta": "Create Resume Free",
+    "ctaSecondary": "View Templates"
+  },
+  "features": {
+    "aiResume": "AI Resume Generator",
+    "aiResumeDesc": "Generate professional summaries and bullet points with Gemini AI",
+    "atsChecker": "ATS Score Checker",
+    "atsCheckerDesc": "Optimize your resume for Applicant Tracking Systems",
+    "coverLetter": "Cover Letter Generator",
+    "coverLetterDesc": "Personalized cover letters for any job application",
+    "templates": "Premium Templates",
+    "templatesDesc": "Bangladeshi CV & international formats",
+    "pdfExport": "PDF Export",
+    "pdfExportDesc": "Download professional PDF resumes instantly",
+    "bilingual": "English & Bangla",
+    "bilingualDesc": "Full bilingual support for Bangladesh market"
+  },
+  "pricing": {
+    "title": "Simple, Affordable Pricing",
+    "subtitle": "Start free, upgrade when you're ready",
+    "free": "Free",
+    "premium": "Premium",
+    "monthly": "Monthly",
+    "yearly": "Yearly",
+    "perMonth": "/month",
+    "perYear": "/year",
+    "getStarted": "Get Started",
+    "upgrade": "Upgrade Now"
+  },
+  "auth": {
+    "login": "Welcome back",
+    "register": "Create your account",
+    "email": "Email",
+    "password": "Password",
+    "name": "Full Name",
+    "forgotPassword": "Forgot password?",
+    "noAccount": "Don't have an account?",
+    "hasAccount": "Already have an account?",
+    "orContinueWith": "Or continue with"
+  },
+  "dashboard": {
+    "welcome": "Welcome back",
+    "myResumes": "My Resumes",
+    "createResume": "Create New Resume",
+    "recentActivity": "Recent Activity",
+    "aiUsage": "AI Usage This Month",
+    "upgradePrompt": "Upgrade to Premium for unlimited resumes and AI features"
+  },
+  "resume": {
+    "builder": "Resume Builder",
+    "preview": "Preview",
+    "export": "Export PDF",
+    "save": "Save",
+    "generateAI": "Generate with AI",
+    "improveAI": "Improve with AI",
+    "personalInfo": "Personal Information",
+    "experience": "Experience",
+    "education": "Education",
+    "skills": "Skills",
+    "projects": "Projects",
+    "summary": "Professional Summary"
+  },
+  "common": {
+    "loading": "Loading...",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "back": "Back",
+    "error": "Something went wrong",
+    "success": "Success!"
+  }
+}
