@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { SEO } from "@/components/seo/SEO";
 import api from "@/lib/api";
 import { useToast } from "@/components/ui/toast";
 
@@ -25,30 +26,33 @@ export default function ResetPasswordPage() {
   };
 
   return (
-    <div className="min-h-[80vh] flex items-center justify-center px-4">
-      <Card className="w-full max-w-md">
-        <CardHeader>
-          <CardTitle>Set New Password</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <Input
-              type="password"
-              placeholder="New password (min 8 chars)"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              minLength={8}
-              required
-            />
-            <Button type="submit" variant="gradient" className="w-full">
-              Reset Password
-            </Button>
-            <Link to="/login" className="text-sm text-primary block text-center">
-              Back to login
-            </Link>
-          </form>
-        </CardContent>
-      </Card>
-    </div>
+    <>
+      <SEO title="Reset your ChakriCV password" noIndex />
+      <div className="min-h-[80vh] flex items-center justify-center px-4">
+        <Card className="w-full max-w-md">
+          <CardHeader>
+            <CardTitle>Set New Password</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <Input
+                type="password"
+                placeholder="New password (min 8 chars)"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                minLength={8}
+                required
+              />
+              <Button type="submit" variant="gradient" className="w-full">
+                Reset Password
+              </Button>
+              <Link to="/login" className="text-sm text-primary block text-center">
+                Back to login
+              </Link>
+            </form>
+          </CardContent>
+        </Card>
+      </div>
+    </>
   );
 }

@@ -1,0 +1,23 @@
+<svg width="1200" height="630" viewBox="0 0 1200 630" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1200" y2="630" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0F172A"/>
+      <stop offset="1" stop-color="#1D4ED8"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" rx="32" fill="url(#bg)"/>
+  <circle cx="980" cy="120" r="120" fill="#8B5CF6" fill-opacity="0.28"/>
+  <circle cx="180" cy="520" r="140" fill="#38BDF8" fill-opacity="0.18"/>
+  <rect x="96" y="96" width="1008" height="438" rx="28" fill="#0B1120" fill-opacity="0.7" stroke="rgba(255,255,255,0.18)"/>
+  <path d="M190 180H760" stroke="#60A5FA" stroke-width="8" stroke-linecap="round"/>
+  <path d="M190 240H560" stroke="#C4B5FD" stroke-width="8" stroke-linecap="round"/>
+  <rect x="190" y="300" width="320" height="16" rx="8" fill="#E2E8F0" fill-opacity="0.75"/>
+  <rect x="190" y="340" width="240" height="16" rx="8" fill="#E2E8F0" fill-opacity="0.5"/>
+  <rect x="190" y="380" width="280" height="16" rx="8" fill="#E2E8F0" fill-opacity="0.5"/>
+  <rect x="744" y="174" width="230" height="230" rx="28" fill="#F8FAFC" fill-opacity="0.95"/>
+  <path d="M820 260C860 210 910 210 950 260" stroke="#1D4ED8" stroke-width="10" stroke-linecap="round"/>
+  <circle cx="836" cy="234" r="20" fill="#1D4ED8"/>
+  <circle cx="918" cy="234" r="20" fill="#8B5CF6"/>
+  <text x="190" y="460" fill="#F8FAFC" font-family="Arial, Helvetica, sans-serif" font-size="30" font-weight="700">ChakriCV</text>
+  <text x="190" y="510" fill="#BFDBFE" font-family="Arial, Helvetica, sans-serif" font-size="24">AI-powered resume builder for Bangladesh</text>
+</svg>

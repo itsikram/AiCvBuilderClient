@@ -50,7 +50,7 @@ export default function LoginPage() {
 
   return (
     <>
-      <SEO title="Login" />
+      <SEO title="Log in to ChakriCV" description="Access your ChakriCV account to build resumes, check ATS scores, and generate cover letters." noIndex />
       <div className="min-h-[80vh] flex items-center justify-center px-4 py-12">
         <Card className="w-full max-w-md">
           <CardHeader className="text-center">

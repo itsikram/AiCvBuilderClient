@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useAuthStore } from "@/store/authStore";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { SEO } from "@/components/seo/SEO";
 import { cn } from "@/lib/utils";
 
 const adminNavItems = [
@@ -50,13 +51,15 @@ export function AdminLayout() {
   };
 
   return (
-    <div className="flex min-h-screen bg-[radial-gradient(circle_at_top_left,_rgba(59,130,246,0.15),_transparent_25%),radial-gradient(circle_at_top_right,_rgba(124,58,237,0.18),_transparent_20%)]">
-      <aside
-        className={cn(
-          "fixed inset-y-0 left-0 z-50 w-72 border-r border-white/10 bg-slate-950 text-white transform transition-transform lg:translate-x-0 lg:static",
-          sidebarOpen ? "translate-x-0" : "-translate-x-full"
-        )}
-      >
+    <>
+      <SEO title="ChakriCV admin" description="Administrative dashboard for platform content, user management, and site operations." noIndex />
+      <div className="flex min-h-screen bg-[radial-gradient(circle_at_top_left,_rgba(59,130,246,0.15),_transparent_25%),radial-gradient(circle_at_top_right,_rgba(124,58,237,0.18),_transparent_20%)]">
+        <aside
+          className={cn(
+            "fixed inset-y-0 left-0 z-50 w-72 border-r border-white/10 bg-slate-950 text-white transform transition-transform lg:translate-x-0 lg:static",
+            sidebarOpen ? "translate-x-0" : "-translate-x-full"
+          )}
+        >
         <div className="flex h-16 items-center justify-between border-b border-white/10 px-4">
           <div>
             <p className="text-xs uppercase tracking-[0.3em] text-slate-300">ChakriCV</p>
@@ -123,31 +126,32 @@ export function AdminLayout() {
         <div className="fixed inset-0 z-40 bg-black/50 lg:hidden" onClick={() => setSidebarOpen(false)} />
       )}
 
-      <div className="flex-1">
-        <header className="sticky top-0 z-30 border-b border-white/10 bg-slate-950/85 backdrop-blur">
-          <div className="flex items-center justify-between px-4 py-4 lg:px-8">
-            <div>
-              <Button variant="ghost" size="icon" className="text-white lg:hidden" onClick={() => setSidebarOpen(true)}>
-                <Menu className="h-5 w-5" />
-              </Button>
-              <div className="hidden lg:block">
-                <p className="text-sm text-slate-300">Platform operations</p>
-                <h1 className="text-xl font-semibold text-white">Administrator workspace</h1>
+        <div className="flex-1">
+          <header className="sticky top-0 z-30 border-b border-white/10 bg-slate-950/85 backdrop-blur">
+            <div className="flex items-center justify-between px-4 py-4 lg:px-8">
+              <div>
+                <Button variant="ghost" size="icon" className="text-white lg:hidden" onClick={() => setSidebarOpen(true)}>
+                  <Menu className="h-5 w-5" />
+                </Button>
+                <div className="hidden lg:block">
+                  <p className="text-sm text-slate-300">Platform operations</p>
+                  <h1 className="text-xl font-semibold text-white">Administrator workspace</h1>
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="hidden sm:flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-sm text-slate-100">
+                  <Sparkles className="h-4 w-4 text-amber-300" />
+                  Operational view
+                </div>
               </div>
             </div>
-            <div className="flex items-center gap-3">
-              <div className="hidden sm:flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-sm text-slate-100">
-                <Sparkles className="h-4 w-4 text-amber-300" />
-                Operational view
-              </div>
-            </div>
-          </div>
-        </header>
+          </header>
 
-        <main className="p-4 lg:p-8">
-          <Outlet />
-        </main>
+          <main className="p-4 lg:p-8">
+            <Outlet />
+          </main>
+        </div>
       </div>
-    </div>
+    </>
   );
 }

@@ -22,7 +22,15 @@ export default function BlogPostPage() {
 
   return (
     <>
-      <SEO title={post.metaTitle || post.title} description={post.metaDescription || post.excerpt} />
+      <SEO
+        title={post.metaTitle || post.title}
+        description={post.metaDescription || post.excerpt}
+        type="article"
+        url={`/blog/${post.slug}`}
+        publishedTime={post.publishedAt}
+        modifiedTime={post.publishedAt}
+        image={post.coverImage || "/og-image.svg"}
+      />
       <article className="py-16">
         <div className="container mx-auto px-4 max-w-3xl">
           <Link to="/blog" className="flex items-center gap-2 text-sm text-muted hover:text-primary mb-6">

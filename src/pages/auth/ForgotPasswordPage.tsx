@@ -21,7 +21,7 @@ export default function ForgotPasswordPage() {
 
   return (
     <>
-      <SEO title="Forgot Password" />
+      <SEO title="Reset your ChakriCV password" description="Recover your ChakriCV account and reset your password securely." noIndex />
       <div className="min-h-[80vh] flex items-center justify-center px-4">
         <Card className="w-full max-w-md">
           <CardHeader>

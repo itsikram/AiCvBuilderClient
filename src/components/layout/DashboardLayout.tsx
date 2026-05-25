@@ -18,6 +18,7 @@ import { useTranslation } from "react-i18next";
 import { useAuthStore } from "@/store/authStore";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { SEO } from "@/components/seo/SEO";
 import { cn } from "@/lib/utils";
 
 const navItems = [
@@ -40,13 +41,15 @@ export function DashboardLayout() {
   const isPremium = user?.subscription?.plan === "premium";
 
   return (
-    <div className="flex min-h-screen bg-[radial-gradient(circle_at_top_left,_rgba(59,130,246,0.12),_transparent_20%),radial-gradient(circle_at_top_right,_rgba(147,51,234,0.14),_transparent_20%)]">
-      <aside
-        className={cn(
-          "fixed inset-y-0 left-0 z-50 w-72 border-r border-border/80 bg-card/95 backdrop-blur transform transition-transform lg:translate-x-0 lg:static",
-          sidebarOpen ? "translate-x-0" : "-translate-x-full"
-        )}
-      >
+    <>
+      <SEO title="ChakriCV dashboard" description="Manage your resumes, templates, ATS checks, and billing from your private ChakriCV dashboard." noIndex />
+      <div className="flex min-h-screen bg-[radial-gradient(circle_at_top_left,_rgba(59,130,246,0.12),_transparent_20%),radial-gradient(circle_at_top_right,_rgba(147,51,234,0.14),_transparent_20%)]">
+        <aside
+          className={cn(
+            "fixed inset-y-0 left-0 z-50 w-72 border-r border-border/80 bg-card/95 backdrop-blur transform transition-transform lg:translate-x-0 lg:static",
+            sidebarOpen ? "translate-x-0" : "-translate-x-full"
+          )}
+        >
         <div className="flex h-16 items-center justify-between border-b border-border px-4">
           <Link to="/" className="font-bold gradient-text text-lg">
             ChakriCV
@@ -113,42 +116,43 @@ export function DashboardLayout() {
         <div className="fixed inset-0 z-40 bg-black/50 lg:hidden" onClick={() => setSidebarOpen(false)} />
       )}
 
-      <div className="flex-1 flex flex-col min-w-0">
-        <header className="border-b border-border/80 bg-background/80 backdrop-blur">
-          <div className="flex items-center justify-between px-4 py-4 lg:px-8">
-            <div className="flex items-center gap-3">
-              <Button variant="ghost" size="icon" className="lg:hidden" onClick={() => setSidebarOpen(true)}>
-                <Menu className="h-5 w-5" />
-              </Button>
-              <div>
-                <p className="text-sm text-muted-foreground">Welcome back</p>
-                <h1 className="text-lg font-semibold sm:text-xl">{t("dashboard.welcome")}, {user?.name?.split(" ")[0]}</h1>
+        <div className="flex-1 flex flex-col min-w-0">
+          <header className="border-b border-border/80 bg-background/80 backdrop-blur">
+            <div className="flex items-center justify-between px-4 py-4 lg:px-8">
+              <div className="flex items-center gap-3">
+                <Button variant="ghost" size="icon" className="lg:hidden" onClick={() => setSidebarOpen(true)}>
+                  <Menu className="h-5 w-5" />
+                </Button>
+                <div>
+                  <p className="text-sm text-muted-foreground">Welcome back</p>
+                  <h1 className="text-lg font-semibold sm:text-xl">{t("dashboard.welcome")}, {user?.name?.split(" ")[0]}</h1>
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                {!isPremium && (
+                  <Button variant="gradient" size="sm" onClick={() => navigate("/dashboard/billing")}>
+                    Upgrade to Premium
+                  </Button>
+                )}
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    logout();
+                    navigate("/");
+                  }}
+                >
+                  <LogOut className="h-4 w-4 mr-2" />
+                  Logout
+                </Button>
               </div>
             </div>
-            <div className="flex items-center gap-3">
-              {!isPremium && (
-                <Button variant="gradient" size="sm" onClick={() => navigate("/dashboard/billing")}>
-                  Upgrade to Premium
-                </Button>
-              )}
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => {
-                  logout();
-                  navigate("/");
-                }}
-              >
-                <LogOut className="h-4 w-4 mr-2" />
-                Logout
-              </Button>
-            </div>
-          </div>
-        </header>
-        <main className="flex-1 p-4 lg:p-8 overflow-auto">
-          <Outlet />
-        </main>
+          </header>
+          <main className="flex-1 p-4 lg:p-8 overflow-auto">
+            <Outlet />
+          </main>
+        </div>
       </div>
-    </div>
+    </>
   );
 }
