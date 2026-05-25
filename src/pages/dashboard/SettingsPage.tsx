@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import api from "@/lib/api";
+import { normalizeLanguage } from "@/lib/language";
 import { useAuthStore } from "@/store/authStore";
 import { useThemeStore } from "@/store/themeStore";
 import { useToast } from "@/components/ui/toast";
@@ -25,7 +26,7 @@ export default function SettingsPage() {
     try {
       const formData = new FormData();
       formData.append("name", name);
-      formData.append("language", i18n.language);
+      formData.append("language", normalizeLanguage(i18n.language));
       formData.append("theme", theme);
       if (avatarFile) {
         formData.append("profilePicture", avatarFile);
@@ -56,7 +57,7 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="max-w-xl space-y-6">
+    <div className="w-full space-y-6">
       <h1 className="text-2xl font-bold">Settings</h1>
 
       <Card>

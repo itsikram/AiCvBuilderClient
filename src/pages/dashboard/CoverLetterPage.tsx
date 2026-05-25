@@ -1,10 +1,12 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Mail, Download, Loader2, Upload, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import api from "@/lib/api";
+import { normalizeLanguage } from "@/lib/language";
 import { useToast } from "@/components/ui/toast";
 import { formatDate } from "@/lib/utils";
 import type { Resume } from "@/types";
@@ -21,6 +23,7 @@ interface CoverLetter {
 export default function CoverLetterPage() {
   const toast = useToast();
   const queryClient = useQueryClient();
+  const { i18n } = useTranslation();
   const [form, setForm] = useState({
     companyName: "",
     jobTitle: "",
@@ -55,7 +58,7 @@ export default function CoverLetterPage() {
       api.post("/cover-letters/generate", {
         ...form,
         resumeId: selectedResumeId || undefined,
-        language: "en",
+        language: normalizeLanguage(i18n.language),
       }),
     onSuccess: (res) => {
       setGenerated(res.data.data.letter.content);

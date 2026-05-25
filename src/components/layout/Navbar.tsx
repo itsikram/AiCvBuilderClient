@@ -28,7 +28,7 @@ export function Navbar() {
 
   return (
     <header className="sticky top-0 z-40 w-full border-b border-border glass">
-      <div className="container mx-auto flex h-16 items-center justify-between px-4">
+      <div className="container mx-auto flex h-[70px] items-center justify-between px-4">
         <Link to="/" className="flex items-center gap-2">
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-blue-600 to-violet-600 text-white font-bold text-sm">
             CV

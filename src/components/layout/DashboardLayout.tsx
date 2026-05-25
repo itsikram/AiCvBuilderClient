@@ -50,8 +50,8 @@ export function DashboardLayout() {
             sidebarOpen ? "translate-x-0" : "-translate-x-full"
           )}
         >
-        <div className="flex h-16 items-center justify-between border-b border-border px-4">
-          <Link to="/" className="font-bold gradient-text text-lg">
+        <div className="flex h-[81px] items-center justify-between border-b border-border px-4">
+          <Link to="/" className="font-bold gradient-text text-[30px]">
             ChakriCV
           </Link>
           <Button variant="ghost" size="icon" className="lg:hidden" onClick={() => setSidebarOpen(false)}>

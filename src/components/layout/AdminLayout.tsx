@@ -60,11 +60,11 @@ export function AdminLayout() {
             sidebarOpen ? "translate-x-0" : "-translate-x-full"
           )}
         >
-        <div className="flex h-16 items-center justify-between border-b border-white/10 px-4">
-          <div>
-            <p className="text-xs uppercase tracking-[0.3em] text-slate-300">ChakriCV</p>
+        <div className="flex h-[81px] items-center justify-between border-b border-white/10 px-4">
+          <Link to="/">
+            <p className="text-xs  gradient-text uppercase text-[30px] tracking-[0.3em] text-slate-300">ChakriCV</p>
             <p className="text-sm font-semibold text-white">Admin Control Center</p>
-          </div>
+          </Link>
           <Button variant="ghost" size="icon" className="text-white hover:bg-white/10 lg:hidden" onClick={() => setSidebarOpen(false)}>
             <X className="h-4 w-4" />
           </Button>

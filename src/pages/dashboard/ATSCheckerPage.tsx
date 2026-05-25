@@ -1,10 +1,12 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Target, Loader2, Upload, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import api from "@/lib/api";
+import { normalizeLanguage } from "@/lib/language";
 import { useToast } from "@/components/ui/toast";
 import type { Resume, ResumeContent } from "@/types";
 
@@ -67,6 +69,7 @@ const buildResumeTextFromContent = (content: ResumeContent) => {
 export default function ATSCheckerPage() {
   const toast = useToast();
   const queryClient = useQueryClient();
+  const { i18n } = useTranslation();
   const [resumeText, setResumeText] = useState("");
   const [jobDescription, setJobDescription] = useState("");
   const [loading, setLoading] = useState(false);
@@ -151,7 +154,11 @@ export default function ATSCheckerPage() {
 
     setLoading(true);
     try {
-      const { data } = await api.post("/resumes/ai/ats-check", { resumeText: textToCheck, jobDescription });
+      const { data } = await api.post("/resumes/ai/ats-check", {
+        resumeText: textToCheck,
+        jobDescription,
+        language: normalizeLanguage(i18n.language),
+      });
       setResult(data.data);
     } catch (err: unknown) {
       const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
