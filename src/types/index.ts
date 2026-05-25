@@ -9,6 +9,9 @@ export interface ResumeContent {
     github?: string;
     website?: string;
     summary: string;
+    profilePhoto?: string;
+    profilePhotoSize?: "small" | "medium" | "large";
+    profilePhotoAlignment?: "left" | "center" | "right";
   };
   experience: Experience[];
   education: Education[];
@@ -131,6 +134,7 @@ export interface Resume {
   templateId: string;
   format: "international" | "bangladeshi" | "ats";
   content: ResumeContent;
+  theme?: Record<string, string>;
   atsScore?: number;
   atsFeedback?: string[];
   isPublic: boolean;
@@ -149,6 +153,8 @@ export interface Template {
   category: string;
   thumbnail: string;
   isPremium: boolean;
+  layout?: string;
+  defaultTheme?: Record<string, string>;
   locked?: boolean;
 }
 

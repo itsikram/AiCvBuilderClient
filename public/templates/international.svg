@@ -1,0 +1,19 @@
+<svg width="800" height="520" viewBox="0 0 800 520" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="80" y1="40" x2="720" y2="480" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#031633"/>
+      <stop offset="1" stop-color="#2563eb"/>
+    </linearGradient>
+  </defs>
+  <rect width="800" height="520" rx="32" fill="url(#bg)"/>
+  <rect x="60" y="60" width="680" height="400" rx="28" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.12)"/>
+  <rect x="90" y="90" width="180" height="38" rx="10" fill="#f8fafc"/>
+  <rect x="90" y="150" width="380" height="12" rx="6" fill="#cbd5e1"/>
+  <rect x="90" y="182" width="300" height="12" rx="6" fill="#94a3b8"/>
+  <rect x="90" y="240" width="620" height="170" rx="20" fill="#0f172a"/>
+  <rect x="120" y="272" width="280" height="12" rx="6" fill="#f8fafc"/>
+  <rect x="120" y="304" width="320" height="10" rx="5" fill="#cbd5e1"/>
+  <rect x="120" y="334" width="250" height="10" rx="5" fill="#94a3b8"/>
+  <rect x="480" y="272" width="180" height="80" rx="16" fill="#2563eb"/>
+  <text x="110" y="455" fill="#f8fafc" font-family="Arial, sans-serif" font-size="34" font-weight="700">International Standard</text>
+</svg>

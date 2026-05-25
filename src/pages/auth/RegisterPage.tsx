@@ -16,12 +16,25 @@ export default function RegisterPage() {
   const toast = useToast();
   const [form, setForm] = useState({ name: "", email: "", password: "", referralCode: "" });
   const [loading, setLoading] = useState(false);
+  const [profilePicture, setProfilePicture] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     try {
-      const { data } = await api.post("/auth/register", form);
+      const formData = new FormData();
+      formData.append("name", form.name);
+      formData.append("email", form.email);
+      formData.append("password", form.password);
+      if (form.referralCode) {
+        formData.append("referralCode", form.referralCode);
+      }
+      if (profilePicture) {
+        formData.append("profilePicture", profilePicture);
+      }
+
+      const { data } = await api.post("/auth/register", formData);
       setAuth(data.data.user, data.data.accessToken);
       toast.add("Account created! Check email to verify.", "success");
       navigate("/dashboard");
@@ -31,6 +44,15 @@ export default function RegisterPage() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handlePictureChange = (file: File | null) => {
+    setProfilePicture(file);
+    if (!file) {
+      setPreviewUrl(null);
+      return;
+    }
+    setPreviewUrl(URL.createObjectURL(file));
   };
 
   return (
@@ -44,6 +66,27 @@ export default function RegisterPage() {
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
+              <div>
+                <label className="text-sm font-medium">Profile picture (optional)</label>
+                <div className="mt-2 flex items-center gap-4">
+                  <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-full border border-dashed border-border bg-secondary">
+                    {previewUrl ? (
+                      <img src={previewUrl} alt="Preview" className="h-full w-full object-cover" />
+                    ) : (
+                      <span className="text-xs text-muted">No image</span>
+                    )}
+                  </div>
+                  <label className="inline-flex cursor-pointer items-center rounded-lg border border-border px-3 py-2 text-sm font-medium">
+                    Choose image
+                    <Input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={(e) => handlePictureChange(e.target.files?.[0] || null)}
+                    />
+                  </label>
+                </div>
+              </div>
               <div>
                 <label className="text-sm font-medium">{t("auth.name")}</label>
                 <Input
@@ -83,7 +126,7 @@ export default function RegisterPage() {
               </Button>
             </form>
             <p className="text-center text-sm mt-4">
-              {t("auth.hasAccount")}{" "}
+              {t("auth.hasAccount")} {" "}
               <Link to="/login" className="text-primary font-medium hover:underline">
                 {t("nav.login")}
               </Link>

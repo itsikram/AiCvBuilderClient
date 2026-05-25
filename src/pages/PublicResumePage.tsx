@@ -11,7 +11,7 @@ export default function PublicResumePage() {
     queryKey: ["public-resume", slug],
     queryFn: async () => {
       const { data } = await api.get(`/resumes/public/${slug}`);
-      return data.data as { title: string; content: ResumeContent };
+      return data.data as { title: string; content: ResumeContent; templateId: string; theme?: Record<string, string> };
     },
     enabled: !!slug,
   });
@@ -25,7 +25,7 @@ export default function PublicResumePage() {
         <p className="text-center text-sm text-muted mb-4">
           {data.title} — Powered by <span className="font-semibold gradient-text">ChakriCV</span>
         </p>
-        <ResumePreview content={data.content} />
+        <ResumePreview content={data.content} templateId={data.templateId} theme={data.theme} />
       </div>
     </div>
   );

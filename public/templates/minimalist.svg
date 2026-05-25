@@ -1,0 +1,14 @@
+<svg width="800" height="520" viewBox="0 0 800 520" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="800" height="520" rx="32" fill="#f8fafc"/>
+  <rect x="60" y="60" width="680" height="400" rx="28" fill="#ffffff" stroke="#e2e8f0"/>
+  <rect x="90" y="90" width="200" height="34" rx="8" fill="#0f172a"/>
+  <rect x="90" y="150" width="420" height="12" rx="6" fill="#334155"/>
+  <rect x="90" y="182" width="320" height="12" rx="6" fill="#475569"/>
+  <rect x="90" y="240" width="620" height="170" rx="18" fill="#f8fafc" stroke="#e2e8f0"/>
+  <rect x="120" y="270" width="280" height="12" rx="6" fill="#0f172a"/>
+  <rect x="120" y="302" width="340" height="10" rx="5" fill="#475569"/>
+  <rect x="120" y="332" width="250" height="10" rx="5" fill="#64748b"/>
+  <rect x="120" y="362" width="210" height="10" rx="5" fill="#94a3b8"/>
+  <rect x="480" y="270" width="180" height="80" rx="18" fill="#cbd5e1"/>
+  <text x="110" y="455" fill="#0f172a" font-family="Arial, sans-serif" font-size="34" font-weight="700">Minimalist Clean</text>
+</svg>

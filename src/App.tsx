@@ -4,6 +4,7 @@ import { HelmetProvider } from "react-helmet-async";
 import { GoogleOAuthProvider } from "@react-oauth/google";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
+import { AdminLayout } from "@/components/layout/AdminLayout";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { Toaster } from "@/components/ui/toast";
 
@@ -76,7 +77,7 @@ function AppRoutes() {
         path="admin"
         element={
           <ProtectedRoute adminOnly>
-            <DashboardLayout />
+            <AdminLayout />
           </ProtectedRoute>
         }
       >

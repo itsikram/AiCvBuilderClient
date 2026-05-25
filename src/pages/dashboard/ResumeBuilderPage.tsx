@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
-import { Save, Download, Sparkles, Share2, ChevronUp, ChevronDown, Plus, Trash2, Upload } from "lucide-react";
+import { Save, Download, Sparkles, Share2, ChevronUp, ChevronDown, Plus, Trash2, Upload, FileText, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,10 +10,36 @@ import { ResumePreview } from "@/components/resume/ResumePreview";
 import { Skeleton } from "@/components/ui/skeleton";
 import api from "@/lib/api";
 import { useToast } from "@/components/ui/toast";
-import type { Resume, ResumeContent, Experience } from "@/types";
+import { formatDate } from "@/lib/utils";
+import type { Resume, ResumeContent, Experience, Template } from "@/types";
+
+type ResumeWithUploadMeta = Resume & {
+  uploadedAt?: string;
+  uploadedFileName?: string;
+  uploadedFileUrl?: string;
+};
+
+type UploadTab = "new" | "previous";
+
+const defaultSectionOrder = ["summary", "experience", "education", "skills", "projects"];
+const fontOptions = [
+  "Inter, ui-sans-serif, system-ui",
+  "Georgia, serif",
+  "Arial, sans-serif",
+  "Poppins, sans-serif",
+  "Times New Roman, serif",
+];
 
 const defaultContent = (): ResumeContent => ({
-  personalInfo: { fullName: "", email: "", phone: "", location: "Dhaka, Bangladesh", summary: "" },
+  personalInfo: {
+    fullName: "",
+    email: "",
+    phone: "",
+    location: "Dhaka, Bangladesh",
+    summary: "",
+    profilePhotoSize: "medium",
+    profilePhotoAlignment: "center",
+  },
   experience: [],
   education: [],
   projects: [],
@@ -45,12 +71,21 @@ export default function ResumeBuilderPage() {
 
   const [title, setTitle] = useState("My Resume");
   const [content, setContent] = useState<ResumeContent>(defaultContent());
-  const [sectionOrder, setSectionOrder] = useState(["summary", "experience", "education", "skills", "projects"]);
+  const [sectionOrder, setSectionOrder] = useState(defaultSectionOrder);
   const [aiModal, setAiModal] = useState(false);
+  const [tailorModal, setTailorModal] = useState(false);
   const [uploadModal, setUploadModal] = useState(false);
   const [templateModal, setTemplateModal] = useState(false);
-  const [selectedTemplate, setSelectedTemplate] = useState("");
-  const [pendingTemplate, setPendingTemplate] = useState("");
+  const [selectedTemplate, setSelectedTemplate] = useState(templateFromUrl || "modern-ats");
+  const [theme, setTheme] = useState<Record<string, string>>({});
+  const [uploadTab, setUploadTab] = useState<UploadTab>("new");
+  const [selectedPreviousUploadId, setSelectedPreviousUploadId] = useState("");
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [analysisProgress, setAnalysisProgress] = useState(0);
+  const [uploadStatus, setUploadStatus] = useState("Choose a PDF or DOCX file to import your resume.");
+  const [isUploadingResume, setIsUploadingResume] = useState(false);
+  const [isTailoringResume, setIsTailoringResume] = useState(false);
+  const [tailorJobDescription, setTailorJobDescription] = useState("");
   const [aiForm, setAiForm] = useState({
     name: "",
     jobTitle: "",
@@ -73,8 +108,17 @@ export default function ResumeBuilderPage() {
     queryKey: ["templates"],
     queryFn: async () => {
       const { data } = await api.get("/templates");
-      return data.data as { _id: string; name: string; slug: string; description: string; category: string; isPremium: boolean; thumbnail: string }[];
+      return data.data as Template[];
     },
+  });
+
+  const { data: resumes = [] } = useQuery<ResumeWithUploadMeta[]>({
+    queryKey: ["resumes"],
+    queryFn: async () => {
+      const { data } = await api.get("/resumes");
+      return data.data as ResumeWithUploadMeta[];
+    },
+    enabled: uploadModal,
   });
 
   useEffect(() => {
@@ -82,21 +126,34 @@ export default function ResumeBuilderPage() {
       setTitle(resume.title);
       setContent(resume.content);
       setSectionOrder(resume.sectionOrder);
+      setSelectedTemplate(resume.templateId || "modern-ats");
+      setTheme((resume.theme as Record<string, string>) || {});
     }
   }, [resume]);
 
+  useEffect(() => {
+    if (!uploadModal) {
+      setUploadTab("new");
+      setSelectedPreviousUploadId("");
+      setUploadProgress(0);
+      setAnalysisProgress(0);
+      setUploadStatus("Choose a PDF or DOCX file to import your resume.");
+      setIsUploadingResume(false);
+    }
+  }, [uploadModal]);
+
   const saveMutation = useMutation({
-    mutationFn: async () => {
+    mutationFn: async (options?: { templateId?: string }) => {
+      const templateId = options?.templateId || selectedTemplate || templateFromUrl || "modern-ats";
+      const themePayload = theme && Object.keys(theme).length > 0 ? theme : {}; 
+
       if (isNew) {
-        const { data } = await api.post("/resumes", { title, templateId: templateFromUrl });
-        await api.patch(`/resumes/${data.data._id}`, { content, sectionOrder });
-        // Apply pending template if exists
-        if (pendingTemplate) {
-          await api.patch(`/resumes/${data.data._id}/template`, { templateId: pendingTemplate });
-        }
+        const { data } = await api.post("/resumes", { title, templateId });
+        await api.patch(`/resumes/${data.data._id}`, { content, sectionOrder, theme: themePayload });
         return data.data._id as string;
       }
-      await api.patch(`/resumes/${id}`, { title, content, sectionOrder });
+
+      await api.patch(`/resumes/${id}`, { title, content, sectionOrder, theme: themePayload });
       return id!;
     },
     onSuccess: (resumeId) => {
@@ -104,7 +161,6 @@ export default function ResumeBuilderPage() {
       toast.add("Resume saved!", "success");
       if (isNew) {
         navigate(`/dashboard/resumes/${resumeId}`, { replace: true });
-        setPendingTemplate("");
       }
     },
     onError: () => toast.add("Failed to save", "error"),
@@ -135,117 +191,152 @@ export default function ResumeBuilderPage() {
     }
   };
 
-  const handleResumeUpload = async (file: File) => {
-    try {
-      const formData = new FormData();
-      formData.append("file", file);
+  const tailorResumeForJob = async () => {
+    if (isNew || !id) {
+      toast.add("Save this resume first before tailoring it for a job description.", "error");
+      return;
+    }
 
-      const { data } = await api.post("/resumes/upload-parse", formData, {
-        headers: { "Content-Type": "multipart/form-data" },
+    if (!tailorJobDescription.trim()) {
+      toast.add("Please paste a job description to tailor your resume.", "error");
+      return;
+    }
+
+    try {
+      setIsTailoringResume(true);
+      const { data } = await api.post("/resumes/ai/tailor", {
+        resumeId: id,
+        jobDescription: tailorJobDescription,
+        language: "en",
       });
 
-      const parsedContent = data.data;
+      const tailored = data.data as {
+        summary?: string;
+        skills?: string[];
+        experienceBullets?: Array<{ bullets?: string[] }>;
+      };
+
       setContent((prev) => ({
         ...prev,
         personalInfo: {
           ...prev.personalInfo,
-          ...parsedContent.personalInfo,
+          summary: tailored.summary || prev.personalInfo.summary,
         },
-        experience: parsedContent.experience?.map((exp: any) => ({
-          id: crypto.randomUUID(),
-          company: exp.company || "",
-          position: exp.position || "",
-          location: exp.location || "",
-          startDate: exp.startDate || "",
-          endDate: exp.endDate || "",
-          current: exp.current || false,
-          bullets: exp.bullets || [""],
-        })) || [],
-        education: parsedContent.education?.map((edu: any) => ({
-          id: crypto.randomUUID(),
-          institution: edu.institution || "",
-          degree: edu.degree || "",
-          field: edu.field || "",
-          startDate: edu.startDate || "",
-          endDate: edu.endDate || "",
-          gpa: edu.gpa || "",
-        })) || [],
-        skills: parsedContent.skills || [],
-        languages: parsedContent.languages?.map((lang: any) => ({
-          id: crypto.randomUUID(),
-          name: lang.name || "",
-          proficiency: lang.proficiency || "intermediate",
-        })) || [],
-        certifications: parsedContent.certifications?.map((cert: any) => ({
-          id: crypto.randomUUID(),
-          name: cert.name || "",
-          issuer: cert.issuer || "",
-          date: cert.date || "",
-          credentialId: cert.credentialId || "",
-          credentialUrl: cert.credentialUrl || "",
-        })) || [],
-        awards: parsedContent.awards?.map((award: any) => ({
-          id: crypto.randomUUID(),
-          title: award.title || "",
-          issuer: award.issuer || "",
-          date: award.date || "",
-          description: award.description || "",
-        })) || [],
-        publications: parsedContent.publications?.map((pub: any) => ({
-          id: crypto.randomUUID(),
-          title: pub.title || "",
-          publisher: pub.publisher || "",
-          date: pub.date || "",
-          url: pub.url || "",
-          description: pub.description || "",
-        })) || [],
-        volunteerExperience: parsedContent.volunteerExperience?.map((vol: any) => ({
-          id: crypto.randomUUID(),
-          organization: vol.organization || "",
-          role: vol.role || "",
-          startDate: vol.startDate || "",
-          endDate: vol.endDate || "",
-          current: vol.current || false,
-          description: vol.description || "",
-        })) || [],
-        references: parsedContent.references?.map((ref: any) => ({
-          id: crypto.randomUUID(),
-          name: ref.name || "",
-          position: ref.position || "",
-          company: ref.company || "",
-          email: ref.email || "",
-          phone: ref.phone || "",
-          relationship: ref.relationship || "",
-        })) || [],
-        interests: parsedContent.interests || [],
-        courses: parsedContent.courses?.map((course: any) => ({
-          id: crypto.randomUUID(),
-          name: course.name || "",
-          provider: course.provider || "",
-          date: course.date || "",
-          certificateUrl: course.certificateUrl || "",
-        })) || [],
-        memberships: parsedContent.memberships?.map((mem: any) => ({
-          id: crypto.randomUUID(),
-          organization: mem.organization || "",
-          role: mem.role || "",
-          startDate: mem.startDate || "",
-          endDate: mem.endDate || "",
-          current: mem.current || false,
-        })) || [],
-        projects: parsedContent.projects?.map((proj: any) => ({
-          id: crypto.randomUUID(),
-          name: proj.name || "",
-          description: proj.description || "",
-          url: proj.url || "",
-          technologies: proj.technologies || [],
-        })) || [],
+        skills: tailored.skills?.length ? tailored.skills : prev.skills,
+        experience: prev.experience.map((experience, index) => {
+          const tailoredBullets = tailored.experienceBullets?.[index]?.bullets;
+          if (tailoredBullets?.length) {
+            return { ...experience, bullets: tailoredBullets };
+          }
+          return experience;
+        }),
       }));
-      setUploadModal(false);
+
+      queryClient.invalidateQueries({ queryKey: ["resume", id] });
+      setTailorModal(false);
+      setTailorJobDescription("");
+      toast.add("Resume tailored for the job description!", "success");
+    } catch (err: unknown) {
+      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
+      toast.add(msg || "Resume tailoring failed", "error");
+    } finally {
+      setIsTailoringResume(false);
+    }
+  };
+
+  const applyImportedResume = (
+    nextTitle: string,
+    nextContent: ResumeContent,
+    nextSectionOrder?: string[],
+    nextTemplateId?: string,
+    nextTheme?: Record<string, string>
+  ) => {
+    setTitle(nextTitle || "My Resume");
+    setContent(nextContent);
+    setSectionOrder(nextSectionOrder && nextSectionOrder.length ? nextSectionOrder : defaultSectionOrder);
+    if (nextTemplateId) {
+      setSelectedTemplate(nextTemplateId);
+    }
+    setTheme(nextTheme || {});
+  };
+
+  const loadPreviousUpload = (resumeToLoad: ResumeWithUploadMeta) => {
+    setUploadModal(false);
+    if (!isNew && id !== resumeToLoad._id) {
+      navigate(`/dashboard/resumes/${resumeToLoad._id}`, { replace: false });
+      return;
+    }
+
+    applyImportedResume(
+      resumeToLoad.title,
+      resumeToLoad.content,
+      resumeToLoad.sectionOrder,
+      resumeToLoad.templateId,
+      (resumeToLoad.theme as Record<string, string>) || {}
+    );
+    toast.add(`Loaded ${resumeToLoad.title}`, "success");
+  };
+
+  const handleResumeUpload = async (file: File) => {
+    let analysisInterval: ReturnType<typeof setInterval> | undefined;
+
+    try {
+      setIsUploadingResume(true);
+      setUploadProgress(5);
+      setAnalysisProgress(0);
+      setUploadStatus("Uploading your resume file...");
+
+      const formData = new FormData();
+      formData.append("file", file);
+      if (!isNew && id) {
+        formData.append("resumeId", id);
+      }
+
+      const { data } = await api.post("/resumes/upload-parse", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+        onUploadProgress: (progressEvent) => {
+          if (progressEvent.total) {
+            const percent = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+            setUploadProgress(Math.max(5, Math.min(95, percent)));
+          }
+        },
+      });
+
+      setUploadProgress(100);
+      setUploadStatus("AI is analyzing the uploaded resume...");
+      setAnalysisProgress(10);
+
+      analysisInterval = setInterval(() => {
+        setAnalysisProgress((current) => {
+          if (current >= 95) {
+            return current;
+          }
+          return Math.min(95, current + 8);
+        });
+      }, 240);
+
+      const parsedContent = data.data.content as ResumeContent;
+      applyImportedResume(data.data.title || title, parsedContent);
+      queryClient.invalidateQueries({ queryKey: ["resumes"] });
+      if (isNew && data.data.resumeId) {
+        navigate(`/dashboard/resumes/${data.data.resumeId}`, { replace: true });
+      } else if (id) {
+        queryClient.invalidateQueries({ queryKey: ["resume", id] });
+      }
+
+      setAnalysisProgress(100);
+      setUploadStatus("Resume uploaded and parsed successfully.");
       toast.add("Resume uploaded and parsed!", "success");
     } catch (err: unknown) {
       const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
+      setUploadStatus(msg || "Upload failed. Please try again.");
       toast.add(msg || "Upload failed", "error");
+    } finally {
+      if (analysisInterval) {
+        clearInterval(analysisInterval);
+      }
+      setIsUploadingResume(false);
+      setUploadModal(false);
     }
   };
 
@@ -275,6 +366,30 @@ export default function ResumeBuilderPage() {
     }));
   };
 
+  const setThemeValue = (key: string, value: string) => {
+    setTheme((prev) => ({ ...prev, [key]: value }));
+  };
+
+  const handleOwnerPhotoUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      toast.add("Please choose an image file for your profile picture.", "error");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = typeof reader.result === "string" ? reader.result : "";
+      setContent((prev) => ({
+        ...prev,
+        personalInfo: { ...prev.personalInfo, profilePhoto: result },
+      }));
+    };
+    reader.readAsDataURL(file);
+  };
+
   const addExperience = () => {
     const exp: Experience = {
       id: crypto.randomUUID(),
@@ -286,6 +401,19 @@ export default function ResumeBuilderPage() {
       bullets: [""],
     };
     setContent((prev) => ({ ...prev, experience: [...prev.experience, exp] }));
+  };
+
+  const addEducation = () => {
+    const edu = {
+      id: crypto.randomUUID(),
+      institution: "",
+      degree: "",
+      field: "",
+      startDate: "",
+      endDate: "",
+      gpa: "",
+    };
+    setContent((prev) => ({ ...prev, education: [...prev.education, edu] }));
   };
 
   const moveSection = (index: number, direction: "up" | "down") => {
@@ -326,7 +454,11 @@ export default function ResumeBuilderPage() {
             <Sparkles className="h-4 w-4" />
             {t("resume.generateAI")}
           </Button>
-          <Button variant="outline" onClick={() => saveMutation.mutate()} disabled={saveMutation.isPending}>
+          <Button variant="outline" onClick={() => setTailorModal(true)}>
+            <Sparkles className="h-4 w-4" />
+            Tailor for job
+          </Button>
+          <Button variant="outline" onClick={() => saveMutation.mutate({})} disabled={saveMutation.isPending}>
             <Save className="h-4 w-4" />
             {t("resume.save")}
           </Button>
@@ -352,6 +484,76 @@ export default function ResumeBuilderPage() {
               <CardTitle className="text-base">{t("resume.personalInfo")}</CardTitle>
             </CardHeader>
             <CardContent className="grid gap-3">
+              <div className="rounded-lg border border-dashed border-border p-4">
+                <label className="flex cursor-pointer flex-col items-center gap-2 text-center">
+                  <span className="text-sm font-medium">Upload owner picture</span>
+                  <span className="text-xs text-muted-foreground">PNG, JPG, or WEBP</span>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleOwnerPhotoUpload}
+                    className="sr-only"
+                  />
+                  <span className="rounded-md border border-border bg-secondary px-3 py-1 text-xs">Choose image</span>
+                </label>
+                {content.personalInfo.profilePhoto && (
+                  <div className="mt-3 flex justify-center">
+                    <img
+                      src={content.personalInfo.profilePhoto}
+                      alt="Owner preview"
+                      className={`rounded-full object-cover border ${
+                        content.personalInfo.profilePhotoSize === "large"
+                          ? "h-32 w-32"
+                          : content.personalInfo.profilePhotoSize === "small"
+                            ? "h-16 w-16"
+                            : "h-24 w-24"
+                      }`}
+                    />
+                  </div>
+                )}
+                <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                  <div>
+                    <label className="text-xs font-medium">Image size</label>
+                    <select
+                      className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
+                      value={content.personalInfo.profilePhotoSize || "medium"}
+                      onChange={(e) =>
+                        setContent({
+                          ...content,
+                          personalInfo: {
+                            ...content.personalInfo,
+                            profilePhotoSize: e.target.value as "small" | "medium" | "large",
+                          },
+                        })
+                      }
+                    >
+                      <option value="small">Small</option>
+                      <option value="medium">Medium</option>
+                      <option value="large">Large</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-xs font-medium">Image alignment</label>
+                    <select
+                      className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
+                      value={content.personalInfo.profilePhotoAlignment || "center"}
+                      onChange={(e) =>
+                        setContent({
+                          ...content,
+                          personalInfo: {
+                            ...content.personalInfo,
+                            profilePhotoAlignment: e.target.value as "left" | "center" | "right",
+                          },
+                        })
+                      }
+                    >
+                      <option value="left">Left</option>
+                      <option value="center">Center</option>
+                      <option value="right">Right</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
               {(["fullName", "email", "phone", "location", "linkedin", "portfolio", "github", "website", "summary"] as const).map((field) => (
                 <div key={field}>
                   <label className="text-xs font-medium capitalize">{field}</label>
@@ -374,6 +576,57 @@ export default function ResumeBuilderPage() {
           </Card>
 
           <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Typography & Colors</CardTitle>
+            </CardHeader>
+            <CardContent className="grid gap-3">
+              <div>
+                <label className="text-xs font-medium">Font family</label>
+                <select
+                  className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
+                  value={theme.fontFamily || fontOptions[0]}
+                  onChange={(e) => setThemeValue("fontFamily", e.target.value)}
+                >
+                  {fontOptions.map((font) => (
+                    <option key={font} value={font}>
+                      {font.split(",")[0]}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="grid gap-3 sm:grid-cols-3">
+                <label className="text-xs font-medium">
+                  Heading color
+                  <input
+                    type="color"
+                    className="mt-1 h-10 w-full rounded border border-border bg-transparent"
+                    value={theme.headingColor || "#0f172a"}
+                    onChange={(e) => setThemeValue("headingColor", e.target.value)}
+                  />
+                </label>
+                <label className="text-xs font-medium">
+                  Body color
+                  <input
+                    type="color"
+                    className="mt-1 h-10 w-full rounded border border-border bg-transparent"
+                    value={theme.textColor || "#111827"}
+                    onChange={(e) => setThemeValue("textColor", e.target.value)}
+                  />
+                </label>
+                <label className="text-xs font-medium">
+                  Accent color
+                  <input
+                    type="color"
+                    className="mt-1 h-10 w-full rounded border border-border bg-transparent"
+                    value={theme.accentColor || "#1d4ed8"}
+                    onChange={(e) => setThemeValue("accentColor", e.target.value)}
+                  />
+                </label>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle className="text-base">{t("resume.experience")}</CardTitle>
               <Button size="sm" variant="outline" onClick={addExperience}>
@@ -382,7 +635,7 @@ export default function ResumeBuilderPage() {
             </CardHeader>
             <CardContent className="space-y-4">
               {content.experience.map((exp, idx) => (
-                <div key={exp.id} className="p-3 border border-border rounded-lg space-y-2">
+                <div key={exp.id} className="p-3 border border-border rounded-lg space-y-3">
                   <div className="grid grid-cols-2 gap-2">
                     <Input placeholder="Position" value={exp.position} onChange={(e) => {
                       const exps = [...content.experience];
@@ -395,14 +648,140 @@ export default function ResumeBuilderPage() {
                       setContent({ ...content, experience: exps });
                     }} />
                   </div>
-                  <Input placeholder="Bullet point" value={exp.bullets[0] || ""} onChange={(e) => {
-                    const exps = [...content.experience];
-                    exps[idx] = { ...exp, bullets: [e.target.value] };
-                    setContent({ ...content, experience: exps });
-                  }} />
-                  <Button size="sm" variant="ghost" onClick={() => {
-                    setContent({ ...content, experience: content.experience.filter((_, i) => i !== idx) });
-                  }}>
+                  <div className="space-y-2">
+                    {exp.bullets.map((bullet, bulletIdx) => (
+                      <div key={`${exp.id}-${bulletIdx}`} className="flex gap-2">
+                        <Input
+                          placeholder={`Bullet ${bulletIdx + 1}`}
+                          value={bullet}
+                          onChange={(e) => {
+                            const exps = [...content.experience];
+                            const bullets = [...exp.bullets];
+                            bullets[bulletIdx] = e.target.value;
+                            exps[idx] = { ...exp, bullets };
+                            setContent({ ...content, experience: exps });
+                          }}
+                        />
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => {
+                            const exps = [...content.experience];
+                            const bullets = exp.bullets.filter((_, currentIdx) => currentIdx !== bulletIdx);
+                            exps[idx] = { ...exp, bullets: bullets.length ? bullets : [""] };
+                            setContent({ ...content, experience: exps });
+                          }}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="flex justify-between gap-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => {
+                        const exps = [...content.experience];
+                        exps[idx] = { ...exp, bullets: [...exp.bullets, ""] };
+                        setContent({ ...content, experience: exps });
+                      }}
+                    >
+                      <Plus className="h-4 w-4" />
+                      Add bullet
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => {
+                        setContent({ ...content, experience: content.experience.filter((_, i) => i !== idx) });
+                      }}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle className="text-base">Education</CardTitle>
+              <Button size="sm" variant="outline" onClick={addEducation}>
+                <Plus className="h-4 w-4" />
+              </Button>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {content.education.map((edu, idx) => (
+                <div key={edu.id} className="p-3 border border-border rounded-lg space-y-2">
+                  <div className="grid gap-2 sm:grid-cols-2">
+                    <Input
+                      placeholder="Institution"
+                      value={edu.institution}
+                      onChange={(e) => {
+                        const education = [...content.education];
+                        education[idx] = { ...edu, institution: e.target.value };
+                        setContent({ ...content, education });
+                      }}
+                    />
+                    <Input
+                      placeholder="Degree"
+                      value={edu.degree}
+                      onChange={(e) => {
+                        const education = [...content.education];
+                        education[idx] = { ...edu, degree: e.target.value };
+                        setContent({ ...content, education });
+                      }}
+                    />
+                  </div>
+                  <div className="grid gap-2 sm:grid-cols-2">
+                    <Input
+                      placeholder="Field of study"
+                      value={edu.field || ""}
+                      onChange={(e) => {
+                        const education = [...content.education];
+                        education[idx] = { ...edu, field: e.target.value };
+                        setContent({ ...content, education });
+                      }}
+                    />
+                    <Input
+                      placeholder="GPA"
+                      value={edu.gpa || ""}
+                      onChange={(e) => {
+                        const education = [...content.education];
+                        education[idx] = { ...edu, gpa: e.target.value };
+                        setContent({ ...content, education });
+                      }}
+                    />
+                  </div>
+                  <div className="grid gap-2 sm:grid-cols-2">
+                    <Input
+                      type="date"
+                      value={edu.startDate}
+                      onChange={(e) => {
+                        const education = [...content.education];
+                        education[idx] = { ...edu, startDate: e.target.value };
+                        setContent({ ...content, education });
+                      }}
+                    />
+                    <Input
+                      type="date"
+                      value={edu.endDate}
+                      onChange={(e) => {
+                        const education = [...content.education];
+                        education[idx] = { ...edu, endDate: e.target.value };
+                        setContent({ ...content, education });
+                      }}
+                    />
+                  </div>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => {
+                      setContent({ ...content, education: content.education.filter((_, i) => i !== idx) });
+                    }}
+                  >
                     <Trash2 className="h-4 w-4" />
                   </Button>
                 </div>
@@ -812,7 +1191,7 @@ export default function ResumeBuilderPage() {
 
         <div className="lg:sticky lg:top-4">
           <p className="text-sm font-medium mb-2">{t("resume.preview")}</p>
-          <ResumePreview content={content} className="w-full" />
+          <ResumePreview content={content} templateId={selectedTemplate} theme={theme} className="w-full" />
         </div>
       </div>
 
@@ -843,26 +1222,158 @@ export default function ResumeBuilderPage() {
 
       {uploadModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <Card className="w-full max-w-lg">
+          <Card className="w-full max-w-2xl">
             <CardHeader>
               <CardTitle>Upload Current Resume</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="border-2 border-dashed border-border rounded-lg p-6 text-center">
-                <Upload className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
-                <p className="text-sm text-muted-foreground mb-2">Upload your existing resume (PDF or DOCX)</p>
-                <input
-                  type="file"
-                  accept=".pdf,.docx,.doc"
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    if (file) handleResumeUpload(file);
-                  }}
-                  className="w-full text-sm"
-                />
+            <CardContent className="space-y-4">
+              <div className="flex rounded-lg bg-secondary p-1">
+                {(["new", "previous"] as UploadTab[]).map((tab) => (
+                  <button
+                    key={tab}
+                    type="button"
+                    onClick={() => setUploadTab(tab)}
+                    className={`flex-1 rounded-md px-3 py-2 text-sm font-medium transition ${
+                      uploadTab === tab ? "bg-background text-foreground shadow-sm" : "text-muted-foreground"
+                    }`}
+                  >
+                    {tab === "new" ? "Upload new" : "Previous uploads"}
+                  </button>
+                ))}
               </div>
+
+              {uploadTab === "new" ? (
+                <div className="space-y-4">
+                  <label className="block cursor-pointer rounded-lg border-2 border-dashed border-border p-6 text-center transition hover:border-primary">
+                    <Upload className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
+                    <p className="text-sm text-muted-foreground mb-2">Upload your existing resume (PDF or DOCX)</p>
+                    <span className="inline-flex rounded-md border border-border bg-secondary px-3 py-1 text-sm">Choose file</span>
+                    <input
+                      type="file"
+                      accept=".pdf,.docx,.doc"
+                      disabled={isUploadingResume}
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) handleResumeUpload(file);
+                      }}
+                      className="sr-only"
+                    />
+                  </label>
+
+                  <div className="rounded-lg border bg-secondary/30 p-4 space-y-3">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="font-medium">{uploadStatus}</span>
+                      <span className="text-muted-foreground">{isUploadingResume ? `${Math.max(uploadProgress, analysisProgress)}%` : "Idle"}</span>
+                    </div>
+                    <div className="h-2 rounded-full bg-secondary overflow-hidden">
+                      <div
+                        className="h-full rounded-full bg-primary transition-all"
+                        style={{ width: `${isUploadingResume ? Math.max(uploadProgress, analysisProgress) : 0}%` }}
+                      />
+                    </div>
+                    <div className="grid gap-2 sm:grid-cols-2 text-sm text-muted-foreground">
+                      <div>
+                        <p className="font-medium text-foreground">Uploading</p>
+                        <p>{uploadProgress}% complete</p>
+                      </div>
+                      <div>
+                        <p className="font-medium text-foreground">AI analyzing</p>
+                        <p>{analysisProgress}% complete</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {(resumes as ResumeWithUploadMeta[])
+                    .filter((resumeItem) => resumeItem.uploadedAt || resumeItem.uploadedFileName)
+                    .map((resumeItem) => {
+                      const isSelected = selectedPreviousUploadId === resumeItem._id;
+                      return (
+                        <button
+                          key={resumeItem._id}
+                          type="button"
+                          onClick={() => setSelectedPreviousUploadId(resumeItem._id)}
+                          className={`w-full rounded-lg border p-4 text-left transition ${
+                            isSelected ? "border-primary bg-primary/5" : "hover:border-primary"
+                          }`}
+                        >
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="flex items-start gap-3">
+                              <FileText className="h-5 w-5 text-primary mt-0.5" />
+                              <div>
+                                <p className="font-semibold">{resumeItem.title}</p>
+                                <p className="text-sm text-muted-foreground">
+                                  Uploaded {resumeItem.uploadedAt ? formatDate(resumeItem.uploadedAt) : "recently"}
+                                  {resumeItem.uploadedFileName ? ` · ${resumeItem.uploadedFileName}` : ""}
+                                </p>
+                              </div>
+                            </div>
+                            <span className="text-xs rounded-full bg-secondary px-2 py-1">{resumeItem.format}</span>
+                          </div>
+                        </button>
+                      );
+                    })}
+
+                  {!(resumes as ResumeWithUploadMeta[]).some((resumeItem) => resumeItem.uploadedAt || resumeItem.uploadedFileName) && (
+                    <div className="rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground">
+                      No previous uploads yet. Upload a resume to build your first imported draft.
+                    </div>
+                  )}
+
+                  <div className="flex justify-end gap-2 pt-2">
+                    <Button variant="outline" onClick={() => setUploadModal(false)} disabled={isUploadingResume}>
+                      Cancel
+                    </Button>
+                    <Button
+                      onClick={() => {
+                        const selected = (resumes as ResumeWithUploadMeta[]).find((resumeItem) => resumeItem._id === selectedPreviousUploadId);
+                        if (selected) loadPreviousUpload(selected);
+                      }}
+                      disabled={!selectedPreviousUploadId || isUploadingResume}
+                    >
+                      Load selected
+                    </Button>
+                  </div>
+                </div>
+              )}
+
               <div className="flex gap-2 pt-2">
-                <Button variant="outline" onClick={() => setUploadModal(false)}>Cancel</Button>
+                {uploadTab === "new" && (
+                  <Button variant="outline" onClick={() => setUploadModal(false)} disabled={isUploadingResume}>
+                    Cancel
+                  </Button>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {tailorModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <Card className="w-full max-w-2xl">
+            <CardHeader>
+              <CardTitle>Tailor this resume for a job</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <p className="text-sm text-muted-foreground">
+                Paste the job description and AI will rewrite the summary, skills, and matching experience bullets for this resume.
+              </p>
+              <textarea
+                className="w-full min-h-[220px] rounded-lg border border-border bg-background px-3 py-2 text-sm"
+                placeholder="Paste the job description here..."
+                value={tailorJobDescription}
+                onChange={(e) => setTailorJobDescription(e.target.value)}
+              />
+              <div className="flex justify-end gap-2">
+                <Button variant="outline" onClick={() => setTailorModal(false)} disabled={isTailoringResume}>
+                  Cancel
+                </Button>
+                <Button variant="gradient" onClick={tailorResumeForJob} disabled={isTailoringResume}>
+                  {isTailoringResume ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+                  Tailor Resume
+                </Button>
               </div>
             </CardContent>
           </Card>
@@ -880,10 +1391,12 @@ export default function ResumeBuilderPage() {
                 {templates?.map((template) => (
                   <div
                     key={template._id}
-                    className={`border rounded-lg p-4 cursor-pointer hover:border-primary transition-colors ${
+                    className={`border rounded-lg p-4 transition-colors ${
                       selectedTemplate === template.slug ? "border-primary bg-primary/5" : ""
-                    }`}
-                    onClick={() => setSelectedTemplate(template.slug)}
+                    } ${template.locked ? "opacity-60 cursor-not-allowed" : "cursor-pointer hover:border-primary"}`}
+                    onClick={() => {
+                      if (!template.locked) setSelectedTemplate(template.slug);
+                    }}
                   >
                     <div className="h-32 bg-gradient-to-br from-blue-100 to-violet-100 dark:from-blue-900/30 dark:to-violet-900/30 flex items-center justify-center mb-3 rounded">
                       <span className="text-3xl font-bold text-primary/30">{template.name[0]}</span>
@@ -892,6 +1405,7 @@ export default function ResumeBuilderPage() {
                     <p className="text-sm text-muted mb-2">{template.description}</p>
                     <span className="text-xs capitalize bg-secondary px-2 py-1 rounded">{template.category}</span>
                     {template.isPremium && <span className="ml-2 text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded">Premium</span>}
+                    {template.locked && <span className="ml-2 text-xs bg-muted px-2 py-1 rounded">Locked</span>}
                   </div>
                 ))}
               </div>
@@ -902,12 +1416,18 @@ export default function ResumeBuilderPage() {
                   onClick={async () => {
                     if (!selectedTemplate) return;
                     try {
+                      const chosenTemplate = templates?.find((template) => template.slug === selectedTemplate);
+                      if (chosenTemplate?.defaultTheme) {
+                        setTheme((chosenTemplate.defaultTheme as Record<string, string>) || {});
+                      }
                       if (isNew) {
-                        // For new resumes, save the resume first, then update the template
-                        setPendingTemplate(selectedTemplate);
-                        await saveMutation.mutateAsync();
+                        await saveMutation.mutateAsync({ templateId: selectedTemplate });
                         toast.add("Template applied!", "success");
                       } else {
+                        if (!id) {
+                          toast.add("Unable to apply template right now.", "error");
+                          return;
+                        }
                         await api.patch(`/resumes/${id}/template`, { templateId: selectedTemplate });
                         toast.add("Template updated!", "success");
                         queryClient.invalidateQueries({ queryKey: ["resume", id] });

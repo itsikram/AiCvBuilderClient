@@ -29,6 +29,17 @@ export default function BlogPostPage() {
             <ArrowLeft className="h-4 w-4" />
             Back to Blog
           </Link>
+          {post.coverImage ? (
+            <img
+              src={post.coverImage}
+              alt={post.title}
+              className="mb-8 h-64 w-full rounded-2xl object-cover"
+            />
+          ) : (
+            <div className="mb-8 flex h-64 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-100 to-violet-100 text-4xl font-bold text-primary/30 dark:from-blue-900/30 dark:to-violet-900/30">
+              {post.title[0]}
+            </div>
+          )}
           <h1 className="text-3xl md:text-4xl font-bold mb-4">{post.title}</h1>
           <p className="text-muted mb-8">{post.excerpt}</p>
           <div
