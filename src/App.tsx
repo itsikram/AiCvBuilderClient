@@ -1,4 +1,5 @@
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { useEffect } from "react";
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { HelmetProvider } from "react-helmet-async";
 import { GoogleOAuthProvider } from "@react-oauth/google";
@@ -7,6 +8,8 @@ import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { AdminLayout } from "@/components/layout/AdminLayout";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { Toaster } from "@/components/ui/toast";
+import { ProgressBar, LoadingBar } from "@/components/ui/ProgressBar";
+import { PageContentProvider } from "@/context/PageContentContext";
 
 import LandingPage from "@/pages/LandingPage";
 import PricingPage from "@/pages/PricingPage";
@@ -27,7 +30,10 @@ import ATSCheckerPage from "@/pages/dashboard/ATSCheckerPage";
 import CoverLetterPage from "@/pages/dashboard/CoverLetterPage";
 import BillingPage from "@/pages/dashboard/BillingPage";
 import SettingsPage from "@/pages/dashboard/SettingsPage";
-import AdminDashboardPage from "@/pages/admin/AdminDashboardPage";
+import OverviewPage from "@/pages/admin/OverviewPage";
+import UsersPage from "@/pages/admin/UsersPage";
+import PageContentManagerPage from "@/pages/admin/PageContentManagerPage";
+import BkashPaymentsPage from "@/pages/admin/BkashPaymentsPage";
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { staleTime: 60_000, retry: 1 } },
@@ -35,9 +41,32 @@ const queryClient = new QueryClient({
 
 const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || "";
 
+// Component to handle route change loading bar
+function RouteLoader() {
+  const location = useLocation();
+
+  useEffect(() => {
+    // Start the loading bar when route changes
+    LoadingBar.start();
+
+    // Simulate completion after a short delay
+    // In real apps, you might want to tie this to actual data loading
+    const timer = setTimeout(() => {
+      LoadingBar.done();
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [location.pathname]);
+
+  return null;
+}
+
 function AppRoutes() {
   return (
-    <Routes>
+    <>
+      <ProgressBar />
+      <RouteLoader />
+      <Routes>
       <Route element={<MainLayout />}>
         <Route index element={<LandingPage />} />
         <Route path="pricing" element={<PricingPage />} />
@@ -81,11 +110,15 @@ function AppRoutes() {
           </ProtectedRoute>
         }
       >
-        <Route index element={<AdminDashboardPage />} />
+        <Route index element={<OverviewPage />} />
+        <Route path="users" element={<UsersPage />} />
+        <Route path="bkash-payments" element={<BkashPaymentsPage />} />
+        <Route path="content-manager" element={<PageContentManagerPage />} />
       </Route>
 
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
+    </>
   );
 }
 
@@ -93,10 +126,12 @@ export default function App() {
   const content = (
     <HelmetProvider>
       <QueryClientProvider client={queryClient}>
-        <BrowserRouter>
-          <AppRoutes />
-          <Toaster />
-        </BrowserRouter>
+        <PageContentProvider>
+          <BrowserRouter>
+            <AppRoutes />
+            <Toaster />
+          </BrowserRouter>
+        </PageContentProvider>
       </QueryClientProvider>
     </HelmetProvider>
   );

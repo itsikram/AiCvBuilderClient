@@ -1388,26 +1388,53 @@ export default function ResumeBuilderPage() {
             </CardHeader>
             <CardContent className="space-y-3">
               <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {templates?.map((template) => (
-                  <div
-                    key={template._id}
-                    className={`border rounded-lg p-4 transition-colors ${
-                      selectedTemplate === template.slug ? "border-primary bg-primary/5" : ""
-                    } ${template.locked ? "opacity-60 cursor-not-allowed" : "cursor-pointer hover:border-primary"}`}
-                    onClick={() => {
-                      if (!template.locked) setSelectedTemplate(template.slug);
-                    }}
-                  >
-                    <div className="h-32 bg-gradient-to-br from-blue-100 to-violet-100 dark:from-blue-900/30 dark:to-violet-900/30 flex items-center justify-center mb-3 rounded">
-                      <span className="text-3xl font-bold text-primary/30">{template.name[0]}</span>
+                {templates?.map((template) => {
+                  // Get template image - use slug-based local image or fallback
+                  const templateImages: Record<string, string> = {
+                    "modern-ats": "/templates/modern-ats.svg",
+                    "classic": "/templates/classic.svg",
+                    "professional-bd": "/templates/professional-bd.svg",
+                    "creative": "/templates/creative.svg",
+                    "minimalist": "/templates/minimalist.svg",
+                    "executive-pro": "/templates/executive-pro.svg",
+                    "academic": "/templates/academic.svg",
+                    "tech-pro": "/templates/tech-pro.svg",
+                    "startup": "/templates/startup.svg",
+                    "bold-modern": "/templates/bold-modern.svg",
+                    "international": "/templates/international.svg",
+                    "bd-gov": "/templates/bd-gov.svg",
+                  };
+                  const imageSrc = (template.slug && templateImages[template.slug]) || 
+                                   (template.thumbnail ? template.thumbnail.replace(/\.png$/i, ".svg") : "/templates/fallback.svg");
+
+                  return (
+                    <div
+                      key={template._id}
+                      className={`border rounded-lg p-4 transition-colors ${
+                        selectedTemplate === template.slug ? "border-primary bg-primary/5" : ""
+                      } ${template.locked ? "opacity-60 cursor-not-allowed" : "cursor-pointer hover:border-primary"}`}
+                      onClick={() => {
+                        if (!template.locked) setSelectedTemplate(template.slug);
+                      }}
+                    >
+                      <div className="h-32 bg-gradient-to-br from-blue-100 to-violet-100 dark:from-blue-900/30 dark:to-violet-900/30 flex items-center justify-center mb-3 rounded overflow-hidden">
+                        <img
+                          src={imageSrc}
+                          alt={template.name}
+                          className="h-full w-full object-cover"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).src = "/templates/fallback.svg";
+                          }}
+                        />
+                      </div>
+                      <h3 className="font-semibold mb-1">{template.name}</h3>
+                      <p className="text-sm text-muted mb-2">{template.description}</p>
+                      <span className="text-xs capitalize bg-secondary px-2 py-1 rounded">{template.category}</span>
+                      {template.isPremium && <span className="ml-2 text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded">Premium</span>}
+                      {template.locked && <span className="ml-2 text-xs bg-muted px-2 py-1 rounded">Locked</span>}
                     </div>
-                    <h3 className="font-semibold mb-1">{template.name}</h3>
-                    <p className="text-sm text-muted mb-2">{template.description}</p>
-                    <span className="text-xs capitalize bg-secondary px-2 py-1 rounded">{template.category}</span>
-                    {template.isPremium && <span className="ml-2 text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded">Premium</span>}
-                    {template.locked && <span className="ml-2 text-xs bg-muted px-2 py-1 rounded">Locked</span>}
-                  </div>
-                ))}
+                  );
+                })}
               </div>
               <div className="flex gap-2 pt-4 justify-end">
                 <Button variant="outline" onClick={() => setTemplateModal(false)}>Cancel</Button>

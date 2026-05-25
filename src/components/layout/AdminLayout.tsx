@@ -1,5 +1,5 @@
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
-import { Menu, X, Shield, FileText, Users, LayoutDashboard, LogOut, Sparkles } from "lucide-react";
+import { Menu, X, Shield, FileText, Users, LayoutDashboard, LogOut, Sparkles, Edit3, CreditCard } from "lucide-react";
 import { useState } from "react";
 import { useAuthStore } from "@/store/authStore";
 import { Button } from "@/components/ui/button";
@@ -8,9 +8,11 @@ import { SEO } from "@/components/seo/SEO";
 import { cn } from "@/lib/utils";
 
 const adminNavItems = [
-  { to: "/admin#overview", label: "Overview", icon: LayoutDashboard },
-  { to: "/admin#content", label: "Content", icon: FileText },
-  { to: "/admin#users", label: "Users", icon: Users },
+  { to: "/admin", label: "Overview", icon: LayoutDashboard },
+  { to: "/admin/users", label: "Users", icon: Users },
+  { to: "/admin/bkash-payments", label: "BKash Payments", icon: CreditCard },
+  { to: "/admin/content-manager", label: "Page Content", icon: Edit3 },
+  { to: "/admin#content", label: "Blog Manager", icon: FileText },
 ];
 
 export function AdminLayout() {

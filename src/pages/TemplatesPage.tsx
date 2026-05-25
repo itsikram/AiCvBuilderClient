@@ -5,17 +5,47 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { SEO } from "@/components/seo/SEO";
+import { Skeleton, SkeletonCard } from "@/components/ui/skeleton";
 import api from "@/lib/api";
 import { useAuthStore } from "@/store/authStore";
 import type { Template } from "@/types";
 import { useEffect, useState } from "react";
+
+// Map of template slugs to local image paths
+const TEMPLATE_IMAGES: Record<string, string> = {
+  "modern-ats": "/templates/modern-ats.svg",
+  "classic": "/templates/classic.svg",
+  "professional-bd": "/templates/professional-bd.svg",
+  "creative": "/templates/creative.svg",
+  "minimalist": "/templates/minimalist.svg",
+  "executive-pro": "/templates/executive-pro.svg",
+  "academic": "/templates/academic.svg",
+  "tech-pro": "/templates/tech-pro.svg",
+  "startup": "/templates/startup.svg",
+  "bold-modern": "/templates/bold-modern.svg",
+  "international": "/templates/international.svg",
+  "bd-gov": "/templates/bd-gov.svg",
+};
+
+const getTemplateImage = (template: Template) => {
+  // First try to use the slug-based local image
+  if (template.slug && TEMPLATE_IMAGES[template.slug]) {
+    return TEMPLATE_IMAGES[template.slug];
+  }
+  // Then try the thumbnail from API
+  if (template.thumbnail) {
+    return template.thumbnail.replace(/\.png$/i, ".svg");
+  }
+  // Fallback
+  return "/templates/fallback.svg";
+};
 
 export default function TemplatesPage() {
   const navigate = useNavigate();
   const { user } = useAuthStore();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-  const { data: templates } = useQuery({
+  const { data: templates, isLoading } = useQuery({
     queryKey: ["templates"],
     queryFn: async () => {
       const { data } = await api.get("/templates");
@@ -67,23 +97,35 @@ export default function TemplatesPage() {
             </div>
           )}
 
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {templates?.map((template) => {
-              const imageSrc = (template.thumbnail || "/templates/fallback.svg").replace(/\.png$/i, ".svg");
+          {isLoading ? (
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <SkeletonCard key={i} className="overflow-hidden">
+                  <Skeleton className="h-40 w-full mb-4" />
+                  <Skeleton className="h-5 w-3/4 mb-2" />
+                  <Skeleton className="h-4 w-full mb-2" />
+                  <Skeleton className="h-4 w-1/2" />
+                </SkeletonCard>
+              ))}
+            </div>
+          ) : (
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {templates?.map((template) => {
+                const imageSrc = getTemplateImage(template);
 
-              return (
-                <Card key={template._id} className="overflow-hidden hover:shadow-lg transition-shadow">
-                  <div className="h-40 overflow-hidden bg-gradient-to-br from-blue-100 to-violet-100 dark:from-blue-900/30 dark:to-violet-900/30">
-                    <img
-                      src={imageSrc}
-                      alt={template.name}
-                      className="h-full w-full object-cover"
-                      loading="lazy"
-                      onError={(event) => {
-                        event.currentTarget.src = "/templates/fallback.svg";
-                      }}
-                    />
-                  </div>
+                return (
+                  <Card key={template._id} className="overflow-hidden hover:shadow-lg transition-shadow">
+                    <div className="h-40 overflow-hidden bg-gradient-to-br from-blue-100 to-violet-100 dark:from-blue-900/30 dark:to-violet-900/30">
+                      <img
+                        src={imageSrc}
+                        alt={template.name}
+                        className="h-full w-full object-cover"
+                        loading="lazy"
+                        onError={(event) => {
+                          event.currentTarget.src = "/templates/fallback.svg";
+                        }}
+                      />
+                    </div>
                   <CardContent className="pt-4">
                     <div className="flex items-start justify-between mb-2">
                       <h3 className="font-semibold">{template.name}</h3>
@@ -105,7 +147,8 @@ export default function TemplatesPage() {
                 </Card>
               );
             })}
-          </div>
+            </div>
+          )}
         </div>
       </section>
     </>

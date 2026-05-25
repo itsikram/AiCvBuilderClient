@@ -1,6 +1,13 @@
 import { Link } from "react-router-dom";
+import { usePageContent } from "@/context/PageContentContext";
 
 export function Footer() {
+  const { headerFooterContent } = usePageContent();
+
+  // Get dynamic content with fallbacks
+  const siteDescription = headerFooterContent.siteDescription || "AI-powered resume builder for Bangladesh.";
+  const contactEmail = headerFooterContent.contactEmail || "support@chakricv.com";
+
   return (
     <footer className="border-t border-border bg-secondary/30 mt-auto">
       <div className="container mx-auto px-4 py-12">
@@ -8,7 +15,7 @@ export function Footer() {
           <div>
             <span className="text-xl font-bold gradient-text">ChakriCV</span>
             <p className="mt-2 text-sm text-muted">
-              AI-powered resume builder for Bangladesh.
+              {siteDescription}
             </p>
           </div>
           <div>
@@ -23,6 +30,13 @@ export function Footer() {
             <h4 className="font-semibold mb-3">Company</h4>
             <ul className="space-y-2 text-sm text-muted">
               <li><Link to="/contact" className="hover:text-primary">Contact</Link></li>
+              {contactEmail && (
+                <li className="text-xs text-muted pt-1">
+                  <a href={`mailto:${contactEmail}`} className="hover:text-primary">
+                    {contactEmail}
+                  </a>
+                </li>
+              )}
             </ul>
           </div>
           <div>
@@ -31,7 +45,7 @@ export function Footer() {
           </div>
         </div>
         <p className="mt-8 text-center text-sm text-muted">
-          © {new Date().getFullYear()} ChakriCV
+          © {new Date().getFullYear()} ChakriCV. All rights reserved.
         </p>
       </div>
     </footer>

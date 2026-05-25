@@ -5,10 +5,21 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { SEO } from "@/components/seo/SEO";
 import { useToast } from "@/components/ui/toast";
+import { usePageContent } from "@/context/PageContentContext";
 
 export default function ContactPage() {
   const toast = useToast();
+  const { getPageContent } = usePageContent();
+  const contactContent = getPageContent("contact");
   const [form, setForm] = useState({ name: "", email: "", message: "" });
+
+  // Get dynamic content with fallbacks
+  const title = (contactContent?.title as string) || "Contact Us";
+  const email = (contactContent?.email as string) || "support@chakricv.com";
+  const phone = (contactContent?.phone as string) || "+880 1XXX-XXXXXX";
+  const officeAddress = (contactContent?.officeAddress as string) || "Dhaka, Bangladesh";
+  const supportHours = (contactContent?.supportHours as string) || "Sunday - Friday: 9:00 AM - 6:00 PM";
+  const contactDescription = (contactContent?.contactDescription as string) || "Have questions? We're here to help you with anything related to our services.";
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -18,10 +29,10 @@ export default function ContactPage() {
 
   return (
     <>
-      <SEO title="Contact" description="Get in touch with ChakriCV support" />
+      <SEO title={title} description={contactDescription} />
       <section className="py-16">
         <div className="container mx-auto px-4 max-w-4xl">
-          <h1 className="text-3xl font-bold text-center mb-12">Contact Us</h1>
+          <h1 className="text-3xl font-bold text-center mb-12">{title}</h1>
           <div className="grid md:grid-cols-2 gap-8">
             <Card>
               <CardHeader>
@@ -61,7 +72,8 @@ export default function ContactPage() {
                   <Mail className="h-8 w-8 text-primary" />
                   <div>
                     <p className="font-medium">Email</p>
-                    <p className="text-muted text-sm">support@chakricv.com</p>
+                    <p className="text-muted text-sm">{email}</p>
+                    {supportHours && <p className="text-xs text-muted mt-1">{supportHours}</p>}
                   </div>
                 </CardContent>
               </Card>
@@ -70,7 +82,7 @@ export default function ContactPage() {
                   <Phone className="h-8 w-8 text-primary" />
                   <div>
                     <p className="font-medium">Phone</p>
-                    <p className="text-muted text-sm">+880 1XXX-XXXXXX</p>
+                    <p className="text-muted text-sm">{phone}</p>
                   </div>
                 </CardContent>
               </Card>
@@ -79,7 +91,7 @@ export default function ContactPage() {
                   <MapPin className="h-8 w-8 text-primary" />
                   <div>
                     <p className="font-medium">Office</p>
-                    <p className="text-muted text-sm">Dhaka, Bangladesh</p>
+                    <p className="text-muted text-sm">{officeAddress}</p>
                   </div>
                 </CardContent>
               </Card>
