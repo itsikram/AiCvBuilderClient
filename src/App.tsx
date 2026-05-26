@@ -18,6 +18,7 @@ import TemplatesPage from "@/pages/TemplatesPage";
 import BlogPage from "@/pages/BlogPage";
 import BlogPostPage from "@/pages/BlogPostPage";
 import ContactPage from "@/pages/ContactPage";
+import AboutPage from "@/pages/AboutPage";
 import PublicResumePage from "@/pages/PublicResumePage";
 import LoginPage from "@/pages/auth/LoginPage";
 import RegisterPage from "@/pages/auth/RegisterPage";
@@ -73,6 +74,7 @@ function AppRoutes() {
       <Routes>
       <Route element={<MainLayout />}>
         <Route index element={<LandingPage />} />
+        <Route path="about" element={<AboutPage />} />
         <Route path="pricing" element={<PricingPage />} />
         <Route path="templates" element={<TemplatesPage />} />
         <Route path="blog" element={<BlogPage />} />

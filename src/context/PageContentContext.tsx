@@ -22,6 +22,13 @@ export interface HeaderFooterContent {
   contactEmail: string;
   contactPhone: string;
   officeAddress: string;
+  // Header navigation links
+  navLinks: Array<{ label: string; href: string }>;
+  // Footer content
+  footerLinks: Array<{ label: string; href: string }>;
+  socialLinks: Array<{ platform: string; url: string }>;
+  copyrightText: string;
+  paymentMethods: string;
 }
 
 interface PageContentContextType {
@@ -38,11 +45,11 @@ export function PageContentProvider({ children }: { children: ReactNode }) {
   const { data: pageContents, isLoading, refetch } = useQuery({
     queryKey: ["page-contents-all"],
     queryFn: async () => {
-      const { data } = await api.get("/admin/page-content");
+      const { data } = await api.get("/page-content");
       return data.data as PageContentData[];
     },
     staleTime: 30000, // 30 seconds
-    refetchOnWindowFocus: true,
+    refetchOnWindowFocus: false,
   });
 
   // Get current language from localStorage or default to 'en'
@@ -88,6 +95,36 @@ export function PageContentProvider({ children }: { children: ReactNode }) {
       }
       if (typeof homeContent.content.heroSubtitle === "string") {
         headerFooterContent.siteDescription = homeContent.content.heroSubtitle;
+      }
+      // Footer description from home page
+      if (typeof homeContent.content.footerDescription === "string") {
+        headerFooterContent.footerDescription = homeContent.content.footerDescription;
+      }
+      // Navigation links from home page
+      if (Array.isArray(homeContent.content.navLinks)) {
+        headerFooterContent.navLinks = homeContent.content.navLinks as Array<{ label: string; href: string }>;
+      }
+      // Footer links from home page
+      if (Array.isArray(homeContent.content.footerLinks)) {
+        headerFooterContent.footerLinks = homeContent.content.footerLinks as Array<{ label: string; href: string }>;
+      }
+      // Social links from home page
+      if (Array.isArray(homeContent.content.socialLinks)) {
+        headerFooterContent.socialLinks = homeContent.content.socialLinks as Array<{ platform: string; url: string }>;
+      }
+      // Copyright text from home page
+      if (typeof homeContent.content.copyrightText === "string") {
+        headerFooterContent.copyrightText = homeContent.content.copyrightText;
+      }
+    }
+
+    // Payment methods from pricing page
+    const pricingContent = pageContents.find(
+      (c) => c.pageId === "pricing" && c.language === getCurrentLanguage() && c.isActive
+    );
+    if (pricingContent?.content) {
+      if (typeof pricingContent.content.paymentMethods === "string") {
+        headerFooterContent.paymentMethods = pricingContent.content.paymentMethods;
       }
     }
   }

@@ -33,6 +33,12 @@ const pageConfig = {
       { key: "trustSectionTitle", label: "Trust Section Title", type: "text" },
       { key: "trustSectionDescription", label: "Trust Section Description", type: "textarea" },
       { key: "heroBadge", label: "Hero Badge Text", type: "text" },
+      // Header/Footer customization fields
+      { key: "footerDescription", label: "Footer Description", type: "textarea" },
+      { key: "copyrightText", label: "Copyright Text", type: "text" },
+      { key: "navLinks", label: "Navigation Links (JSON Array: [{label, href}])", type: "json" },
+      { key: "footerLinks", label: "Footer Links (JSON Array: [{label, href}])", type: "json" },
+      { key: "socialLinks", label: "Social Media Links (JSON Array: [{platform, url}])", type: "json" },
     ],
   },
   about: {
@@ -69,6 +75,7 @@ const pageConfig = {
       { key: "subtitle", label: "Subtitle/Description", type: "textarea" },
       { key: "badge", label: "Badge Text", type: "text" },
       { key: "footer", label: "Footer Text", type: "textarea" },
+      { key: "paymentMethods", label: "Payment Methods Text", type: "text" },
     ],
   },
 };
@@ -89,6 +96,25 @@ const defaultPageValues = {
       { value: "95%", label: "ATS Pass Rate" },
       { value: "৳499", label: "Starting Price/mo" },
       { value: "2", label: "Languages" }
+    ], null, 2),
+    // Header/Footer defaults
+    footerDescription: "AI-powered resume builder for Bangladesh. Create professional, ATS-optimized resumes in minutes.",
+    copyrightText: `© ${new Date().getFullYear()} ChakriCV. All rights reserved.`,
+    navLinks: JSON.stringify([
+      { label: "Pricing", href: "/pricing" },
+      { label: "Templates", href: "/templates" },
+      { label: "Blog", href: "/blog" }
+    ], null, 2),
+    footerLinks: JSON.stringify([
+      { label: "About", href: "/about" },
+      { label: "Contact", href: "/contact" },
+      { label: "Pricing", href: "/pricing" },
+      { label: "Templates", href: "/templates" }
+    ], null, 2),
+    socialLinks: JSON.stringify([
+      { platform: "Facebook", url: "https://facebook.com/chakricv" },
+      { platform: "LinkedIn", url: "https://linkedin.com/company/chakricv" },
+      { platform: "Twitter", url: "https://twitter.com/chakricv" }
     ], null, 2),
   },
   about: {

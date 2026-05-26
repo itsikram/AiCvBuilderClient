@@ -86,6 +86,7 @@ export default function ResumeBuilderPage() {
   const [isUploadingResume, setIsUploadingResume] = useState(false);
   const [isTailoringResume, setIsTailoringResume] = useState(false);
   const [tailorJobDescription, setTailorJobDescription] = useState("");
+  const [showPageBreaks, setShowPageBreaks] = useState(false);
   const [aiForm, setAiForm] = useState({
     name: "",
     jobTitle: "",
@@ -1190,8 +1191,19 @@ export default function ResumeBuilderPage() {
         </div>
 
         <div className="lg:sticky lg:top-4">
-          <p className="text-sm font-medium mb-2">{t("resume.preview")}</p>
-          <ResumePreview content={content} templateId={selectedTemplate} theme={theme} className="w-full" />
+          <div className="flex items-center justify-between mb-2">
+            <p className="text-sm font-medium">{t("resume.preview")}</p>
+            <label className="flex items-center gap-2 text-xs text-muted-foreground cursor-pointer">
+              <input
+                type="checkbox"
+                className="rounded border-border"
+                onChange={(e) => setShowPageBreaks(e.target.checked)}
+                checked={showPageBreaks}
+              />
+              Show page breaks
+            </label>
+          </div>
+          <ResumePreview content={content} templateId={selectedTemplate} theme={theme} className="w-full" showPageBreaks={showPageBreaks} />
         </div>
       </div>
 

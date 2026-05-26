@@ -52,3 +52,16 @@ body {
   background: rgba(15, 23, 42, 0.7);
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
+
+/* Print styles for resume preview - prevent sections from splitting across pages */
+@media print {
+  .resume-section {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+  
+  .resume-preview main section {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+}

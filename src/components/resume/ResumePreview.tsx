@@ -6,6 +6,7 @@ interface Props {
   templateId?: string;
   theme?: Record<string, string>;
   className?: string;
+  showPageBreaks?: boolean;
 }
 
 type PreviewStyle = {
@@ -212,7 +213,7 @@ const templateStyles: Record<string, PreviewStyle> = {
 
 const formatList = (items: string[]) => items.filter(Boolean).join(" - ");
 
-export function ResumePreview({ content, templateId = "modern-ats", theme, className }: Props) {
+export function ResumePreview({ content, templateId = "modern-ats", theme, className, showPageBreaks = false }: Props) {
   const {
     personalInfo,
     experience,
@@ -281,69 +282,729 @@ export function ResumePreview({ content, templateId = "modern-ats", theme, class
     </>
   );
 
+  // A4 page dimensions at 96 DPI
+  const pageHeight = 1123;
+  const pageWidth = 794;
+
+  // Multi-page mode: show full content with page break indicators
+  if (showPageBreaks) {
+    return (
+      <div
+        className={cn("shadow-lg rounded-lg text-sm leading-relaxed", className)}
+        style={{ 
+          backgroundColor: "#e5e7eb", 
+          color: bodyColor, 
+          fontFamily,
+          maxWidth: `${pageWidth}px`,
+          margin: "0 auto",
+          padding: "20px",
+        }}
+      >
+        {/* Page 1 */}
+        <div className="relative bg-white mb-2" style={{ height: `${pageHeight}px`, overflow: "hidden" }}>
+          <div className="absolute top-2 right-2 z-10 text-[10px] text-red-400 bg-red-50 px-2 py-0.5 rounded">
+            Page 1
+          </div>
+          <div className="p-[40px]">
+            <div className={cn("pb-4 mb-4 flex flex-col gap-3", style.header)}>
+              {personalInfo.profilePhoto && (
+                <div className={cn(
+                  "flex",
+                  personalInfo.profilePhotoAlignment === "left" ? "justify-start" :
+                  personalInfo.profilePhotoAlignment === "right" ? "justify-end" : "justify-center"
+                )}>
+                  <img
+                    src={personalInfo.profilePhoto}
+                    alt={personalInfo.fullName || "Owner profile"}
+                    className={cn(
+                      "rounded-full object-cover border-2 border-white shadow",
+                      personalInfo.profilePhotoSize === "large" ? "h-32 w-32" :
+                      personalInfo.profilePhotoSize === "small" ? "h-16 w-16" : "h-24 w-24"
+                    )}
+                  />
+                </div>
+              )}
+              <div className={cn(
+                personalInfo.profilePhotoAlignment === "left" ? "text-left" :
+                personalInfo.profilePhotoAlignment === "right" ? "text-right" : "text-center"
+              )}>
+                <h1 className={cn("text-2xl font-bold", style.layout === "bold" ? "text-white" : "")}
+                  style={style.layout === "bold" ? undefined : { color: headingColor }}>
+                  {personalInfo.fullName || "Your Name"}
+                </h1>
+                <p className={cn("mt-1 text-xs", style.layout === "bold" ? "text-violet-100" : "")}
+                  style={style.layout === "bold" ? undefined : { color: bodyColor }}>
+                  {[personalInfo.email, personalInfo.phone, personalInfo.location].filter(Boolean).join(" | ")}
+                </p>
+                {(personalInfo.linkedin || personalInfo.portfolio || personalInfo.github || personalInfo.website) && (
+                  <p className={cn("text-xs mt-1", style.layout === "bold" ? "text-violet-100" : "")}
+                    style={{ color: accentColor }}>
+                    {[personalInfo.linkedin, personalInfo.portfolio, personalInfo.github, personalInfo.website]
+                      .filter(Boolean).join(" | ")}
+                  </p>
+                )}
+              </div>
+            </div>
+
+            <div className={cn(isSidebar && "grid grid-cols-[0.9fr_1.5fr] gap-6")}>
+              {isSidebar && <aside>{sidebarBlocks}</aside>}
+              <main className="resume-preview">
+                {personalInfo.summary && (
+                  <section className={`resume-section ${sectionClass}`}>
+                    <SectionTitle>Professional Summary</SectionTitle>
+                    <p className="text-current">{personalInfo.summary}</p>
+                  </section>
+                )}
+                {experience.length > 0 && (
+                  <section className={`resume-section ${sectionClass}`}>
+                    <SectionTitle>Experience</SectionTitle>
+                    {experience.map((exp) => (
+                      <div key={exp.id} className="mb-3">
+                        <div className="flex justify-between items-start gap-3">
+                          <div>
+                            <p className="font-semibold text-current">{exp.position}</p>
+                            <p className="text-current opacity-80">{exp.company}</p>
+                          </div>
+                          <p className="text-xs whitespace-nowrap text-current opacity-70">
+                            {exp.startDate} - {exp.current ? "Present" : exp.endDate}
+                          </p>
+                        </div>
+                        <ul className="mt-1 list-disc list-inside text-current space-y-0.5">
+                          {exp.bullets.filter(Boolean).map((bullet, index) => (
+                            <li key={index}>{bullet}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    ))}
+                  </section>
+                )}
+                {education.length > 0 && (
+                  <section className={`resume-section ${sectionClass}`}>
+                    <SectionTitle>Education</SectionTitle>
+                    {education.map((edu) => (
+                      <div key={edu.id} className="mb-2">
+                        <p className="font-semibold text-current">
+                          {edu.degree}{edu.field ? ` in ${edu.field}` : ""}
+                        </p>
+                        <p className="text-current opacity-80">
+                          {edu.institution} | {edu.startDate} - {edu.endDate}
+                        </p>
+                      </div>
+                    ))}
+                  </section>
+                )}
+                {!isSidebar && sidebarBlocks}
+                {projects.length > 0 && (
+                  <section className={`resume-section ${sectionClass}`}>
+                    <SectionTitle>Projects</SectionTitle>
+                    {projects.map((project) => (
+                      <div key={project.id} className="mb-2">
+                        <p className="font-semibold text-current">{project.name}</p>
+                        <p className="text-current">{project.description}</p>
+                        {project.technologies.length > 0 && (
+                          <p className="text-xs text-current opacity-70">{project.technologies.join(", ")}</p>
+                        )}
+                      </div>
+                    ))}
+                  </section>
+                )}
+                {awards.length > 0 && (
+                  <section className={`resume-section ${sectionClass}`}>
+                    <SectionTitle>Awards</SectionTitle>
+                    {awards.map((award) => (
+                      <div key={award.id} className="mb-2">
+                        <p className="font-semibold text-current">{award.title}</p>
+                        <p className="text-xs text-current opacity-80">
+                          {award.issuer} | {award.date}
+                        </p>
+                        {award.description && <p className="text-xs mt-1 text-current">{award.description}</p>}
+                      </div>
+                    ))}
+                  </section>
+                )}
+                {publications.length > 0 && (
+                  <section className={`resume-section ${sectionClass}`}>
+                    <SectionTitle>Publications</SectionTitle>
+                    {publications.map((publication) => (
+                      <div key={publication.id} className="mb-2">
+                        <p className="font-semibold text-current">{publication.title}</p>
+                        <p className="text-xs text-current opacity-80">
+                          {publication.publisher} | {publication.date}
+                        </p>
+                        {publication.description && (
+                          <p className="text-xs mt-1 text-current">{publication.description}</p>
+                        )}
+                      </div>
+                    ))}
+                  </section>
+                )}
+                {volunteerExperience.length > 0 && (
+                  <section className={`resume-section ${sectionClass}`}>
+                    <SectionTitle>Volunteer Experience</SectionTitle>
+                    {volunteerExperience.map((volunteer) => (
+                      <div key={volunteer.id} className="mb-2">
+                        <p className="font-semibold text-current">{volunteer.role}</p>
+                        <p className="text-xs text-current opacity-80">
+                          {volunteer.organization} | {volunteer.startDate} - {volunteer.current ? "Present" : volunteer.endDate}
+                        </p>
+                        {volunteer.description && (
+                          <p className="text-xs mt-1 text-current">{volunteer.description}</p>
+                        )}
+                      </div>
+                    ))}
+                  </section>
+                )}
+                {references.length > 0 && (
+                  <section className={`resume-section ${sectionClass}`}>
+                    <SectionTitle>References</SectionTitle>
+                    {references.map((reference) => (
+                      <div key={reference.id} className="mb-2">
+                        <p className="font-semibold text-current">{reference.name}</p>
+                        <p className="text-xs text-current opacity-80">
+                          {reference.position} at {reference.company}
+                        </p>
+                        <p className="text-xs text-current opacity-70">
+                          {[reference.email, reference.phone].filter(Boolean).join(" | ")}
+                        </p>
+                      </div>
+                    ))}
+                  </section>
+                )}
+                {interests.length > 0 && (
+                  <section className={`resume-section ${sectionClass}`}>
+                    <SectionTitle>Interests</SectionTitle>
+                    <p className="text-current">{formatList(interests)}</p>
+                  </section>
+                )}
+                {courses.length > 0 && (
+                  <section className={`resume-section ${sectionClass}`}>
+                    <SectionTitle>Courses</SectionTitle>
+                    {courses.map((course) => (
+                      <div key={course.id} className="mb-2">
+                        <p className="font-semibold text-current">{course.name}</p>
+                        <p className="text-xs text-current opacity-80">
+                          {course.provider} | {course.date}
+                        </p>
+                      </div>
+                    ))}
+                  </section>
+                )}
+                {memberships.length > 0 && (
+                  <section className={`resume-section ${sectionClass}`}>
+                    <SectionTitle>Professional Memberships</SectionTitle>
+                    {memberships.map((membership) => (
+                      <div key={membership.id} className="mb-2">
+                        <p className="font-semibold text-current">{membership.organization}</p>
+                        <p className="text-xs text-current opacity-80">
+                          {[membership.role, membership.startDate].filter(Boolean).join(" | ")}
+                          {membership.current ? " - Present" : membership.endDate ? ` - ${membership.endDate}` : ""}
+                        </p>
+                      </div>
+                    ))}
+                  </section>
+                )}
+                {customSections.length > 0 && (
+                  <section className={`resume-section ${sectionClass}`}>
+                    {customSections.map((section) => (
+                      <div key={section.title} className="mb-2">
+                        <SectionTitle>{section.title}</SectionTitle>
+                        <p className="text-current">{section.content}</p>
+                      </div>
+                    ))}
+                  </section>
+                )}
+              </main>
+            </div>
+          </div>
+          <div className="absolute bottom-0 left-0 right-0 h-0.5 border-b-2 border-dashed border-red-300 bg-red-50/10" />
+        </div>
+
+        {/* Page 2 */}
+        <div className="relative bg-white mb-2" style={{ height: `${pageHeight}px`, overflow: "hidden" }}>
+          <div className="absolute top-2 right-2 z-10 text-[10px] text-red-400 bg-red-50 px-2 py-0.5 rounded">
+            Page 2
+          </div>
+          <div className="p-[40px]">
+            <div className={cn("pb-4 mb-4 flex flex-col gap-3", style.header)}>
+              {personalInfo.profilePhoto && (
+                <div className={cn(
+                  "flex",
+                  personalInfo.profilePhotoAlignment === "left" ? "justify-start" :
+                  personalInfo.profilePhotoAlignment === "right" ? "justify-end" : "justify-center"
+                )}>
+                  <img
+                    src={personalInfo.profilePhoto}
+                    alt={personalInfo.fullName || "Owner profile"}
+                    className={cn(
+                      "rounded-full object-cover border-2 border-white shadow",
+                      personalInfo.profilePhotoSize === "large" ? "h-32 w-32" :
+                      personalInfo.profilePhotoSize === "small" ? "h-16 w-16" : "h-24 w-24"
+                    )}
+                  />
+                </div>
+              )}
+              <div className={cn(
+                personalInfo.profilePhotoAlignment === "left" ? "text-left" :
+                personalInfo.profilePhotoAlignment === "right" ? "text-right" : "text-center"
+              )}>
+                <h1 className={cn("text-2xl font-bold", style.layout === "bold" ? "text-white" : "")}
+                  style={style.layout === "bold" ? undefined : { color: headingColor }}>
+                  {personalInfo.fullName || "Your Name"}
+                </h1>
+                <p className={cn("mt-1 text-xs", style.layout === "bold" ? "text-violet-100" : "")}
+                  style={style.layout === "bold" ? undefined : { color: bodyColor }}>
+                  {[personalInfo.email, personalInfo.phone, personalInfo.location].filter(Boolean).join(" | ")}
+                </p>
+                {(personalInfo.linkedin || personalInfo.portfolio || personalInfo.github || personalInfo.website) && (
+                  <p className={cn("text-xs mt-1", style.layout === "bold" ? "text-violet-100" : "")}
+                    style={{ color: accentColor }}>
+                    {[personalInfo.linkedin, personalInfo.portfolio, personalInfo.github, personalInfo.website]
+                      .filter(Boolean).join(" | ")}
+                  </p>
+                )}
+              </div>
+            </div>
+
+            <div className={cn(isSidebar && "grid grid-cols-[0.9fr_1.5fr] gap-6")}>
+              {isSidebar && <aside>{sidebarBlocks}</aside>}
+              <main className="resume-preview">
+                {personalInfo.summary && (
+                  <section className={`resume-section ${sectionClass}`}>
+                    <SectionTitle>Professional Summary</SectionTitle>
+                    <p className="text-current">{personalInfo.summary}</p>
+                  </section>
+                )}
+                {experience.length > 0 && (
+                  <section className={`resume-section ${sectionClass}`}>
+                    <SectionTitle>Experience</SectionTitle>
+                    {experience.map((exp) => (
+                      <div key={exp.id} className="mb-3">
+                        <div className="flex justify-between items-start gap-3">
+                          <div>
+                            <p className="font-semibold text-current">{exp.position}</p>
+                            <p className="text-current opacity-80">{exp.company}</p>
+                          </div>
+                          <p className="text-xs whitespace-nowrap text-current opacity-70">
+                            {exp.startDate} - {exp.current ? "Present" : exp.endDate}
+                          </p>
+                        </div>
+                        <ul className="mt-1 list-disc list-inside text-current space-y-0.5">
+                          {exp.bullets.filter(Boolean).map((bullet, index) => (
+                            <li key={index}>{bullet}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    ))}
+                  </section>
+                )}
+                {education.length > 0 && (
+                  <section className={`resume-section ${sectionClass}`}>
+                    <SectionTitle>Education</SectionTitle>
+                    {education.map((edu) => (
+                      <div key={edu.id} className="mb-2">
+                        <p className="font-semibold text-current">
+                          {edu.degree}{edu.field ? ` in ${edu.field}` : ""}
+                        </p>
+                        <p className="text-current opacity-80">
+                          {edu.institution} | {edu.startDate} - {edu.endDate}
+                        </p>
+                      </div>
+                    ))}
+                  </section>
+                )}
+                {!isSidebar && sidebarBlocks}
+                {projects.length > 0 && (
+                  <section className={`resume-section ${sectionClass}`}>
+                    <SectionTitle>Projects</SectionTitle>
+                    {projects.map((project) => (
+                      <div key={project.id} className="mb-2">
+                        <p className="font-semibold text-current">{project.name}</p>
+                        <p className="text-current">{project.description}</p>
+                        {project.technologies.length > 0 && (
+                          <p className="text-xs text-current opacity-70">{project.technologies.join(", ")}</p>
+                        )}
+                      </div>
+                    ))}
+                  </section>
+                )}
+                {awards.length > 0 && (
+                  <section className={`resume-section ${sectionClass}`}>
+                    <SectionTitle>Awards</SectionTitle>
+                    {awards.map((award) => (
+                      <div key={award.id} className="mb-2">
+                        <p className="font-semibold text-current">{award.title}</p>
+                        <p className="text-xs text-current opacity-80">
+                          {award.issuer} | {award.date}
+                        </p>
+                        {award.description && <p className="text-xs mt-1 text-current">{award.description}</p>}
+                      </div>
+                    ))}
+                  </section>
+                )}
+                {publications.length > 0 && (
+                  <section className={`resume-section ${sectionClass}`}>
+                    <SectionTitle>Publications</SectionTitle>
+                    {publications.map((publication) => (
+                      <div key={publication.id} className="mb-2">
+                        <p className="font-semibold text-current">{publication.title}</p>
+                        <p className="text-xs text-current opacity-80">
+                          {publication.publisher} | {publication.date}
+                        </p>
+                        {publication.description && (
+                          <p className="text-xs mt-1 text-current">{publication.description}</p>
+                        )}
+                      </div>
+                    ))}
+                  </section>
+                )}
+                {volunteerExperience.length > 0 && (
+                  <section className={`resume-section ${sectionClass}`}>
+                    <SectionTitle>Volunteer Experience</SectionTitle>
+                    {volunteerExperience.map((volunteer) => (
+                      <div key={volunteer.id} className="mb-2">
+                        <p className="font-semibold text-current">{volunteer.role}</p>
+                        <p className="text-xs text-current opacity-80">
+                          {volunteer.organization} | {volunteer.startDate} - {volunteer.current ? "Present" : volunteer.endDate}
+                        </p>
+                        {volunteer.description && (
+                          <p className="text-xs mt-1 text-current">{volunteer.description}</p>
+                        )}
+                      </div>
+                    ))}
+                  </section>
+                )}
+                {references.length > 0 && (
+                  <section className={`resume-section ${sectionClass}`}>
+                    <SectionTitle>References</SectionTitle>
+                    {references.map((reference) => (
+                      <div key={reference.id} className="mb-2">
+                        <p className="font-semibold text-current">{reference.name}</p>
+                        <p className="text-xs text-current opacity-80">
+                          {reference.position} at {reference.company}
+                        </p>
+                        <p className="text-xs text-current opacity-70">
+                          {[reference.email, reference.phone].filter(Boolean).join(" | ")}
+                        </p>
+                      </div>
+                    ))}
+                  </section>
+                )}
+                {interests.length > 0 && (
+                  <section className={`resume-section ${sectionClass}`}>
+                    <SectionTitle>Interests</SectionTitle>
+                    <p className="text-current">{formatList(interests)}</p>
+                  </section>
+                )}
+                {courses.length > 0 && (
+                  <section className={`resume-section ${sectionClass}`}>
+                    <SectionTitle>Courses</SectionTitle>
+                    {courses.map((course) => (
+                      <div key={course.id} className="mb-2">
+                        <p className="font-semibold text-current">{course.name}</p>
+                        <p className="text-xs text-current opacity-80">
+                          {course.provider} | {course.date}
+                        </p>
+                      </div>
+                    ))}
+                  </section>
+                )}
+                {memberships.length > 0 && (
+                  <section className={`resume-section ${sectionClass}`}>
+                    <SectionTitle>Professional Memberships</SectionTitle>
+                    {memberships.map((membership) => (
+                      <div key={membership.id} className="mb-2">
+                        <p className="font-semibold text-current">{membership.organization}</p>
+                        <p className="text-xs text-current opacity-80">
+                          {[membership.role, membership.startDate].filter(Boolean).join(" | ")}
+                          {membership.current ? " - Present" : membership.endDate ? ` - ${membership.endDate}` : ""}
+                        </p>
+                      </div>
+                    ))}
+                  </section>
+                )}
+                {customSections.length > 0 && (
+                  <section className={`resume-section ${sectionClass}`}>
+                    {customSections.map((section) => (
+                      <div key={section.title} className="mb-2">
+                        <SectionTitle>{section.title}</SectionTitle>
+                        <p className="text-current">{section.content}</p>
+                      </div>
+                    ))}
+                  </section>
+                )}
+              </main>
+            </div>
+          </div>
+          <div className="absolute bottom-0 left-0 right-0 h-0.5 border-b-2 border-dashed border-red-300 bg-red-50/10" />
+        </div>
+
+        {/* Page 3 */}
+        <div className="relative bg-white" style={{ height: `${pageHeight}px`, overflow: "hidden" }}>
+          <div className="absolute top-2 right-2 z-10 text-[10px] text-red-400 bg-red-50 px-2 py-0.5 rounded">
+            Page 3
+          </div>
+          <div className="p-[40px]">
+            <div className={cn("pb-4 mb-4 flex flex-col gap-3", style.header)}>
+              {personalInfo.profilePhoto && (
+                <div className={cn(
+                  "flex",
+                  personalInfo.profilePhotoAlignment === "left" ? "justify-start" :
+                  personalInfo.profilePhotoAlignment === "right" ? "justify-end" : "justify-center"
+                )}>
+                  <img
+                    src={personalInfo.profilePhoto}
+                    alt={personalInfo.fullName || "Owner profile"}
+                    className={cn(
+                      "rounded-full object-cover border-2 border-white shadow",
+                      personalInfo.profilePhotoSize === "large" ? "h-32 w-32" :
+                      personalInfo.profilePhotoSize === "small" ? "h-16 w-16" : "h-24 w-24"
+                    )}
+                  />
+                </div>
+              )}
+              <div className={cn(
+                personalInfo.profilePhotoAlignment === "left" ? "text-left" :
+                personalInfo.profilePhotoAlignment === "right" ? "text-right" : "text-center"
+              )}>
+                <h1 className={cn("text-2xl font-bold", style.layout === "bold" ? "text-white" : "")}
+                  style={style.layout === "bold" ? undefined : { color: headingColor }}>
+                  {personalInfo.fullName || "Your Name"}
+                </h1>
+                <p className={cn("mt-1 text-xs", style.layout === "bold" ? "text-violet-100" : "")}
+                  style={style.layout === "bold" ? undefined : { color: bodyColor }}>
+                  {[personalInfo.email, personalInfo.phone, personalInfo.location].filter(Boolean).join(" | ")}
+                </p>
+                {(personalInfo.linkedin || personalInfo.portfolio || personalInfo.github || personalInfo.website) && (
+                  <p className={cn("text-xs mt-1", style.layout === "bold" ? "text-violet-100" : "")}
+                    style={{ color: accentColor }}>
+                    {[personalInfo.linkedin, personalInfo.portfolio, personalInfo.github, personalInfo.website]
+                      .filter(Boolean).join(" | ")}
+                  </p>
+                )}
+              </div>
+            </div>
+
+            <div className={cn(isSidebar && "grid grid-cols-[0.9fr_1.5fr] gap-6")}>
+              {isSidebar && <aside>{sidebarBlocks}</aside>}
+              <main className="resume-preview">
+                {personalInfo.summary && (
+                  <section className={`resume-section ${sectionClass}`}>
+                    <SectionTitle>Professional Summary</SectionTitle>
+                    <p className="text-current">{personalInfo.summary}</p>
+                  </section>
+                )}
+                {experience.length > 0 && (
+                  <section className={`resume-section ${sectionClass}`}>
+                    <SectionTitle>Experience</SectionTitle>
+                    {experience.map((exp) => (
+                      <div key={exp.id} className="mb-3">
+                        <div className="flex justify-between items-start gap-3">
+                          <div>
+                            <p className="font-semibold text-current">{exp.position}</p>
+                            <p className="text-current opacity-80">{exp.company}</p>
+                          </div>
+                          <p className="text-xs whitespace-nowrap text-current opacity-70">
+                            {exp.startDate} - {exp.current ? "Present" : exp.endDate}
+                          </p>
+                        </div>
+                        <ul className="mt-1 list-disc list-inside text-current space-y-0.5">
+                          {exp.bullets.filter(Boolean).map((bullet, index) => (
+                            <li key={index}>{bullet}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    ))}
+                  </section>
+                )}
+                {education.length > 0 && (
+                  <section className={`resume-section ${sectionClass}`}>
+                    <SectionTitle>Education</SectionTitle>
+                    {education.map((edu) => (
+                      <div key={edu.id} className="mb-2">
+                        <p className="font-semibold text-current">
+                          {edu.degree}{edu.field ? ` in ${edu.field}` : ""}
+                        </p>
+                        <p className="text-current opacity-80">
+                          {edu.institution} | {edu.startDate} - {edu.endDate}
+                        </p>
+                      </div>
+                    ))}
+                  </section>
+                )}
+                {!isSidebar && sidebarBlocks}
+                {projects.length > 0 && (
+                  <section className={`resume-section ${sectionClass}`}>
+                    <SectionTitle>Projects</SectionTitle>
+                    {projects.map((project) => (
+                      <div key={project.id} className="mb-2">
+                        <p className="font-semibold text-current">{project.name}</p>
+                        <p className="text-current">{project.description}</p>
+                        {project.technologies.length > 0 && (
+                          <p className="text-xs text-current opacity-70">{project.technologies.join(", ")}</p>
+                        )}
+                      </div>
+                    ))}
+                  </section>
+                )}
+                {awards.length > 0 && (
+                  <section className={`resume-section ${sectionClass}`}>
+                    <SectionTitle>Awards</SectionTitle>
+                    {awards.map((award) => (
+                      <div key={award.id} className="mb-2">
+                        <p className="font-semibold text-current">{award.title}</p>
+                        <p className="text-xs text-current opacity-80">
+                          {award.issuer} | {award.date}
+                        </p>
+                        {award.description && <p className="text-xs mt-1 text-current">{award.description}</p>}
+                      </div>
+                    ))}
+                  </section>
+                )}
+                {publications.length > 0 && (
+                  <section className={`resume-section ${sectionClass}`}>
+                    <SectionTitle>Publications</SectionTitle>
+                    {publications.map((publication) => (
+                      <div key={publication.id} className="mb-2">
+                        <p className="font-semibold text-current">{publication.title}</p>
+                        <p className="text-xs text-current opacity-80">
+                          {publication.publisher} | {publication.date}
+                        </p>
+                        {publication.description && (
+                          <p className="text-xs mt-1 text-current">{publication.description}</p>
+                        )}
+                      </div>
+                    ))}
+                  </section>
+                )}
+                {volunteerExperience.length > 0 && (
+                  <section className={`resume-section ${sectionClass}`}>
+                    <SectionTitle>Volunteer Experience</SectionTitle>
+                    {volunteerExperience.map((volunteer) => (
+                      <div key={volunteer.id} className="mb-2">
+                        <p className="font-semibold text-current">{volunteer.role}</p>
+                        <p className="text-xs text-current opacity-80">
+                          {volunteer.organization} | {volunteer.startDate} - {volunteer.current ? "Present" : volunteer.endDate}
+                        </p>
+                        {volunteer.description && (
+                          <p className="text-xs mt-1 text-current">{volunteer.description}</p>
+                        )}
+                      </div>
+                    ))}
+                  </section>
+                )}
+                {references.length > 0 && (
+                  <section className={`resume-section ${sectionClass}`}>
+                    <SectionTitle>References</SectionTitle>
+                    {references.map((reference) => (
+                      <div key={reference.id} className="mb-2">
+                        <p className="font-semibold text-current">{reference.name}</p>
+                        <p className="text-xs text-current opacity-80">
+                          {reference.position} at {reference.company}
+                        </p>
+                        <p className="text-xs text-current opacity-70">
+                          {[reference.email, reference.phone].filter(Boolean).join(" | ")}
+                        </p>
+                      </div>
+                    ))}
+                  </section>
+                )}
+                {interests.length > 0 && (
+                  <section className={`resume-section ${sectionClass}`}>
+                    <SectionTitle>Interests</SectionTitle>
+                    <p className="text-current">{formatList(interests)}</p>
+                  </section>
+                )}
+                {courses.length > 0 && (
+                  <section className={`resume-section ${sectionClass}`}>
+                    <SectionTitle>Courses</SectionTitle>
+                    {courses.map((course) => (
+                      <div key={course.id} className="mb-2">
+                        <p className="font-semibold text-current">{course.name}</p>
+                        <p className="text-xs text-current opacity-80">
+                          {course.provider} | {course.date}
+                        </p>
+                      </div>
+                    ))}
+                  </section>
+                )}
+                {memberships.length > 0 && (
+                  <section className={`resume-section ${sectionClass}`}>
+                    <SectionTitle>Professional Memberships</SectionTitle>
+                    {memberships.map((membership) => (
+                      <div key={membership.id} className="mb-2">
+                        <p className="font-semibold text-current">{membership.organization}</p>
+                        <p className="text-xs text-current opacity-80">
+                          {[membership.role, membership.startDate].filter(Boolean).join(" | ")}
+                          {membership.current ? " - Present" : membership.endDate ? ` - ${membership.endDate}` : ""}
+                        </p>
+                      </div>
+                    ))}
+                  </section>
+                )}
+                {customSections.length > 0 && (
+                  <section className={`resume-section ${sectionClass}`}>
+                    {customSections.map((section) => (
+                      <div key={section.title} className="mb-2">
+                        <SectionTitle>{section.title}</SectionTitle>
+                        <p className="text-current">{section.content}</p>
+                      </div>
+                    ))}
+                  </section>
+                )}
+              </main>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Single page mode (default preview without page breaks)
   return (
     <div
-      className={cn(
-        "p-8 shadow-lg rounded-lg text-sm leading-relaxed min-h-[800px]",
-        className
-      )}
-      style={{ backgroundColor, color: bodyColor, fontFamily }}
+      className={cn("shadow-lg rounded-lg text-sm leading-relaxed p-8", className)}
+      style={{ 
+        backgroundColor, 
+        color: bodyColor, 
+        fontFamily,
+        minHeight: "800px",
+      }}
     >
       <div className={cn("pb-4 mb-4 flex flex-col gap-3", style.header)}>
         {personalInfo.profilePhoto && (
-          <div
-            className={cn(
-              "flex",
-              personalInfo.profilePhotoAlignment === "left"
-                ? "justify-start"
-                : personalInfo.profilePhotoAlignment === "right"
-                  ? "justify-end"
-                  : "justify-center"
-            )}
-          >
+          <div className={cn(
+            "flex",
+            personalInfo.profilePhotoAlignment === "left" ? "justify-start" :
+            personalInfo.profilePhotoAlignment === "right" ? "justify-end" : "justify-center"
+          )}>
             <img
               src={personalInfo.profilePhoto}
               alt={personalInfo.fullName || "Owner profile"}
               className={cn(
                 "rounded-full object-cover border-2 border-white shadow",
-                personalInfo.profilePhotoSize === "large"
-                  ? "h-32 w-32"
-                  : personalInfo.profilePhotoSize === "small"
-                    ? "h-16 w-16"
-                    : "h-24 w-24"
+                personalInfo.profilePhotoSize === "large" ? "h-32 w-32" :
+                personalInfo.profilePhotoSize === "small" ? "h-16 w-16" : "h-24 w-24"
               )}
             />
           </div>
         )}
-        <div
-          className={cn(
-            personalInfo.profilePhotoAlignment === "left"
-              ? "text-left"
-              : personalInfo.profilePhotoAlignment === "right"
-                ? "text-right"
-                : "text-center"
-          )}
-        >
-          <h1
-            className={cn("text-2xl font-bold", style.layout === "bold" ? "text-white" : "")}
-            style={style.layout === "bold" ? undefined : { color: headingColor }}
-          >
+        <div className={cn(
+          personalInfo.profilePhotoAlignment === "left" ? "text-left" :
+          personalInfo.profilePhotoAlignment === "right" ? "text-right" : "text-center"
+        )}>
+          <h1 className={cn("text-2xl font-bold", style.layout === "bold" ? "text-white" : "")}
+            style={style.layout === "bold" ? undefined : { color: headingColor }}>
             {personalInfo.fullName || "Your Name"}
           </h1>
-          <p
-            className={cn("mt-1 text-xs", style.layout === "bold" ? "text-violet-100" : "")}
-            style={style.layout === "bold" ? undefined : { color: bodyColor }}
-          >
+          <p className={cn("mt-1 text-xs", style.layout === "bold" ? "text-violet-100" : "")}
+            style={style.layout === "bold" ? undefined : { color: bodyColor }}>
             {[personalInfo.email, personalInfo.phone, personalInfo.location].filter(Boolean).join(" | ")}
           </p>
           {(personalInfo.linkedin || personalInfo.portfolio || personalInfo.github || personalInfo.website) && (
-            <p
-              className={cn("text-xs mt-1", style.layout === "bold" ? "text-violet-100" : "")}
-              style={{ color: accentColor }}
-            >
+            <p className={cn("text-xs mt-1", style.layout === "bold" ? "text-violet-100" : "")}
+              style={{ color: accentColor }}>
               {[personalInfo.linkedin, personalInfo.portfolio, personalInfo.github, personalInfo.website]
-                .filter(Boolean)
-                .join(" | ")}
+                .filter(Boolean).join(" | ")}
             </p>
           )}
         </div>
@@ -351,17 +1012,15 @@ export function ResumePreview({ content, templateId = "modern-ats", theme, class
 
       <div className={cn(isSidebar && "grid grid-cols-[0.9fr_1.5fr] gap-6")}>
         {isSidebar && <aside>{sidebarBlocks}</aside>}
-
-        <main>
+        <main className="resume-preview">
           {personalInfo.summary && (
-            <section className={sectionClass}>
+            <section className={`resume-section ${sectionClass}`}>
               <SectionTitle>Professional Summary</SectionTitle>
               <p className="text-current">{personalInfo.summary}</p>
             </section>
           )}
-
           {experience.length > 0 && (
-            <section className={sectionClass}>
+            <section className={`resume-section ${sectionClass}`}>
               <SectionTitle>Experience</SectionTitle>
               {experience.map((exp) => (
                 <div key={exp.id} className="mb-3">
@@ -383,15 +1042,13 @@ export function ResumePreview({ content, templateId = "modern-ats", theme, class
               ))}
             </section>
           )}
-
           {education.length > 0 && (
-            <section className={sectionClass}>
+            <section className={`resume-section ${sectionClass}`}>
               <SectionTitle>Education</SectionTitle>
               {education.map((edu) => (
                 <div key={edu.id} className="mb-2">
                   <p className="font-semibold text-current">
-                    {edu.degree}
-                    {edu.field ? ` in ${edu.field}` : ""}
+                    {edu.degree}{edu.field ? ` in ${edu.field}` : ""}
                   </p>
                   <p className="text-current opacity-80">
                     {edu.institution} | {edu.startDate} - {edu.endDate}
@@ -400,11 +1057,9 @@ export function ResumePreview({ content, templateId = "modern-ats", theme, class
               ))}
             </section>
           )}
-
           {!isSidebar && sidebarBlocks}
-
           {projects.length > 0 && (
-            <section className={sectionClass}>
+            <section className={`resume-section ${sectionClass}`}>
               <SectionTitle>Projects</SectionTitle>
               {projects.map((project) => (
                 <div key={project.id} className="mb-2">
@@ -417,9 +1072,8 @@ export function ResumePreview({ content, templateId = "modern-ats", theme, class
               ))}
             </section>
           )}
-
           {awards.length > 0 && (
-            <section className={sectionClass}>
+            <section className={`resume-section ${sectionClass}`}>
               <SectionTitle>Awards</SectionTitle>
               {awards.map((award) => (
                 <div key={award.id} className="mb-2">
@@ -432,9 +1086,8 @@ export function ResumePreview({ content, templateId = "modern-ats", theme, class
               ))}
             </section>
           )}
-
           {publications.length > 0 && (
-            <section className={sectionClass}>
+            <section className={`resume-section ${sectionClass}`}>
               <SectionTitle>Publications</SectionTitle>
               {publications.map((publication) => (
                 <div key={publication.id} className="mb-2">
@@ -449,9 +1102,8 @@ export function ResumePreview({ content, templateId = "modern-ats", theme, class
               ))}
             </section>
           )}
-
           {volunteerExperience.length > 0 && (
-            <section className={sectionClass}>
+            <section className={`resume-section ${sectionClass}`}>
               <SectionTitle>Volunteer Experience</SectionTitle>
               {volunteerExperience.map((volunteer) => (
                 <div key={volunteer.id} className="mb-2">
@@ -466,9 +1118,8 @@ export function ResumePreview({ content, templateId = "modern-ats", theme, class
               ))}
             </section>
           )}
-
           {references.length > 0 && (
-            <section className={sectionClass}>
+            <section className={`resume-section ${sectionClass}`}>
               <SectionTitle>References</SectionTitle>
               {references.map((reference) => (
                 <div key={reference.id} className="mb-2">
@@ -483,16 +1134,14 @@ export function ResumePreview({ content, templateId = "modern-ats", theme, class
               ))}
             </section>
           )}
-
           {interests.length > 0 && (
-            <section className={sectionClass}>
+            <section className={`resume-section ${sectionClass}`}>
               <SectionTitle>Interests</SectionTitle>
               <p className="text-current">{formatList(interests)}</p>
             </section>
           )}
-
           {courses.length > 0 && (
-            <section className={sectionClass}>
+            <section className={`resume-section ${sectionClass}`}>
               <SectionTitle>Courses</SectionTitle>
               {courses.map((course) => (
                 <div key={course.id} className="mb-2">
@@ -504,9 +1153,8 @@ export function ResumePreview({ content, templateId = "modern-ats", theme, class
               ))}
             </section>
           )}
-
           {memberships.length > 0 && (
-            <section className={sectionClass}>
+            <section className={`resume-section ${sectionClass}`}>
               <SectionTitle>Professional Memberships</SectionTitle>
               {memberships.map((membership) => (
                 <div key={membership.id} className="mb-2">
@@ -519,9 +1167,8 @@ export function ResumePreview({ content, templateId = "modern-ats", theme, class
               ))}
             </section>
           )}
-
           {customSections.length > 0 && (
-            <section className={sectionClass}>
+            <section className={`resume-section ${sectionClass}`}>
               {customSections.map((section) => (
                 <div key={section.title} className="mb-2">
                   <SectionTitle>{section.title}</SectionTitle>

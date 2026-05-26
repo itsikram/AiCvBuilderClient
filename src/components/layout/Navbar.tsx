@@ -37,6 +37,9 @@ export function Navbar() {
         </Link>
 
         <nav className="hidden md:flex items-center gap-6">
+          <Link to="/about" className="text-sm hover:text-primary transition-colors">
+            About
+          </Link>
           <Link to="/pricing" className="text-sm hover:text-primary transition-colors">
             {t("nav.pricing")}
           </Link>
@@ -117,6 +120,9 @@ export function Navbar() {
 
       {open && (
         <div className="md:hidden border-t border-border p-4 flex flex-col gap-3">
+          <Link to="/about" onClick={() => setOpen(false)}>
+            About
+          </Link>
           <Link to="/pricing" onClick={() => setOpen(false)}>
             {t("nav.pricing")}
           </Link>
