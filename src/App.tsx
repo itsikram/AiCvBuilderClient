@@ -6,7 +6,7 @@ import { GoogleOAuthProvider } from "@react-oauth/google";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { AdminLayout } from "@/components/layout/AdminLayout";
-import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
+import { ProtectedRoute, PublicRoute } from "@/components/auth/ProtectedRoute";
 import { Toaster } from "@/components/ui/toast";
 import { ProgressBar, LoadingBar } from "@/components/ui/ProgressBar";
 import { PageContentProvider } from "@/context/PageContentContext";
@@ -34,6 +34,8 @@ import OverviewPage from "@/pages/admin/OverviewPage";
 import UsersPage from "@/pages/admin/UsersPage";
 import PageContentManagerPage from "@/pages/admin/PageContentManagerPage";
 import BkashPaymentsPage from "@/pages/admin/BkashPaymentsPage";
+import AdminSettingsPage from "@/pages/admin/SettingsPage";
+import AdminTemplatesPage from "@/pages/admin/TemplatesPage";
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { staleTime: 60_000, retry: 1 } },
@@ -74,11 +76,11 @@ function AppRoutes() {
         <Route path="blog" element={<BlogPage />} />
         <Route path="blog/:slug" element={<BlogPostPage />} />
         <Route path="contact" element={<ContactPage />} />
-        <Route path="login" element={<LoginPage />} />
-        <Route path="register" element={<RegisterPage />} />
-        <Route path="forgot-password" element={<ForgotPasswordPage />} />
-        <Route path="reset-password" element={<ResetPasswordPage />} />
-        <Route path="verify-email" element={<VerifyEmailPage />} />
+        <Route path="login" element={<PublicRoute><LoginPage /></PublicRoute>} />
+        <Route path="register" element={<PublicRoute><RegisterPage /></PublicRoute>} />
+        <Route path="forgot-password" element={<PublicRoute><ForgotPasswordPage /></PublicRoute>} />
+        <Route path="reset-password" element={<PublicRoute><ResetPasswordPage /></PublicRoute>} />
+        <Route path="verify-email" element={<PublicRoute><VerifyEmailPage /></PublicRoute>} />
       </Route>
 
       <Route path="r/:slug" element={<PublicResumePage />} />
@@ -114,6 +116,8 @@ function AppRoutes() {
         <Route path="users" element={<UsersPage />} />
         <Route path="bkash-payments" element={<BkashPaymentsPage />} />
         <Route path="content-manager" element={<PageContentManagerPage />} />
+        <Route path="settings" element={<AdminSettingsPage />} />
+        <Route path="templates" element={<AdminTemplatesPage />} />
       </Route>
 
       <Route path="*" element={<Navigate to="/" replace />} />

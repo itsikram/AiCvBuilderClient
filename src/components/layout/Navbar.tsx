@@ -46,12 +46,20 @@ export function Navbar() {
           <Link to="/contact" className="text-sm hover:text-primary transition-colors">
             {t("nav.contact")}
           </Link>
-          {isAuthenticated &&
-            dashboardLinks.map((item) => (
-              <Link key={item.to} to={item.to} className="text-sm hover:text-primary transition-colors">
-                {item.label}
-              </Link>
-            ))}
+          {isAuthenticated && (
+            <>
+              {dashboardLinks.map((item) => (
+                <Link key={item.to} to={item.to} className="text-sm hover:text-primary transition-colors">
+                  {item.label}
+                </Link>
+              ))}
+              {user?.role === "admin" && (
+                <Link to="/admin" className="text-sm text-amber-600 hover:text-amber-700 transition-colors font-medium">
+                  Admin
+                </Link>
+              )}
+            </>
+          )}
         </nav>
 
         <div className="hidden md:flex items-center gap-2">

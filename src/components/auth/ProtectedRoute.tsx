@@ -20,3 +20,21 @@ export function ProtectedRoute({ children, adminOnly }: Props) {
 
   return <>{children}</>;
 }
+
+// Component to redirect logged-in users away from auth pages
+interface PublicRouteProps {
+  children: React.ReactNode;
+}
+
+export function PublicRoute({ children }: PublicRouteProps) {
+  const { isAuthenticated } = useAuthStore();
+  const location = useLocation();
+
+  // If user is already logged in, redirect to dashboard or intended destination
+  if (isAuthenticated) {
+    const from = location.state?.from?.pathname || "/dashboard";
+    return <Navigate to={from} replace />;
+  }
+
+  return <>{children}</>;
+}
