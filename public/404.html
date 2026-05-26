@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ChakriCV - AI Resume Builder</title>
+    <script>
+      // Redirect all 404s to index.html for SPA routing
+      (function() {
+        var path = window.location.pathname;
+        var search = window.location.search;
+        var hash = window.location.hash;
+        // Redirect to root with the original path as the client-side route
+        window.location.href = '/' + path + search + hash;
+      })();
+    </script>
+  </head>
+  <body>
+    <noscript>
+      <p>Please enable JavaScript to use this application.</p>
+      <p>Redirecting to <a href="/">homepage</a>...</p>
+    </noscript>
+  </body>
+</html>
