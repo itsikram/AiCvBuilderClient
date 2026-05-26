@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Plus, Edit2, Save, X } from "lucide-react";
+import { Plus, Edit2, Save, X, Trash2, Settings, Copy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -13,13 +13,45 @@ import type { Template } from "@/types";
 interface ExtendedTemplate extends Template {
   isActive?: boolean;
   sortOrder?: number;
+  layout?: string;
 }
+
+const defaultThemeKeys = [
+  { key: "accentColor", label: "Accent Color", type: "color", default: "#2563eb" },
+  { key: "headingColor", label: "Heading Color", type: "color", default: "#111827" },
+  { key: "textColor", label: "Text Color", type: "color", default: "#111827" },
+  { key: "backgroundColor", label: "Background Color", type: "color", default: "#ffffff" },
+  { key: "fontFamily", label: "Font Family", type: "text", default: "Inter, ui-sans-serif, system-ui" },
+  { key: "nameFontSize", label: "Name Font Size (px)", type: "number", default: "24" },
+  { key: "headingFontSize", label: "Heading Font Size (px)", type: "number", default: "14" },
+  { key: "bodyFontSize", label: "Body Font Size (px)", type: "number", default: "11" },
+  { key: "sectionSpacing", label: "Section Spacing", type: "select", options: ["small", "medium", "large"], default: "medium" },
+  { key: "gradientStart", label: "Gradient Start Color", type: "color", default: "" },
+  { key: "gradientEnd", label: "Gradient End Color", type: "color", default: "" },
+  { key: "gradientDirection", label: "Gradient Direction", type: "select", options: ["to-right", "to-left", "to-bottom", "to-top", "diagonal"], default: "to-right" },
+];
+
+const layoutOptions = [
+  { value: "single-column", label: "Single Column" },
+  { value: "two-column", label: "Two Column" },
+  { value: "sidebar-left", label: "Sidebar Left" },
+  { value: "sidebar-right", label: "Sidebar Right" },
+];
+
+const categoryOptions = [
+  { value: "ats", label: "ATS" },
+  { value: "modern", label: "Modern" },
+  { value: "bangladeshi", label: "Bangladeshi" },
+  { value: "creative", label: "Creative" },
+];
 
 export default function AdminTemplatesPage() {
   const toast = useToast();
   const queryClient = useQueryClient();
   const [editingTemplate, setEditingTemplate] = useState<ExtendedTemplate | null>(null);
   const [editForm, setEditForm] = useState<Partial<ExtendedTemplate>>({});
+  const [showThemeEditor, setShowThemeEditor] = useState(false);
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
 
   const { data: templates, isLoading } = useQuery({
     queryKey: ["admin-templates"],
@@ -38,6 +70,7 @@ export default function AdminTemplatesPage() {
       queryClient.invalidateQueries({ queryKey: ["admin-templates"] });
       toast.add("Template created successfully!", "success");
       setEditingTemplate(null);
+      setEditForm({});
     },
     onError: (error: unknown) => {
       const msg = (error as { response?: { data?: { message?: string } } })?.response?.data?.message;
@@ -54,6 +87,8 @@ export default function AdminTemplatesPage() {
       queryClient.invalidateQueries({ queryKey: ["admin-templates"] });
       toast.add("Template updated successfully!", "success");
       setEditingTemplate(null);
+      setEditForm({});
+      setShowThemeEditor(false);
     },
     onError: (error: unknown) => {
       const msg = (error as { response?: { data?: { message?: string } } })?.response?.data?.message;
@@ -61,7 +96,32 @@ export default function AdminTemplatesPage() {
     },
   });
 
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      await api.delete(`/admin/templates/${id}`);
+      return id;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-templates"] });
+      toast.add("Template deleted successfully!", "success");
+      setDeleteConfirmId(null);
+    },
+    onError: (error: unknown) => {
+      const msg = (error as { response?: { data?: { message?: string } } })?.response?.data?.message;
+      toast.add(msg || "Failed to delete template", "error");
+    },
+  });
+
   const handleSave = () => {
+    if (!editForm.name?.trim()) {
+      toast.add("Template name is required", "error");
+      return;
+    }
+    if (!editForm.slug?.trim()) {
+      toast.add("Template slug is required", "error");
+      return;
+    }
+
     if (editingTemplate?._id) {
       updateMutation.mutate({ id: editingTemplate._id, updates: editForm });
     } else {
@@ -72,11 +132,13 @@ export default function AdminTemplatesPage() {
   const handleCancel = () => {
     setEditingTemplate(null);
     setEditForm({});
+    setShowThemeEditor(false);
   };
 
   const handleEdit = (template: ExtendedTemplate) => {
     setEditingTemplate(template);
     setEditForm(template);
+    setShowThemeEditor(false);
   };
 
   const handleNewTemplate = () => {
@@ -85,12 +147,57 @@ export default function AdminTemplatesPage() {
       name: "",
       slug: "",
       description: "",
-      category: "",
+      category: "ats",
       thumbnail: "",
       isPremium: false,
       isActive: true,
       sortOrder: templates?.length || 0,
+      layout: "single-column",
       defaultTheme: {},
+    });
+    setShowThemeEditor(false);
+  };
+
+  const handleOpenThemeEditor = (template: ExtendedTemplate) => {
+    setEditingTemplate(template);
+    setEditForm({
+      ...template,
+      defaultTheme: template.defaultTheme || {},
+    });
+    setShowThemeEditor(true);
+  };
+
+  const handleSaveTheme = () => {
+    if (editingTemplate?._id) {
+      updateMutation.mutate({
+        id: editingTemplate._id,
+        updates: { defaultTheme: editForm.defaultTheme },
+      });
+    }
+  };
+
+  const handleCopyTheme = () => {
+    if (editForm.defaultTheme) {
+      navigator.clipboard.writeText(JSON.stringify(editForm.defaultTheme, null, 2));
+      toast.add("Theme copied to clipboard!", "success");
+    }
+  };
+
+  const handlePasteTheme = async () => {
+    try {
+      const text = await navigator.clipboard.readText();
+      const parsed = JSON.parse(text);
+      setEditForm({ ...editForm, defaultTheme: parsed });
+      toast.add("Theme pasted successfully!", "success");
+    } catch {
+      toast.add("Invalid theme JSON in clipboard", "error");
+    }
+  };
+
+  const updateDefaultTheme = (key: string, value: string) => {
+    setEditForm({
+      ...editForm,
+      defaultTheme: { ...editForm.defaultTheme, [key]: value },
     });
   };
 
@@ -129,7 +236,8 @@ export default function AdminTemplatesPage() {
         </Button>
       </div>
 
-      {(editingTemplate || editForm.name) && (
+      {/* Edit/Create Form */}
+      {(editingTemplate || editForm.name) && !showThemeEditor && (
         <Card className="border-primary">
           <CardHeader>
             <CardTitle>{editingTemplate?._id ? "Edit Template" : "New Template"}</CardTitle>
@@ -137,7 +245,7 @@ export default function AdminTemplatesPage() {
           <CardContent className="space-y-4">
             <div className="grid gap-4 md:grid-cols-2">
               <div>
-                <label className="text-sm font-medium">Template Name</label>
+                <label className="text-sm font-medium">Template Name *</label>
                 <Input
                   value={editForm.name || ""}
                   onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
@@ -145,20 +253,36 @@ export default function AdminTemplatesPage() {
                 />
               </div>
               <div>
-                <label className="text-sm font-medium">Slug</label>
+                <label className="text-sm font-medium">Slug *</label>
                 <Input
                   value={editForm.slug || ""}
-                  onChange={(e) => setEditForm({ ...editForm, slug: e.target.value })}
+                  onChange={(e) => setEditForm({ ...editForm, slug: e.target.value.toLowerCase().replace(/\s+/g, "-") })}
                   placeholder="e.g., modern-professional"
                 />
               </div>
               <div>
                 <label className="text-sm font-medium">Category</label>
-                <Input
-                  value={editForm.category || ""}
+                <select
+                  className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
+                  value={editForm.category || "ats"}
                   onChange={(e) => setEditForm({ ...editForm, category: e.target.value })}
-                  placeholder="e.g., Professional"
-                />
+                >
+                  {categoryOptions.map((opt) => (
+                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="text-sm font-medium">Layout</label>
+                <select
+                  className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
+                  value={editForm.layout || "single-column"}
+                  onChange={(e) => setEditForm({ ...editForm, layout: e.target.value })}
+                >
+                  {layoutOptions.map((opt) => (
+                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                  ))}
+                </select>
               </div>
               <div className="md:col-span-2">
                 <label className="text-sm font-medium">Description</label>
@@ -177,10 +301,40 @@ export default function AdminTemplatesPage() {
                 />
               </div>
             </div>
+
+            <div className="flex gap-4 items-center">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={editForm.isPremium || false}
+                  onChange={(e) => setEditForm({ ...editForm, isPremium: e.target.checked })}
+                  className="rounded border-border"
+                />
+                <span className="text-sm font-medium">Premium Template</span>
+              </label>
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={editForm.isActive !== false}
+                  onChange={(e) => setEditForm({ ...editForm, isActive: e.target.checked })}
+                  className="rounded border-border"
+                />
+                <span className="text-sm font-medium">Active</span>
+              </label>
+            </div>
+
             <div className="flex gap-2">
               <Button variant="gradient" onClick={handleSave} disabled={createMutation.isPending || updateMutation.isPending}>
                 <Save className="h-4 w-4 mr-2" />
                 Save
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => editingTemplate?._id && setShowThemeEditor(true)}
+                disabled={!editingTemplate?._id}
+              >
+                <Settings className="h-4 w-4 mr-2" />
+                Theme Settings
               </Button>
               <Button variant="outline" onClick={handleCancel}>
                 <X className="h-4 w-4 mr-2" />
@@ -191,9 +345,86 @@ export default function AdminTemplatesPage() {
         </Card>
       )}
 
+      {/* Theme Editor */}
+      {showThemeEditor && editingTemplate && (
+        <Card className="border-primary">
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle>Theme Settings - {editingTemplate.name}</CardTitle>
+            <div className="flex gap-2">
+              <Button variant="outline" size="sm" onClick={handleCopyTheme}>
+                <Copy className="h-4 w-4 mr-2" />
+                Copy
+              </Button>
+              <Button variant="outline" size="sm" onClick={handlePasteTheme}>
+                <PasteIcon className="h-4 w-4 mr-2" />
+                Paste
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {defaultThemeKeys.map((field) => (
+                <div key={field.key}>
+                  <label className="text-sm font-medium">{field.label}</label>
+                  {field.type === "color" ? (
+                    <div className="flex items-center gap-2 mt-1">
+                      <input
+                        type="color"
+                        value={editForm.defaultTheme?.[field.key] || field.default}
+                        onChange={(e) => updateDefaultTheme(field.key, e.target.value)}
+                        className="h-10 w-12 rounded border border-border"
+                      />
+                      <Input
+                        value={editForm.defaultTheme?.[field.key] || field.default}
+                        onChange={(e) => updateDefaultTheme(field.key, e.target.value)}
+                        className="flex-1"
+                      />
+                    </div>
+                  ) : field.type === "select" ? (
+                    <select
+                      className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
+                      value={editForm.defaultTheme?.[field.key] || field.default}
+                      onChange={(e) => updateDefaultTheme(field.key, e.target.value)}
+                    >
+                      {field.options?.map((opt) => (
+                        <option key={opt} value={opt}>{opt}</option>
+                      ))}
+                    </select>
+                  ) : field.type === "number" ? (
+                    <Input
+                      type="number"
+                      value={editForm.defaultTheme?.[field.key] || field.default}
+                      onChange={(e) => updateDefaultTheme(field.key, e.target.value)}
+                      className="mt-1"
+                    />
+                  ) : (
+                    <Input
+                      value={editForm.defaultTheme?.[field.key] || field.default}
+                      onChange={(e) => updateDefaultTheme(field.key, e.target.value)}
+                      className="mt-1"
+                    />
+                  )}
+                </div>
+              ))}
+            </div>
+            <div className="flex gap-2">
+              <Button variant="gradient" onClick={handleSaveTheme} disabled={updateMutation.isPending}>
+                <Save className="h-4 w-4 mr-2" />
+                Save Theme
+              </Button>
+              <Button variant="outline" onClick={() => setShowThemeEditor(false)}>
+                <X className="h-4 w-4 mr-2" />
+                Close
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Templates Grid */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {templates?.map((template) => (
-          <Card key={template._id}>
+          <Card key={template._id} className={deleteConfirmId === template._id ? "border-red-500" : ""}>
             <CardContent className="pt-6">
               {template.thumbnail ? (
                 <img
@@ -209,7 +440,7 @@ export default function AdminTemplatesPage() {
               <div className="flex items-start justify-between mb-2">
                 <div>
                   <h3 className="font-semibold">{template.name}</h3>
-                  <p className="text-sm text-muted-foreground">{template.description}</p>
+                  <p className="text-sm text-muted-foreground line-clamp-2">{template.description}</p>
                   {template.category && (
                     <Badge variant="secondary" className="mt-1 text-xs">
                       {template.category}
@@ -221,17 +452,61 @@ export default function AdminTemplatesPage() {
                 )}
               </div>
               <div className="flex items-center justify-between mt-4">
-                <span className="text-xs text-muted-foreground">
-                  {template.locked ? "Locked" : "Available"}
-                </span>
+                <div className="flex gap-1">
+                  <Badge variant={template.isActive ? "outline" : "secondary"} className="text-xs">
+                    {template.isActive ? "Active" : "Inactive"}
+                  </Badge>
+                  {template.layout && (
+                    <Badge variant="outline" className="text-xs">
+                      {template.layout}
+                    </Badge>
+                  )}
+                </div>
+              </div>
+              <div className="flex gap-2 mt-4">
                 <Button
                   size="sm"
-                  variant="ghost"
+                  variant="outline"
+                  onClick={() => handleOpenThemeEditor(template)}
+                >
+                  <Settings className="h-4 w-4 mr-1" />
+                  Theme
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
                   onClick={() => handleEdit(template)}
                 >
                   <Edit2 className="h-4 w-4 mr-1" />
                   Edit
                 </Button>
+                {deleteConfirmId === template._id ? (
+                  <>
+                    <Button
+                      size="sm"
+                      variant="destructive"
+                      onClick={() => deleteMutation.mutate(template._id)}
+                    >
+                      Confirm
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => setDeleteConfirmId(null)}
+                    >
+                      Cancel
+                    </Button>
+                  </>
+                ) : (
+                  <Button
+                    size="sm"
+                    variant="destructive"
+                    onClick={() => setDeleteConfirmId(template._id)}
+                  >
+                    <Trash2 className="h-4 w-4 mr-1" />
+                    Delete
+                  </Button>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -244,5 +519,25 @@ export default function AdminTemplatesPage() {
         </div>
       )}
     </div>
+  );
+}
+
+function PasteIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+    >
+      <rect width="8" height="4" x="8" y="2" rx="1" ry="1" />
+      <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
+    </svg>
   );
 }

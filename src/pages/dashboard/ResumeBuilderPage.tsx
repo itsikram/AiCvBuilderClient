@@ -2,11 +2,12 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
-import { Save, Download, Sparkles, Share2, ChevronUp, ChevronDown, Plus, Trash2, Upload, FileText, Loader2 } from "lucide-react";
+import { Save, Download, Sparkles, Share2, ChevronUp, ChevronDown, Plus, Trash2, Upload, FileText, Loader2, Settings, Eye, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ResumePreview } from "@/components/resume/ResumePreview";
+import TemplateSettingsModal from "@/components/resume/TemplateSettingsModal";
 import { Skeleton } from "@/components/ui/skeleton";
 import api from "@/lib/api";
 import { useToast } from "@/components/ui/toast";
@@ -76,6 +77,8 @@ export default function ResumeBuilderPage() {
   const [tailorModal, setTailorModal] = useState(false);
   const [uploadModal, setUploadModal] = useState(false);
   const [templateModal, setTemplateModal] = useState(false);
+  const [templateSettingsModalOpen, setTemplateSettingsModalOpen] = useState(false);
+  const [previewModalOpen, setPreviewModalOpen] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState(templateFromUrl || "modern-ats");
   const [theme, setTheme] = useState<Record<string, string>>({});
   const [uploadTab, setUploadTab] = useState<UploadTab>("new");
@@ -447,6 +450,10 @@ export default function ResumeBuilderPage() {
             <Upload className="h-4 w-4" />
             Change Template
           </Button>
+          <Button variant="outline" onClick={() => setTemplateSettingsModalOpen(true)}>
+            <Settings className="h-4 w-4" />
+            Template Settings
+          </Button>
           <Button variant="outline" onClick={() => setUploadModal(true)}>
             <Upload className="h-4 w-4" />
             Upload Resume
@@ -498,18 +505,31 @@ export default function ResumeBuilderPage() {
                   <span className="rounded-md border border-border bg-secondary px-3 py-1 text-xs">Choose image</span>
                 </label>
                 {content.personalInfo.profilePhoto && (
-                  <div className="mt-3 flex justify-center">
-                    <img
-                      src={content.personalInfo.profilePhoto}
-                      alt="Owner preview"
-                      className={`rounded-full object-cover border ${
-                        content.personalInfo.profilePhotoSize === "large"
-                          ? "h-32 w-32"
-                          : content.personalInfo.profilePhotoSize === "small"
-                            ? "h-16 w-16"
-                            : "h-24 w-24"
-                      }`}
-                    />
+                  <div className="mt-3 flex flex-col items-center gap-3">
+                    <div className="relative">
+                      <img
+                        src={content.personalInfo.profilePhoto}
+                        alt="Owner preview"
+                        className={`rounded-full object-cover border ${
+                          content.personalInfo.profilePhotoSize === "large"
+                            ? "h-32 w-32"
+                            : content.personalInfo.profilePhotoSize === "small"
+                              ? "h-16 w-16"
+                              : "h-24 w-24"
+                        }`}
+                      />
+                      <button
+                        onClick={() => {
+                          setContent({
+                            ...content,
+                            personalInfo: { ...content.personalInfo, profilePhoto: "" },
+                          });
+                        }}
+                        className="absolute -top-2 -right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 shadow"
+                      >
+                        <Trash2 className="h-3 w-3" />
+                      </button>
+                    </div>
                   </div>
                 )}
                 <div className="mt-4 grid gap-3 sm:grid-cols-2">
@@ -812,20 +832,60 @@ export default function ResumeBuilderPage() {
           </Card>
 
           <Card>
-            <CardHeader>
+            <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle className="text-base">{t("resume.skills")}</CardTitle>
+              <Button size="sm" variant="outline" onClick={() => {
+                setContent({
+                  ...content,
+                  skills: [...content.skills, ""],
+                });
+              }}>
+                <Plus className="h-4 w-4" />
+              </Button>
             </CardHeader>
-            <CardContent>
-              <Input
-                placeholder="React, Node.js, MongoDB (comma separated)"
-                value={content.skills.join(", ")}
-                onChange={(e) =>
-                  setContent({
-                    ...content,
-                    skills: e.target.value.split(",").map((s) => s.trim()).filter(Boolean),
-                  })
-                }
-              />
+            <CardContent className="space-y-2">
+              {content.skills.map((skill, idx) => (
+                <div key={idx} className="flex gap-2">
+                  <Input
+                    placeholder={`Skill ${idx + 1}`}
+                    value={skill}
+                    onChange={(e) => {
+                      const newSkills = [...content.skills];
+                      newSkills[idx] = e.target.value;
+                      setContent({ ...content, skills: newSkills });
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        if (skill.trim()) {
+                          setContent({
+                            ...content,
+                            skills: [...content.skills, ""],
+                          });
+                        }
+                      } else if (e.key === "Backspace" && !skill && content.skills.length > 1) {
+                        setContent({
+                          ...content,
+                          skills: content.skills.filter((_, i) => i !== idx),
+                        });
+                      }
+                    }}
+                  />
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => {
+                      setContent({
+                        ...content,
+                        skills: content.skills.filter((_, i) => i !== idx),
+                      });
+                    }}
+                    disabled={content.skills.length <= 1}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              ))}
             </CardContent>
           </Card>
 
@@ -1190,7 +1250,8 @@ export default function ResumeBuilderPage() {
           </Card>
         </div>
 
-        <div className="lg:sticky lg:top-4">
+        {/* Desktop Preview - Hidden on mobile */}
+        <div className="hidden lg:block lg:sticky lg:top-4">
           <div className="flex items-center justify-between mb-2">
             <p className="text-sm font-medium">{t("resume.preview")}</p>
             <label className="flex items-center gap-2 text-xs text-muted-foreground cursor-pointer">
@@ -1392,6 +1453,48 @@ export default function ResumeBuilderPage() {
         </div>
       )}
 
+      {/* Mobile Preview Modal */}
+      {previewModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 lg:hidden">
+          <div className="relative w-full max-w-3xl max-h-[90vh] overflow-y-auto bg-white rounded-lg shadow-2xl">
+            <div className="sticky top-0 z-10 flex items-center justify-between p-4 bg-white border-b">
+              <h2 className="text-lg font-semibold">{t("resume.preview")}</h2>
+              <div className="flex items-center gap-2">
+                <label className="flex items-center gap-2 text-xs text-muted-foreground cursor-pointer">
+                  <input
+                    type="checkbox"
+                    className="rounded border-border"
+                    onChange={(e) => setShowPageBreaks(e.target.checked)}
+                    checked={showPageBreaks}
+                  />
+                  <span>Show page breaks</span>
+                </label>
+                <button
+                  onClick={() => setPreviewModalOpen(false)}
+                  className="p-2 rounded-full hover:bg-gray-100"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+            </div>
+            <div className="p-4">
+              <ResumePreview content={content} templateId={selectedTemplate} theme={theme} className="w-full" showPageBreaks={showPageBreaks} />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Mobile Sticky Preview Button */}
+      <div className="lg:hidden fixed bottom-6 right-6 z-40">
+        <button
+          onClick={() => setPreviewModalOpen(true)}
+          className="flex items-center gap-2 px-4 py-3 bg-gradient-to-r from-blue-600 to-violet-600 text-white rounded-full shadow-lg hover:shadow-xl transition-shadow"
+        >
+          <Eye className="h-5 w-5" />
+          <span className="font-medium">Preview</span>
+        </button>
+      </div>
+
       {templateModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
           <Card className="w-full max-w-4xl max-h-[80vh] overflow-y-auto">
@@ -1485,6 +1588,30 @@ export default function ResumeBuilderPage() {
           </Card>
         </div>
       )}
+
+      {/* Template Settings Modal - For real-time customization */}
+      <TemplateSettingsModal
+        isOpen={templateSettingsModalOpen}
+        onClose={() => setTemplateSettingsModalOpen(false)}
+        currentTheme={theme}
+        currentTemplate={selectedTemplate}
+        templates={templates}
+        onThemeChange={setTheme}
+        onTemplateChange={setSelectedTemplate}
+        onSave={async () => {
+          if (!id || isNew) return;
+          try {
+            await api.patch(`/resumes/${id}`, { 
+              templateId: selectedTemplate, 
+              theme: theme 
+            });
+            toast.add("Template settings saved!", "success");
+            queryClient.invalidateQueries({ queryKey: ["resume", id] });
+          } catch {
+            toast.add("Failed to save template settings", "error");
+          }
+        }}
+      />
     </div>
   );
 }

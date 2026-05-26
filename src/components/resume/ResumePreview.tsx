@@ -557,7 +557,7 @@ export function ResumePreview({ content, templateId = "modern-ats", theme, class
         minHeight: "800px",
       }}
     >
-      <div className={cn("pb-4 mb-4 flex flex-col gap-3", style.header)}>
+            <div className={cn("pb-4 mb-4 flex flex-col gap-3", style.header, personalInfo.profilePhoto && "has-profile-photo")}>
         {personalInfo.profilePhoto && (
           <div className={cn(
             "flex",

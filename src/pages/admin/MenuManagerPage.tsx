@@ -34,19 +34,6 @@ interface FooterLink {
   href: string;
 }
 
-interface HeaderFooterData {
-  navLinks: NavLink[];
-  footerLinks: FooterLink[];
-  socialLinks: SocialLink[];
-  copyrightText: string;
-  footerDescription: string;
-  contactEmail: string;
-  paymentMethods: string;
-  headerLogo: string;
-  footerLogo: string;
-  siteIcon: string;
-}
-
 interface PageContent {
   _id: string;
   pageId: "home" | "about" | "contact" | "pricing";

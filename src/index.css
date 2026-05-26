@@ -53,6 +53,11 @@ body {
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
+/* Resume preview styles - margin for sections when profile photo exists */
+.has-profile-photo .resume-section:first-of-type {
+  margin-top: 1.5rem;
+}
+
 /* Print styles for resume preview - prevent sections from splitting across pages */
 @media print {
   .resume-section {
@@ -63,5 +68,13 @@ body {
   .resume-preview main section {
     break-inside: avoid;
     page-break-inside: avoid;
+  }
+}
+
+/* Hide welcome texts and headers on mobile for resume builder */
+@media (max-width: 768px) {
+  .resume-builder-welcome,
+  .resume-builder-header-text {
+    display: none !important;
   }
 }

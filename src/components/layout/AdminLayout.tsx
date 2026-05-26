@@ -1,5 +1,5 @@
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
-import { Menu, X, Shield, FileText, Users, LayoutDashboard, LogOut, Sparkles, Edit3, CreditCard, Settings, DollarSign, Link as LinkIcon } from "lucide-react";
+import { Menu, X, Shield, FileText, Users, LayoutDashboard, LogOut, Sparkles, Edit3, CreditCard, Settings, DollarSign, Link as LinkIcon, Palette } from "lucide-react";
 import { useState } from "react";
 import { useAuthStore } from "@/store/authStore";
 import { Button } from "@/components/ui/button";
@@ -12,6 +12,7 @@ const adminNavItems = [
   { to: "/admin/users", label: "Users", icon: Users },
   { to: "/admin/bkash-payments", label: "BKash Payments", icon: CreditCard },
   { to: "/admin/plans", label: "Subscription Plans", icon: DollarSign },
+  { to: "/admin/templates", label: "Templates", icon: Palette },
   { to: "/admin/content-manager", label: "Page Content", icon: Edit3 },
   { to: "/admin/menu-manager", label: "Menu Manager", icon: LinkIcon },
   { to: "/admin#content", label: "Blog Manager", icon: FileText },
@@ -75,17 +76,18 @@ export function AdminLayout() {
           </Button>
         </div>
 
-        <div className="p-4">
-          <div className="rounded-2xl border border-emerald-400/30 bg-emerald-500/10 p-3">
-            <div className="flex items-center gap-2">
-              <Shield className="h-4 w-4 text-emerald-300" />
-              <span className="text-sm font-medium text-emerald-100">Privileged access</span>
+        <div className="flex flex-col h-full">
+          <div className="p-4">
+            <div className="rounded-2xl border border-emerald-400/30 bg-emerald-500/10 p-3">
+              <div className="flex items-center gap-2">
+                <Shield className="h-4 w-4 text-emerald-300" />
+                <span className="text-sm font-medium text-emerald-100">Privileged access</span>
+              </div>
+              <p className="mt-2 text-sm text-slate-200">Manage content, users, and platform growth from one secure workspace.</p>
             </div>
-            <p className="mt-2 text-sm text-slate-200">Manage content, users, and platform growth from one secure workspace.</p>
           </div>
-        </div>
 
-        <nav className="space-y-1 px-3">
+          <nav className="flex-1 space-y-1 px-3 overflow-y-auto">
           {adminNavItems.map((item) => (
             <Link
               key={item.to}
@@ -105,25 +107,28 @@ export function AdminLayout() {
               {item.label}
             </Link>
           ))}
-        </nav>
+          </nav>
 
-        <div className="absolute inset-x-4 bottom-4 rounded-2xl border border-white/10 bg-white/5 p-4">
+          <div className="shrink-0 p-4">
+            <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
           <p className="text-sm font-semibold text-white">{user?.name}</p>
           <div className="mt-2 flex items-center gap-2">
             <Badge variant="premium">Admin</Badge>
             <Badge variant="secondary">Secure</Badge>
           </div>
-          <Button
-            variant="ghost"
-            className="mt-4 w-full justify-start text-white hover:bg-white/10"
-            onClick={() => {
-              logout();
-              navigate("/");
-            }}
-          >
-            <LogOut className="h-4 w-4 mr-2" />
-            Logout
-          </Button>
+              <Button
+                variant="ghost"
+                className="w-full justify-start text-white hover:bg-white/10"
+                onClick={() => {
+                  logout();
+                  navigate("/");
+                }}
+              >
+                <LogOut className="h-4 w-4 mr-2" />
+                Logout
+              </Button>
+            </div>
+          </div>
         </div>
       </aside>
 
