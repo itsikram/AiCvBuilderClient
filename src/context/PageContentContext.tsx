@@ -29,6 +29,10 @@ export interface HeaderFooterContent {
   socialLinks: Array<{ platform: string; url: string }>;
   copyrightText: string;
   paymentMethods: string;
+  // Logo and branding
+  headerLogo: string;
+  footerLogo: string;
+  siteIcon: string;
 }
 
 interface PageContentContextType {
@@ -115,6 +119,16 @@ export function PageContentProvider({ children }: { children: ReactNode }) {
       // Copyright text from home page
       if (typeof homeContent.content.copyrightText === "string") {
         headerFooterContent.copyrightText = homeContent.content.copyrightText;
+      }
+      // Logo and branding from home page
+      if (typeof homeContent.content.headerLogo === "string") {
+        headerFooterContent.headerLogo = homeContent.content.headerLogo;
+      }
+      if (typeof homeContent.content.footerLogo === "string") {
+        headerFooterContent.footerLogo = homeContent.content.footerLogo;
+      }
+      if (typeof homeContent.content.siteIcon === "string") {
+        headerFooterContent.siteIcon = homeContent.content.siteIcon;
       }
     }
 

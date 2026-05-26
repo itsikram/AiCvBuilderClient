@@ -56,7 +56,11 @@ export function Footer() {
       <div className="container mx-auto px-4 py-12">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div>
-            <span className="text-xl font-bold gradient-text">ChakriCV</span>
+            {headerFooterContent.footerLogo ? (
+              <img src={headerFooterContent.footerLogo} alt="ChakriCV" className="h-8 object-contain" />
+            ) : (
+              <span className="text-xl font-bold gradient-text">ChakriCV</span>
+            )}
             <p className="mt-2 text-sm text-muted">
               {siteDescription}
             </p>

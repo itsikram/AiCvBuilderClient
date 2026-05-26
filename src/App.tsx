@@ -11,6 +11,7 @@ import { AuthProvider } from "@/components/auth/AuthProvider";
 import { Toaster } from "@/components/ui/toast";
 import { ProgressBar, LoadingBar } from "@/components/ui/ProgressBar";
 import { PageContentProvider } from "@/context/PageContentContext";
+import { SiteConfig } from "@/components/SiteConfig";
 
 import LandingPage from "@/pages/LandingPage";
 import PricingPage from "@/pages/PricingPage";
@@ -36,6 +37,7 @@ import OverviewPage from "@/pages/admin/OverviewPage";
 import UsersPage from "@/pages/admin/UsersPage";
 import PlansPage from "@/pages/admin/PlansPage";
 import PageContentManagerPage from "@/pages/admin/PageContentManagerPage";
+import MenuManagerPage from "@/pages/admin/MenuManagerPage";
 import BkashPaymentsPage from "@/pages/admin/BkashPaymentsPage";
 import AdminSettingsPage from "@/pages/admin/SettingsPage";
 import AdminTemplatesPage from "@/pages/admin/TemplatesPage";
@@ -121,6 +123,7 @@ function AppRoutes() {
         <Route path="bkash-payments" element={<BkashPaymentsPage />} />
         <Route path="plans" element={<PlansPage />} />
         <Route path="content-manager" element={<PageContentManagerPage />} />
+        <Route path="menu-manager" element={<MenuManagerPage />} />
         <Route path="settings" element={<AdminSettingsPage />} />
         <Route path="templates" element={<AdminTemplatesPage />} />
       </Route>
@@ -138,6 +141,7 @@ export default function App() {
         <PageContentProvider>
           <BrowserRouter>
             <AppRoutes />
+            <SiteConfig />
             <Toaster />
           </BrowserRouter>
         </PageContentProvider>

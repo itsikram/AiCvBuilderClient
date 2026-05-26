@@ -5,6 +5,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useAuthStore } from "@/store/authStore";
 import { useThemeStore } from "@/store/themeStore";
+import { usePageContent } from "@/context/PageContentContext";
 
 const dashboardLinks = [
   { to: "/dashboard", label: "Dashboard" },
@@ -20,7 +21,15 @@ export function Navbar() {
   const [open, setOpen] = useState(false);
   const { isAuthenticated, logout, user } = useAuthStore();
   const { resolvedTheme, setTheme } = useThemeStore();
+  const { headerFooterContent } = usePageContent();
   const navigate = useNavigate();
+
+  // Use dynamic nav links if available, otherwise use defaults
+  const navLinks = headerFooterContent.navLinks || [
+    { label: "Pricing", href: "/pricing" },
+    { label: "Templates", href: "/templates" },
+    { label: "Blog", href: "/blog" },
+  ];
 
   const toggleLang = () => i18n.changeLanguage(i18n.language === "en" ? "bn" : "en");
   const toggleTheme = () => setTheme(resolvedTheme === "dark" ? "light" : "dark");
@@ -30,25 +39,28 @@ export function Navbar() {
     <header className="sticky top-0 z-40 w-full border-b border-border glass">
       <div className="container mx-auto flex h-[70px] items-center justify-between px-4">
         <Link to="/" className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-blue-600 to-violet-600 text-white font-bold text-sm">
-            CV
-          </div>
-          <span className="text-xl font-bold gradient-text">ChakriCV</span>
+          {headerFooterContent.headerLogo ? (
+            <img src={headerFooterContent.headerLogo} alt="ChakriCV" className="h-8 object-contain" />
+          ) : (
+            <>
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-blue-600 to-violet-600 text-white font-bold text-sm">
+                CV
+              </div>
+              <span className="text-xl font-bold gradient-text">ChakriCV</span>
+            </>
+          )}
         </Link>
 
         <nav className="hidden md:flex items-center gap-6">
-          <Link to="/about" className="text-sm hover:text-primary transition-colors">
-            About
-          </Link>
-          <Link to="/pricing" className="text-sm hover:text-primary transition-colors">
-            {t("nav.pricing")}
-          </Link>
-          <Link to="/blog" className="text-sm hover:text-primary transition-colors">
-            {t("nav.blog")}
-          </Link>
-          <Link to="/contact" className="text-sm hover:text-primary transition-colors">
-            {t("nav.contact")}
-          </Link>
+          {navLinks.map((link, index) => (
+            <Link
+              key={index}
+              to={link.href}
+              className="text-sm hover:text-primary transition-colors"
+            >
+              {link.label}
+            </Link>
+          ))}
           {isAuthenticated && (
             <>
               {dashboardLinks.map((item) => (
@@ -118,20 +130,18 @@ export function Navbar() {
         </Button>
       </div>
 
-      {open && (
-        <div className="md:hidden border-t border-border p-4 flex flex-col gap-3">
-          <Link to="/about" onClick={() => setOpen(false)}>
-            About
-          </Link>
-          <Link to="/pricing" onClick={() => setOpen(false)}>
-            {t("nav.pricing")}
-          </Link>
-          <Link to="/blog" onClick={() => setOpen(false)}>
-            {t("nav.blog")}
-          </Link>
-          <Link to="/contact" onClick={() => setOpen(false)}>
-            {t("nav.contact")}
-          </Link>
+        {open && (
+          <div className="md:hidden border-t border-border p-4 flex flex-col gap-3">
+            {navLinks.map((link, index) => (
+              <Link
+                key={index}
+                to={link.href}
+                onClick={() => setOpen(false)}
+                className="text-sm hover:text-primary transition-colors"
+              >
+                {link.label}
+              </Link>
+            ))}
           {isAuthenticated && (
             <>
               {dashboardLinks.map((item) => (
