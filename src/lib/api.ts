@@ -6,6 +6,13 @@ const api = axios.create({
   headers: { "Content-Type": "application/json" },
 });
 
+// Callback to be set by the auth redirect handler
+let onAuthFailed: (() => void) | null = null;
+
+export const setAuthRedirectCallback = (callback: (() => void) | null) => {
+  onAuthFailed = callback;
+};
+
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem("accessToken");
   if (token) {
@@ -31,7 +38,22 @@ api.interceptors.response.use(
         return api(original);
       } catch {
         localStorage.removeItem("accessToken");
-        window.location.href = "/login";
+        // Clear the auth state in Zustand store
+        try {
+          const { useAuthStore } = await import("@/store/authStore");
+          useAuthStore.getState().logout();
+        } catch {
+          // If import fails, just clear localStorage
+        }
+        // Use the callback to navigate via React Router instead of window.location
+        if (onAuthFailed) {
+          onAuthFailed();
+        } else {
+          // Fallback: only redirect if not already on login page
+          if (window.location.pathname !== "/login") {
+            window.location.href = "/login";
+          }
+        }
       }
     }
     return Promise.reject(error);

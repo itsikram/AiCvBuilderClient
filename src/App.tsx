@@ -7,6 +7,7 @@ import { MainLayout } from "@/components/layout/MainLayout";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { AdminLayout } from "@/components/layout/AdminLayout";
 import { ProtectedRoute, PublicRoute } from "@/components/auth/ProtectedRoute";
+import { AuthProvider } from "@/components/auth/AuthProvider";
 import { Toaster } from "@/components/ui/toast";
 import { ProgressBar, LoadingBar } from "@/components/ui/ProgressBar";
 import { PageContentProvider } from "@/context/PageContentContext";
@@ -32,6 +33,7 @@ import BillingPage from "@/pages/dashboard/BillingPage";
 import SettingsPage from "@/pages/dashboard/SettingsPage";
 import OverviewPage from "@/pages/admin/OverviewPage";
 import UsersPage from "@/pages/admin/UsersPage";
+import PlansPage from "@/pages/admin/PlansPage";
 import PageContentManagerPage from "@/pages/admin/PageContentManagerPage";
 import BkashPaymentsPage from "@/pages/admin/BkashPaymentsPage";
 import AdminSettingsPage from "@/pages/admin/SettingsPage";
@@ -65,7 +67,7 @@ function RouteLoader() {
 
 function AppRoutes() {
   return (
-    <>
+    <AuthProvider>
       <ProgressBar />
       <RouteLoader />
       <Routes>
@@ -115,6 +117,7 @@ function AppRoutes() {
         <Route index element={<OverviewPage />} />
         <Route path="users" element={<UsersPage />} />
         <Route path="bkash-payments" element={<BkashPaymentsPage />} />
+        <Route path="plans" element={<PlansPage />} />
         <Route path="content-manager" element={<PageContentManagerPage />} />
         <Route path="settings" element={<AdminSettingsPage />} />
         <Route path="templates" element={<AdminTemplatesPage />} />
@@ -122,7 +125,7 @@ function AppRoutes() {
 
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
-    </>
+    </AuthProvider>
   );
 }
 

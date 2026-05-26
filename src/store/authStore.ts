@@ -51,6 +51,23 @@ export const useAuthStore = create<AuthState>()(
         set({ user: null, accessToken: null, isAuthenticated: false });
       },
     }),
-    { name: "chakricv-auth", partialize: (s) => ({ user: s.user, isAuthenticated: s.isAuthenticated }) }
+    {
+      name: "chakricv-auth",
+      partialize: (s) => ({ user: s.user, isAuthenticated: s.isAuthenticated }),
+      // On rehydrate, validate the state
+      onRehydrateStorage: () => (state) => {
+        if (state) {
+          // If there's no user but isAuthenticated is true, reset it
+          if (!state.user && state.isAuthenticated) {
+            state.isAuthenticated = false;
+          }
+          // If there's a user but no accessToken in localStorage, reset auth
+          if (state.user && !localStorage.getItem("accessToken")) {
+            state.isAuthenticated = false;
+            state.user = null;
+          }
+        }
+      },
+    }
   )
 );

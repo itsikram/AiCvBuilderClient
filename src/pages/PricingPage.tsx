@@ -10,6 +10,7 @@ import { SEO } from "@/components/seo/SEO";
 import api from "@/lib/api";
 import { cn, formatCurrency } from "@/lib/utils";
 import { useAuthStore } from "@/store/authStore";
+import { usePageContent } from "@/context/PageContentContext";
 import type { SubscriptionPlan } from "@/types";
 
 export default function PricingPage() {
@@ -17,6 +18,14 @@ export default function PricingPage() {
   const [yearly, setYearly] = useState(false);
   const { user } = useAuthStore();
   const currentPlan = user?.subscription?.plan ?? null;
+  const { getPageContent } = usePageContent();
+  const pricingContent = getPageContent("pricing");
+
+  // Dynamic content from admin
+  const pricingTitle = (pricingContent?.title as string) || t("pricing.title");
+  const pricingSubtitle = (pricingContent?.subtitle as string) || t("pricing.subtitle");
+  const pricingBadge = (pricingContent?.badge as string) || "Flexible pricing for every stage";
+  const pricingFooter = (pricingContent?.footer as string) || "Pay with bKash, Nagad, SSLCommerz, or any Bangladeshi card";
 
   const { data: plans } = useQuery({
     queryKey: ["plans"],
@@ -28,16 +37,16 @@ export default function PricingPage() {
 
   return (
     <>
-      <SEO title="Pricing" description="Affordable resume builder plans for Bangladesh" />
+      <SEO title={pricingTitle} description={pricingSubtitle} />
       <section className="py-20">
         <div className="container mx-auto px-4">
           <div className="mx-auto max-w-3xl text-center mb-12">
             <Badge variant="premium" className="mb-4 inline-flex items-center gap-2">
               <Star className="h-3.5 w-3.5" />
-              Flexible pricing for every stage
+              {pricingBadge}
             </Badge>
-            <h1 className="text-4xl font-bold mb-4">{t("pricing.title")}</h1>
-            <p className="text-muted text-lg">{t("pricing.subtitle")}</p>
+            <h1 className="text-4xl font-bold mb-4">{pricingTitle}</h1>
+            <p className="text-muted text-lg">{pricingSubtitle}</p>
             <div className="flex items-center justify-center gap-3 mt-6">
               <span className={!yearly ? "font-medium" : "text-muted"}>{t("pricing.monthly")}</span>
               <button
@@ -116,7 +125,7 @@ export default function PricingPage() {
           </div>
 
           <p className="text-center text-sm text-muted mt-12">
-            Pay with bKash, Nagad, SSLCommerz, or any Bangladeshi card
+            {pricingFooter}
           </p>
         </div>
       </section>

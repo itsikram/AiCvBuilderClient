@@ -1,5 +1,5 @@
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
-import { Menu, X, Shield, FileText, Users, LayoutDashboard, LogOut, Sparkles, Edit3, CreditCard, Settings } from "lucide-react";
+import { Menu, X, Shield, FileText, Users, LayoutDashboard, LogOut, Sparkles, Edit3, CreditCard, Settings, DollarSign } from "lucide-react";
 import { useState } from "react";
 import { useAuthStore } from "@/store/authStore";
 import { Button } from "@/components/ui/button";
@@ -11,6 +11,7 @@ const adminNavItems = [
   { to: "/admin", label: "Overview", icon: LayoutDashboard },
   { to: "/admin/users", label: "Users", icon: Users },
   { to: "/admin/bkash-payments", label: "BKash Payments", icon: CreditCard },
+  { to: "/admin/plans", label: "Subscription Plans", icon: DollarSign },
   { to: "/admin/content-manager", label: "Page Content", icon: Edit3 },
   { to: "/admin#content", label: "Blog Manager", icon: FileText },
   { to: "/admin/settings", label: "Settings", icon: Settings },

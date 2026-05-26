@@ -3,9 +3,11 @@ import { createContext, useContext } from "react";
 import { useQuery } from "@tanstack/react-query";
 import api from "@/lib/api";
 
+export type PageId = "home" | "about" | "contact" | "pricing" | "templates" | "blog";
+
 export interface PageContentData {
   _id: string;
-  pageId: "home" | "about" | "contact";
+  pageId: PageId;
   language: "en" | "bn";
   content: Record<string, unknown>;
   isActive: boolean;
@@ -25,7 +27,7 @@ export interface HeaderFooterContent {
 interface PageContentContextType {
   pageContents: PageContentData[];
   isLoading: boolean;
-  getPageContent: (pageId: "home" | "about" | "contact") => Record<string, unknown> | undefined;
+  getPageContent: (pageId: PageId) => Record<string, unknown> | undefined;
   headerFooterContent: Partial<HeaderFooterContent>;
   refreshContent: () => void;
 }
@@ -49,7 +51,7 @@ export function PageContentProvider({ children }: { children: ReactNode }) {
     return (saved === "bn" ? "bn" : "en") as "en" | "bn";
   };
 
-  const getPageContent = (pageId: "home" | "about" | "contact"): Record<string, unknown> | undefined => {
+  const getPageContent = (pageId: PageId): Record<string, unknown> | undefined => {
     if (!pageContents) return undefined;
     const currentLang = getCurrentLanguage();
     const content = pageContents.find(

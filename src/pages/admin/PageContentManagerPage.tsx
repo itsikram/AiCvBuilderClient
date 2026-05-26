@@ -7,11 +7,11 @@ import { Skeleton, SkeletonCard } from "@/components/ui/skeleton";
 import { useToast } from "@/components/ui/toast";
 import api from "@/lib/api";
 import { usePageContent } from "@/context/PageContentContext";
-import { Save, RefreshCw, Globe, Home, FileText, Mail, Plus, Edit3 } from "lucide-react";
+import { Save, RefreshCw, Globe, Home, FileText, Mail, DollarSign, Plus, Edit3 } from "lucide-react";
 
 interface PageContent {
   _id: string;
-  pageId: "home" | "about" | "contact";
+  pageId: "home" | "about" | "contact" | "pricing";
   language: "en" | "bn";
   content: Record<string, unknown>;
   isActive: boolean;
@@ -61,6 +61,16 @@ const pageConfig = {
       { key: "contactDescription", label: "Contact Description", type: "textarea" },
     ],
   },
+  pricing: {
+    name: "Pricing Page",
+    icon: DollarSign,
+    fields: [
+      { key: "title", label: "Page Title", type: "text" },
+      { key: "subtitle", label: "Subtitle/Description", type: "textarea" },
+      { key: "badge", label: "Badge Text", type: "text" },
+      { key: "footer", label: "Footer Text", type: "textarea" },
+    ],
+  },
 };
 
 // Default values for each page when no content exists
@@ -99,13 +109,19 @@ const defaultPageValues = {
     supportHours: "Sunday - Friday: 9:00 AM - 6:00 PM",
     contactDescription: "Have questions? We're here to help you with anything related to our services.",
   },
+  pricing: {
+    title: "Simple, Transparent Pricing",
+    subtitle: "Choose the plan that works best for you. All plans include access to our AI-powered resume builder.",
+    badge: "Flexible pricing for every stage",
+    footer: "Pay with bKash, Nagad, SSLCommerz, or any Bangladeshi card",
+  },
 };
 
 export default function PageContentManagerPage() {
   const toast = useToast();
   const queryClient = useQueryClient();
   const { refreshContent } = usePageContent();
-  const [selectedPage, setSelectedPage] = useState<"home" | "about" | "contact">("home");
+  const [selectedPage, setSelectedPage] = useState<"home" | "about" | "contact" | "pricing">("home");
   const [selectedLanguage, setSelectedLanguage] = useState<"en" | "bn">("en");
   const [editingContent, setEditingContent] = useState<Record<string, string>>({});
   const [isEditing, setIsEditing] = useState(false);
@@ -191,14 +207,14 @@ export default function PageContentManagerPage() {
     setEditingContent((prev) => ({ ...prev, [key]: value }));
   };
 
-  const pages: Array<"home" | "about" | "contact"> = ["home", "about", "contact"];
+  const pages: Array<"home" | "about" | "contact" | "pricing"> = ["home", "about", "contact", "pricing"];
 
   return (
     <div className="space-y-8">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold">Page Content Manager</h1>
-          <p className="text-muted">Manage content for home, about, and contact pages</p>
+          <p className="text-muted">Manage content for home, about, contact, and pricing pages</p>
         </div>
       </div>
 
