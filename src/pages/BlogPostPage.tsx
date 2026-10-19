@@ -29,7 +29,7 @@ export default function BlogPostPage() {
         url={`/blog/${post.slug}`}
         publishedTime={post.publishedAt}
         modifiedTime={post.publishedAt}
-        image={post.coverImage || "/og-image.svg"}
+        image={post.coverImage || "/og-image.jpg"}
       />
       <article className="py-16">
         <div className="container mx-auto px-4 max-w-3xl">

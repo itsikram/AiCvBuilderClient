@@ -58,15 +58,15 @@ const DEFAULT_FOOTER_LINKS: FooterLink[] = [
 ];
 
 const DEFAULT_SOCIAL_LINKS: SocialLink[] = [
-  { platform: "Facebook", url: "https://facebook.com/chakricv" },
-  { platform: "LinkedIn", url: "https://linkedin.com/company/chakricv" },
-  { platform: "Twitter", url: "https://twitter.com/chakricv" },
+  { platform: "Facebook", url: "https://facebook.com/aicvbuilderbd" },
+  { platform: "LinkedIn", url: "https://linkedin.com/company/aicvbuilderbd" },
+  { platform: "Twitter", url: "https://twitter.com/aicvbuilderbd" },
 ];
 
 const DEFAULT_FOOTER_DESCRIPTION =
   "AI-powered resume builder for Bangladesh. Create professional, ATS-optimized resumes in minutes.";
 
-const DEFAULT_COPYRIGHT = `© ${new Date().getFullYear()} ChakriCV. All rights reserved.`;
+const DEFAULT_COPYRIGHT = `© ${new Date().getFullYear()} AI CV Builder BD. All rights reserved.`;
 
 const DEFAULT_HEADER_LOGO = "";
 const DEFAULT_FOOTER_LOGO = "";
@@ -659,7 +659,7 @@ export default function MenuManagerPage() {
                 <Input
                   value={copyrightText}
                   onChange={(e) => setCopyrightText(e.target.value)}
-                  placeholder="© 2024 ChakriCV. All rights reserved."
+                  placeholder="© 2024 AI CV Builder BD. All rights reserved."
                 />
               </div>
               <div className="space-y-2">
@@ -668,7 +668,7 @@ export default function MenuManagerPage() {
                   type="email"
                   value={contactEmail}
                   onChange={(e) => setContactEmail(e.target.value)}
-                  placeholder="support@chakricv.com"
+                  placeholder="support@aicvbuilderbd.online"
                 />
               </div>
               <div className="space-y-2">

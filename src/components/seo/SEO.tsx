@@ -15,11 +15,11 @@ interface SEOProps {
   structuredData?: unknown;
 }
 
-const DEFAULT_TITLE = "ChakriCV - AI Resume Builder for Bangladesh";
+const DEFAULT_TITLE = "AI CV Builder BD - AI Resume Builder for Bangladesh";
 const DEFAULT_DESCRIPTION =
-  "Create ATS-optimized resumes, cover letters, and job-ready AI content with ChakriCV in Bangladesh.";
-const DEFAULT_IMAGE = "/og-image.svg";
-const SITE_URL = import.meta.env.VITE_APP_URL || "https://chakricv.com";
+  "Create ATS-optimized resumes, cover letters, and job-ready AI content with AI CV Builder BD in Bangladesh.";
+const DEFAULT_IMAGE = "/og-image.jpg";
+import { SITE_URL } from "@/lib/site";
 
 function normalizeUrl(value?: string) {
   if (!value) {
@@ -57,7 +57,7 @@ function getDefaultStructuredData({
   return {
     "@context": "https://schema.org",
     "@type": "SoftwareApplication",
-    name: "ChakriCV",
+    name: "AI CV Builder BD",
     applicationCategory: "BusinessApplication",
     operatingSystem: "Web",
     description,
@@ -65,7 +65,7 @@ function getDefaultStructuredData({
     image,
     publisher: {
       "@type": "Organization",
-      name: "ChakriCV",
+      name: "AI CV Builder BD",
       url: SITE_URL,
       logo: image,
     },
@@ -86,15 +86,15 @@ export function SEO({
   robots,
   noIndex = false,
   locale = "en_BD",
-  author = "ChakriCV",
+  author = "AI CV Builder BD",
   publishedTime,
   modifiedTime,
   structuredData,
 }: SEOProps) {
   const fullTitle = title
-    ? title.includes("ChakriCV")
+    ? title.includes("AI CV Builder BD")
       ? title
-      : `${title} | ChakriCV`
+      : `${title} | AI CV Builder BD`
     : DEFAULT_TITLE;
   const pageUrl = normalizeUrl(url);
   const ogImage = normalizeImage(image);
@@ -112,7 +112,7 @@ export function SEO({
       <meta property="og:image" content={ogImage} />
       <meta property="og:url" content={pageUrl} />
       <meta property="og:type" content={type} />
-      <meta property="og:site_name" content="ChakriCV" />
+      <meta property="og:site_name" content="AI CV Builder BD" />
       <meta property="og:locale" content={locale} />
       <meta name="twitter:card" content="summary_large_image" />
       <meta name="twitter:title" content={fullTitle} />

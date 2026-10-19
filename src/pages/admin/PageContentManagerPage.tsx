@@ -84,13 +84,13 @@ const pageConfig = {
 const defaultPageValues = {
   home: {
     heroTitle: "Build Your Perfect Resume with AI",
-    heroSubtitle: "Create ATS-optimized resumes in minutes with our AI-powered resume builder. Get hired faster with ChakriCV.",
+    heroSubtitle: "Create ATS-optimized resumes in minutes with our AI-powered resume builder. Get hired faster with AI CV Builder BD.",
     heroCTA: "Get Started Free",
     heroCTASecondary: "View Templates",
     heroBadge: "Powered by Gemini 2.5 Flash AI",
     featuresTitle: "Everything you need to get hired",
     trustSectionTitle: "Trusted by job seekers across Bangladesh",
-    trustSectionDescription: "Students, freelancers, and professionals use ChakriCV to create ATS-optimized resumes and land jobs at top companies.",
+    trustSectionDescription: "Students, freelancers, and professionals use AI CV Builder BD to create ATS-optimized resumes and land jobs at top companies.",
     statsSection: JSON.stringify([
       { value: "10K+", label: "Resumes Created" },
       { value: "95%", label: "ATS Pass Rate" },
@@ -99,7 +99,7 @@ const defaultPageValues = {
     ], null, 2),
     // Header/Footer defaults
     footerDescription: "AI-powered resume builder for Bangladesh. Create professional, ATS-optimized resumes in minutes.",
-    copyrightText: `© ${new Date().getFullYear()} ChakriCV. All rights reserved.`,
+    copyrightText: `© ${new Date().getFullYear()} AI CV Builder BD. All rights reserved.`,
     navLinks: JSON.stringify([
       { label: "Pricing", href: "/pricing" },
       { label: "Templates", href: "/templates" },
@@ -112,24 +112,24 @@ const defaultPageValues = {
       { label: "Templates", href: "/templates" }
     ], null, 2),
     socialLinks: JSON.stringify([
-      { platform: "Facebook", url: "https://facebook.com/chakricv" },
-      { platform: "LinkedIn", url: "https://linkedin.com/company/chakricv" },
-      { platform: "Twitter", url: "https://twitter.com/chakricv" }
+      { platform: "Facebook", url: "https://facebook.com/aicvbuilderbd" },
+      { platform: "LinkedIn", url: "https://linkedin.com/company/aicvbuilderbd" },
+      { platform: "Twitter", url: "https://twitter.com/aicvbuilderbd" }
     ], null, 2),
   },
   about: {
-    title: "About ChakriCV",
+    title: "About AI CV Builder BD",
     subtitle: "We're on a mission to help job seekers in Bangladesh land their dream jobs.",
     missionTitle: "Our Mission",
     missionDescription: "To empower every job seeker with professional tools to create ATS-optimized resumes and stand out in the competitive job market.",
     visionTitle: "Our Vision",
     visionDescription: "To be the leading resume builder platform in Bangladesh, helping millions of job seekers achieve their career goals.",
     teamTitle: "Why Choose Us",
-    storyContent: "ChakriCV was built by professionals who understand the challenges of job hunting in Bangladesh. We combine AI technology with local market knowledge to deliver the best resume building experience.",
+    storyContent: "AI CV Builder BD was built by professionals who understand the challenges of job hunting in Bangladesh. We combine AI technology with local market knowledge to deliver the best resume building experience.",
   },
   contact: {
     title: "Contact Us",
-    email: "support@chakricv.com",
+    email: "support@aicvbuilderbd.online",
     phone: "+880 1XXX-XXXXXX",
     officeAddress: "Dhaka, Bangladesh",
     supportHours: "Sunday - Friday: 9:00 AM - 6:00 PM",

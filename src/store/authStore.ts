@@ -52,7 +52,7 @@ export const useAuthStore = create<AuthState>()(
       },
     }),
     {
-      name: "chakricv-auth",
+      name: "aicvbuilderbd-auth",
       partialize: (s) => ({ user: s.user, isAuthenticated: s.isAuthenticated }),
       // On rehydrate, validate the state
       onRehydrateStorage: () => (state) => {

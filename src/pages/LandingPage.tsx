@@ -40,7 +40,7 @@ export default function LandingPage() {
   const featuresTitle = (homeContent?.featuresTitle as string) || "Everything you need to get hired";
   const trustSectionTitle = (homeContent?.trustSectionTitle as string) || "Trusted by job seekers across Bangladesh";
   const trustSectionDescription = (homeContent?.trustSectionDescription as string) || 
-    "Students, freelancers, and professionals use ChakriCV to create ATS-optimized resumes and land jobs at top companies.";
+    "Students, freelancers, and professionals use AI CV Builder BD to create ATS-optimized resumes and land jobs at top companies.";
 
   // Parse stats from content or use defaults
   let stats = [

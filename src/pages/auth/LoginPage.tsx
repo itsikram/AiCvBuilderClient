@@ -50,12 +50,12 @@ export default function LoginPage() {
 
   return (
     <>
-      <SEO title="Log in to ChakriCV" description="Access your ChakriCV account to build resumes, check ATS scores, and generate cover letters." noIndex />
+      <SEO title="Log in to AI CV Builder BD" description="Access your AI CV Builder BD account to build resumes, check ATS scores, and generate cover letters." noIndex />
       <div className="min-h-[80vh] flex items-center justify-center px-4 py-12">
         <Card className="w-full max-w-md">
           <CardHeader className="text-center">
             <CardTitle className="text-2xl">{t("auth.login")}</CardTitle>
-            <CardDescription>ChakriCV — AI Resume Builder</CardDescription>
+            <CardDescription>AI CV Builder BD — AI Resume Builder</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <form onSubmit={handleSubmit} className="space-y-4">

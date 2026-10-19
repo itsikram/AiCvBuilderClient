@@ -15,7 +15,7 @@ export function SiteConfig() {
 
     // Update site title if siteTitle is provided
     if (headerFooterContent.siteTitle) {
-      document.title = `${headerFooterContent.siteTitle} - ChakriCV`;
+      document.title = `${headerFooterContent.siteTitle} - AI CV Builder BD`;
     }
   }, [headerFooterContent.siteIcon, headerFooterContent.siteTitle]);
 

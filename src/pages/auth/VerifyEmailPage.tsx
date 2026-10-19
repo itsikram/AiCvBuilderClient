@@ -23,7 +23,7 @@ export default function VerifyEmailPage() {
 
   return (
     <>
-      <SEO title="Verify your ChakriCV email" noIndex />
+      <SEO title="Verify your AI CV Builder BD email" noIndex />
       <div className="min-h-[80vh] flex items-center justify-center px-4">
         <Card className="w-full max-w-md text-center">
           <CardContent className="pt-8 pb-8">

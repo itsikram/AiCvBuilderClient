@@ -8,14 +8,14 @@ export default function AboutPage() {
   const aboutContent = getPageContent("about");
 
   // Get dynamic content with fallbacks
-  const title = (aboutContent?.title as string) || "About ChakriCV";
+  const title = (aboutContent?.title as string) || "About AI CV Builder BD";
   const subtitle = (aboutContent?.subtitle as string) || "We're on a mission to help job seekers in Bangladesh land their dream jobs.";
   const missionTitle = (aboutContent?.missionTitle as string) || "Our Mission";
   const missionDescription = (aboutContent?.missionDescription as string) || "To empower every job seeker with professional tools to create ATS-optimized resumes and stand out in the competitive job market.";
   const visionTitle = (aboutContent?.visionTitle as string) || "Our Vision";
   const visionDescription = (aboutContent?.visionDescription as string) || "To be the leading resume builder platform in Bangladesh, helping millions of job seekers achieve their career goals.";
   const teamTitle = (aboutContent?.teamTitle as string) || "Why Choose Us";
-  const storyContent = (aboutContent?.storyContent as string) || "ChakriCV was built by professionals who understand the challenges of job hunting in Bangladesh. We combine AI technology with local market knowledge to deliver the best resume building experience.";
+  const storyContent = (aboutContent?.storyContent as string) || "AI CV Builder BD was built by professionals who understand the challenges of job hunting in Bangladesh. We combine AI technology with local market knowledge to deliver the best resume building experience.";
 
   const features = [
     {
@@ -160,7 +160,7 @@ export default function AboutPage() {
             Ready to Build Your Professional Resume?
           </h2>
           <p className="text-lg opacity-90 mb-8 max-w-2xl mx-auto">
-            Join thousands of job seekers who have already transformed their careers with ChakriCV.
+            Join thousands of job seekers who have already transformed their careers with AI CV Builder BD.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <a 

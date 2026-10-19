@@ -40,13 +40,13 @@ export function Navbar() {
       <div className="container mx-auto flex h-[70px] items-center justify-between px-4">
         <Link to="/" className="flex items-center gap-2">
           {headerFooterContent.headerLogo ? (
-            <img src={headerFooterContent.headerLogo} alt="ChakriCV" className="h-8 object-contain" />
+            <img src={headerFooterContent.headerLogo} alt="AI CV Builder BD" className="h-8 object-contain" />
           ) : (
             <>
               <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-blue-600 to-violet-600 text-white font-bold text-sm">
                 CV
               </div>
-              <span className="text-xl font-bold gradient-text">ChakriCV</span>
+              <span className="text-xl font-bold gradient-text">AI CV Builder BD</span>
             </>
           )}
         </Link>

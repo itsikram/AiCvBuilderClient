@@ -27,7 +27,7 @@ export default function ResetPasswordPage() {
 
   return (
     <>
-      <SEO title="Reset your ChakriCV password" noIndex />
+      <SEO title="Reset your AI CV Builder BD password" noIndex />
       <div className="min-h-[80vh] flex items-center justify-center px-4">
         <Card className="w-full max-w-md">
           <CardHeader>

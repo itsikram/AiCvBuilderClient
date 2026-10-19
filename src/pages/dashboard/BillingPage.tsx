@@ -127,7 +127,7 @@ export default function BillingPage() {
             </label>
 
             <Input
-              placeholder="Coupon code (e.g. CHAKRI20)"
+              placeholder="Coupon code (e.g. AICVBD20)"
               value={couponCode}
               onChange={(e) => setCouponCode(e.target.value)}
             />

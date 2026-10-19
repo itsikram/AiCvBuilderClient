@@ -24,7 +24,7 @@ export const useThemeStore = create<ThemeState>()(
       },
     }),
     {
-      name: "chakricv-theme",
+      name: "aicvbuilderbd-theme",
       onRehydrateStorage: () => (state) => {
         if (state) {
           const resolved =

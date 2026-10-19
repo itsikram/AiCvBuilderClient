@@ -58,8 +58,8 @@ export default function RegisterPage() {
   return (
     <>
       <SEO
-        title="Create your ChakriCV account"
-        description="Sign up for ChakriCV and build AI-powered resumes, cover letters, and ATS-ready documents in minutes."
+        title="Create your AI CV Builder BD account"
+        description="Sign up for AI CV Builder BD and build AI-powered resumes, cover letters, and ATS-ready documents in minutes."
         noIndex
       />
       <div className="min-h-[80vh] flex items-center justify-center px-4 py-12">

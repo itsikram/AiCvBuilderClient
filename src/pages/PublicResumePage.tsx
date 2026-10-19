@@ -20,15 +20,15 @@ export default function PublicResumePage() {
   if (isLoading) return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
   if (error || !data) return <div className="min-h-screen flex items-center justify-center">Resume not found</div>;
 
-  const description = data.content.personalInfo.summary || `${data.title} — a public resume created with ChakriCV.`;
+  const description = data.content.personalInfo.summary || `${data.title} — a public resume created with AI CV Builder BD.`;
 
   return (
     <>
-      <SEO title={data.title} description={description} url={`/r/${slug}`} image="/og-image.svg" />
+      <SEO title={data.title} description={description} url={`/r/${slug}`} image="/og-image.jpg" />
       <div className="min-h-screen bg-secondary/30 py-8 px-4">
         <div className="max-w-[800px] mx-auto">
           <p className="text-center text-sm text-muted mb-4">
-            {data.title} — Powered by <span className="font-semibold gradient-text">ChakriCV</span>
+            {data.title} — Powered by <span className="font-semibold gradient-text">AI CV Builder BD</span>
           </p>
           <ResumePreview content={data.content} templateId={data.templateId} theme={data.theme} />
         </div>

@@ -15,7 +15,7 @@ export default function ContactPage() {
 
   // Get dynamic content with fallbacks
   const title = (contactContent?.title as string) || "Contact Us";
-  const email = (contactContent?.email as string) || "support@chakricv.com";
+  const email = (contactContent?.email as string) || "support@aicvbuilderbd.online";
   const phone = (contactContent?.phone as string) || "+880 1XXX-XXXXXX";
   const officeAddress = (contactContent?.officeAddress as string) || "Dhaka, Bangladesh";
   const supportHours = (contactContent?.supportHours as string) || "Sunday - Friday: 9:00 AM - 6:00 PM";

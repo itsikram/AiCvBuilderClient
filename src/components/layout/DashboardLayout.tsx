@@ -42,7 +42,7 @@ export function DashboardLayout() {
 
   return (
     <>
-      <SEO title="ChakriCV dashboard" description="Manage your resumes, templates, ATS checks, and billing from your private ChakriCV dashboard." noIndex />
+      <SEO title="AI CV Builder BD dashboard" description="Manage your resumes, templates, ATS checks, and billing from your private AI CV Builder BD dashboard." noIndex />
       <div className="flex min-h-screen bg-[radial-gradient(circle_at_top_left,_rgba(59,130,246,0.12),_transparent_20%),radial-gradient(circle_at_top_right,_rgba(147,51,234,0.14),_transparent_20%)]">
         <aside
           className={cn(
@@ -52,7 +52,7 @@ export function DashboardLayout() {
         >
         <div className="flex h-[81px] items-center justify-between border-b border-border px-4">
           <Link to="/" className="font-bold gradient-text text-[30px]">
-            ChakriCV
+            AI CV Builder BD
           </Link>
           <Button variant="ghost" size="icon" className="lg:hidden" onClick={() => setSidebarOpen(false)}>
             <X className="h-4 w-4" />

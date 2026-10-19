@@ -58,7 +58,7 @@ export function AdminLayout() {
 
   return (
     <>
-      <SEO title="ChakriCV admin" description="Administrative dashboard for platform content, user management, and site operations." noIndex />
+      <SEO title="AI CV Builder BD admin" description="Administrative dashboard for platform content, user management, and site operations." noIndex />
       <div className="flex min-h-screen bg-[radial-gradient(circle_at_top_left,_rgba(59,130,246,0.15),_transparent_25%),radial-gradient(circle_at_top_right,_rgba(124,58,237,0.18),_transparent_20%)]">
         <aside
           className={cn(
@@ -68,7 +68,7 @@ export function AdminLayout() {
         >
         <div className="flex h-[81px] items-center justify-between border-b border-white/10 px-4">
           <Link to="/">
-            <p className="text-xs  gradient-text uppercase text-[30px] tracking-[0.3em] text-slate-300">ChakriCV</p>
+            <p className="text-xs  gradient-text uppercase text-[30px] tracking-[0.3em] text-slate-300">AI CV Builder BD</p>
             <p className="text-sm font-semibold text-white">Admin Control Center</p>
           </Link>
           <Button variant="ghost" size="icon" className="text-white hover:bg-white/10 lg:hidden" onClick={() => setSidebarOpen(false)}>

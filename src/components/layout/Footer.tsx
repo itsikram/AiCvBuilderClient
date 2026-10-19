@@ -25,8 +25,8 @@ export function Footer() {
 
   // Get dynamic content with fallbacks
   const siteDescription = headerFooterContent.footerDescription || headerFooterContent.siteDescription || "AI-powered resume builder for Bangladesh.";
-  const contactEmail = headerFooterContent.contactEmail || "support@chakricv.com";
-  const copyrightText = headerFooterContent.copyrightText || `© ${new Date().getFullYear()} ChakriCV. All rights reserved.`;
+  const contactEmail = headerFooterContent.contactEmail || "support@aicvbuilderbd.online";
+  const copyrightText = headerFooterContent.copyrightText || `© ${new Date().getFullYear()} AI CV Builder BD. All rights reserved.`;
   const paymentMethods = headerFooterContent.paymentMethods || "bKash, Nagad, SSLCommerz";
   
   // Use dynamic footer links if available, otherwise use defaults
@@ -57,9 +57,9 @@ export function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div>
             {headerFooterContent.footerLogo ? (
-              <img src={headerFooterContent.footerLogo} alt="ChakriCV" className="h-8 object-contain" />
+              <img src={headerFooterContent.footerLogo} alt="AI CV Builder BD" className="h-8 object-contain" />
             ) : (
-              <span className="text-xl font-bold gradient-text">ChakriCV</span>
+              <span className="text-xl font-bold gradient-text">AI CV Builder BD</span>
             )}
             <p className="mt-2 text-sm text-muted">
               {siteDescription}
