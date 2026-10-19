@@ -1,24 +1,45 @@
 import { useParams, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import { ArrowLeft } from "lucide-react";
 import { SEO } from "@/components/seo/SEO";
+import { Skeleton } from "@/components/ui/skeleton";
 import api from "@/lib/api";
+import { articleLd, breadcrumbLd } from "@/lib/jsonld";
+import { useLang } from "@/lib/useLang";
 import type { BlogPost } from "@/types";
+import NotFoundPage from "./NotFoundPage";
 
 export default function BlogPostPage() {
   const { slug } = useParams<{ slug: string }>();
+  const { t } = useTranslation();
+  const { lang, lp } = useLang();
 
-  const { data: post, isLoading } = useQuery({
+  const { data: post, isLoading, isError } = useQuery({
     queryKey: ["blog", slug],
     queryFn: async () => {
       const { data } = await api.get(`/blogs/${slug}`);
       return data.data as BlogPost;
     },
     enabled: !!slug,
+    retry: false,
   });
 
-  if (isLoading) return <div className="container py-16">Loading...</div>;
-  if (!post) return <div className="container py-16">Post not found</div>;
+  if (isLoading) {
+    return (
+      <div className="container mx-auto max-w-3xl space-y-4 px-4 py-14">
+        <Skeleton className="h-10 w-3/4" />
+        <Skeleton className="h-64 w-full rounded-2xl" />
+        <Skeleton className="h-4 w-full" />
+        <Skeleton className="h-4 w-5/6" />
+      </div>
+    );
+  }
+  if (isError || !post) return <NotFoundPage />;
+
+  const path = lp(`/blog/${post.slug}`);
+  const published = post.publishedAt || post.createdAt;
+  const modified = post.updatedAt || published;
 
   return (
     <>
@@ -26,34 +47,45 @@ export default function BlogPostPage() {
         title={post.metaTitle || post.title}
         description={post.metaDescription || post.excerpt}
         type="article"
-        url={`/blog/${post.slug}`}
-        publishedTime={post.publishedAt}
-        modifiedTime={post.publishedAt}
-        image={post.coverImage || "/og-image.jpg"}
+        alternates={false}
+        canonicalPath={post.language === "bn" ? `/bn/blog/${post.slug}` : `/blog/${post.slug}`}
+        publishedTime={published}
+        modifiedTime={modified}
+        image={post.coverImage}
+        jsonLd={[
+          articleLd({
+            headline: post.title,
+            description: post.metaDescription || post.excerpt,
+            path,
+            lang,
+            datePublished: published ?? "",
+            dateModified: modified ?? "",
+            image: post.coverImage,
+          }),
+          breadcrumbLd([
+            { name: t("nav.home"), path: lp("/") },
+            { name: t("nav.guides"), path: lp("/blog") },
+            { name: post.title, path },
+          ]),
+        ]}
       />
-      <article className="py-16">
-        <div className="container mx-auto px-4 max-w-3xl">
-          <Link to="/blog" className="flex items-center gap-2 text-sm text-muted hover:text-primary mb-6">
-            <ArrowLeft className="h-4 w-4" />
-            Back to Blog
+      <article className="py-10 md:py-14">
+        <div className="container mx-auto max-w-3xl px-4">
+          <Link to={lp("/blog")} className="mb-6 flex items-center gap-2 text-sm text-muted hover:text-primary">
+            <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+            {t("nav.guides")}
           </Link>
-          {post.coverImage ? (
-            <img
-              src={post.coverImage}
-              alt={post.title}
-              className="mb-8 h-64 w-full rounded-2xl object-cover"
-            />
-          ) : (
-            <div className="mb-8 flex h-64 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-100 to-violet-100 text-4xl font-bold text-primary/30 dark:from-blue-900/30 dark:to-violet-900/30">
-              {post.title[0]}
-            </div>
+          <h1 className="mb-4 text-3xl font-bold md:text-4xl">{post.title}</h1>
+          {published && (
+            <time dateTime={published} className="text-sm text-muted">
+              {new Date(published).toLocaleDateString(lang === "bn" ? "bn-BD" : "en-GB", { dateStyle: "long" })}
+            </time>
           )}
-          <h1 className="text-3xl md:text-4xl font-bold mb-4">{post.title}</h1>
-          <p className="text-muted mb-8">{post.excerpt}</p>
-          <div
-            className="prose prose-slate dark:prose-invert max-w-none"
-            dangerouslySetInnerHTML={{ __html: post.content || "" }}
-          />
+          {post.coverImage && (
+            <img src={post.coverImage} alt="" className="mt-6 aspect-[16/9] w-full rounded-2xl object-cover" width="1200" height="675" />
+          )}
+          <p className="mt-6 text-lg text-muted">{post.excerpt}</p>
+          <div className="blog-content mt-8" dangerouslySetInnerHTML={{ __html: post.content || "" }} />
         </div>
       </article>
     </>

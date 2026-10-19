@@ -1,7 +1,9 @@
 import type { ReactNode } from "react";
 import { createContext, useContext } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import api from "@/lib/api";
+import { normalizeLanguage } from "@/lib/language";
 
 export type PageId = "home" | "about" | "contact" | "pricing" | "templates" | "blog";
 
@@ -56,11 +58,8 @@ export function PageContentProvider({ children }: { children: ReactNode }) {
     refetchOnWindowFocus: false,
   });
 
-  // Get current language from localStorage or default to 'en'
-  const getCurrentLanguage = (): "en" | "bn" => {
-    const saved = localStorage.getItem("i18nextLng");
-    return (saved === "bn" ? "bn" : "en") as "en" | "bn";
-  };
+  const { i18n } = useTranslation();
+  const getCurrentLanguage = (): "en" | "bn" => normalizeLanguage(i18n.language);
 
   const getPageContent = (pageId: PageId): Record<string, unknown> | undefined => {
     if (!pageContents) return undefined;

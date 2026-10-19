@@ -6,12 +6,24 @@
     "contact": "Contact",
     "login": "Login",
     "register": "Get Started Free",
-    "dashboard": "Dashboard"
+    "dashboard": "Dashboard",
+    "main": "Main navigation",
+    "templates": "Templates",
+    "cvFormat": "CV Format",
+    "guides": "CV Guides",
+    "about": "About",
+    "admin": "Admin",
+    "logout": "Log out",
+    "switchLanguage": "বাংলায় দেখুন (switch to Bangla)",
+    "darkMode": "Switch to dark mode",
+    "lightMode": "Switch to light mode",
+    "openMenu": "Open menu",
+    "closeMenu": "Close menu"
   },
   "hero": {
     "title": "Build Your Dream Career with AI",
     "subtitle": "Create ATS-optimized resumes, cover letters, and land jobs in Bangladesh & globally",
-    "cta": "Create Resume Free",
+    "cta": "Create my CV free",
     "ctaSecondary": "View Templates"
   },
   "features": {
@@ -38,7 +50,14 @@
     "perMonth": "/month",
     "perYear": "/year",
     "getStarted": "Get Started",
-    "upgrade": "Upgrade Now"
+    "upgrade": "Upgrade Now",
+    "seoTitle": "Pricing – Free CV Maker with Premium Upgrade",
+    "seoDescription": "Make and download your CV free. Premium unlocks more templates, more AI help and watermark-free PDFs. Pay with bKash, Nagad or card.",
+    "badge": "Start free, upgrade only if you need more",
+    "footer": "Pay with bKash, Nagad, SSLCommerz or any Bangladeshi card",
+    "yearlyToggle": "Show yearly prices",
+    "save": "Save 17%",
+    "currentPlan": "Current plan"
   },
   "auth": {
     "login": "Welcome back",
@@ -74,13 +93,209 @@
     "summary": "Professional Summary"
   },
   "common": {
-    "loading": "Loading...",
+    "loading": "Loading…",
     "save": "Save",
     "cancel": "Cancel",
     "delete": "Delete",
     "edit": "Edit",
     "back": "Back",
     "error": "Something went wrong",
-    "success": "Success!"
+    "success": "Success!",
+    "breadcrumb": "Breadcrumb",
+    "sending": "Sending…"
+  },
+  "landing": {
+    "seoTitle": "Free CV Maker BD – AI CV Builder for Bangladesh Jobs",
+    "seoDescription": "Make an ATS-friendly CV in Bangla or English in minutes. BD CV formats, AI writing help and free PDF download. No design skills needed.",
+    "badge": "Bangla + English · AI writing help",
+    "heroTitle": "Free CV Maker for Jobs in Bangladesh",
+    "heroSubtitle": "Build a professional, ATS-friendly CV in minutes. Bangladeshi formats with SSC/HSC and personal details, AI help for your objective and experience, and a clean PDF download.",
+    "heroCta": "Create my CV free",
+    "heroCtaSecondary": "See CV templates",
+    "heroTrust": [
+      "No design skills needed",
+      "Works on mobile",
+      "Bangla & English"
+    ],
+    "howTitle": "Create your CV in 3 steps",
+    "steps": [
+      {
+        "title": "Fill in your details",
+        "text": "Answer simple questions about your education, experience and skills. Your work saves automatically."
+      },
+      {
+        "title": "Let AI polish it",
+        "text": "Get a stronger career objective, action-verb bullet points and skill suggestions. You approve every change."
+      },
+      {
+        "title": "Download your PDF",
+        "text": "Pick a template, check the live preview, and download a PDF that looks exactly like it."
+      }
+    ],
+    "featuresTitle": "Everything you need to apply with confidence",
+    "features": {
+      "aiWriting": {
+        "title": "AI writing help",
+        "text": "Generate or improve your career objective, summary and experience bullets, and choose a formal, confident or friendly tone."
+      },
+      "tailor": {
+        "title": "Tailor to a job circular",
+        "text": "Paste a job post, including bdjobs-style circulars, to see a match score, missing keywords and suggested edits."
+      },
+      "coverLetter": {
+        "title": "Cover letter generator",
+        "text": "Draft a cover letter from your CV and the job post in English or Bangla, then edit it before you send."
+      },
+      "templates": {
+        "title": "BD and ATS templates",
+        "text": "Bangladeshi, government-style and international templates, with or without a photo."
+      },
+      "pdf": {
+        "title": "PDF that matches the preview",
+        "text": "What you see is what you download, including correct Bangla text."
+      },
+      "bilingual": {
+        "title": "Bangla and English",
+        "text": "Use the app in either language and translate your CV between them with AI."
+      }
+    },
+    "bdTitle": "Made for Bangladeshi job seekers",
+    "bdText": "Global CV builders miss what local employers expect. We built the sections Bangladeshi recruiters look for.",
+    "bdPoints": [
+      "Career Objective and Professional Summary",
+      "Education with SSC, HSC, Honours and Masters, plus GPA/CGPA and its scale",
+      "Training, certifications and references",
+      "Optional personal details: father's and mother's name, date of birth, NID, religion, permanent address",
+      "Passport-size photo option"
+    ],
+    "guidesTitle": "Free CV guides",
+    "faqTitle": "Frequently asked questions",
+    "faqs": [
+      {
+        "q": "Is AI CV Builder BD really free?",
+        "a": "Yes. You can create a CV, use the free templates and download a PDF for free. Premium adds more templates, more AI requests and removes the watermark."
+      },
+      {
+        "q": "Can I make my CV in Bangla?",
+        "a": "Yes. Write your CV in Bangla or English, switch the app language at any time, and use AI to translate your CV between the two."
+      },
+      {
+        "q": "Which CV format is used in Bangladesh?",
+        "a": "Most employers expect contact details and a photo, a career objective, experience, education with GPA/CGPA, training, skills, personal details and references on 1–2 pages. Our BD templates follow this order."
+      },
+      {
+        "q": "Is the CV ATS-friendly?",
+        "a": "Templates marked ATS use a single column, standard headings and real text, so applicant tracking systems can read them."
+      },
+      {
+        "q": "Does the AI make things up?",
+        "a": "No. The AI only rewrites what you give it and never adds jobs, degrees or numbers you didn't provide. You review and approve each suggestion."
+      }
+    ],
+    "finalTitle": "Your next job starts with a better CV",
+    "finalText": "Create your CV now. It takes about 10 minutes."
+  },
+  "guides": {
+    "updated": "Updated",
+    "quickAnswer": "Quick answer",
+    "faq": "Frequently asked questions",
+    "related": "Related guides",
+    "browseTemplates": "Browse CV templates",
+    "hubTitle": "CV Guides and Career Blog",
+    "hubIntro": "Free, practical guides to writing a CV, biodata and cover letter for jobs in Bangladesh, in English and Bangla.",
+    "hubSeoTitle": "CV Guides & Career Tips for Bangladesh",
+    "hubSeoDescription": "Free guides on CV format, fresher CVs, government job CVs, biodata and cover letters for Bangladeshi job seekers, in English and Bangla.",
+    "latestPosts": "Latest articles",
+    "noPosts": "New articles are coming soon."
+  },
+  "footer": {
+    "description": "Free AI CV maker for jobs in Bangladesh. Build ATS-friendly CVs in Bangla and English.",
+    "guides": "CV guides",
+    "product": "Product",
+    "company": "Company",
+    "createCv": "Create a CV",
+    "payments": "Payments",
+    "copyright": "© {{year}} {{name}}. All rights reserved."
+  },
+  "notFound": {
+    "title": "Page not found",
+    "text": "The page you're looking for doesn't exist or has moved.",
+    "home": "Go to the home page",
+    "popular": "Popular guides"
+  },
+  "consent": {
+    "text": "We use cookies for basic analytics to improve the site. Accept analytics cookies?",
+    "accept": "Accept",
+    "decline": "Decline",
+    "label": "Cookie consent"
+  },
+  "about": {
+    "seoTitle": "About Us – AI CV Builder BD",
+    "seoDescription": "AI CV Builder BD helps Bangladeshi job seekers create professional CVs in Bangla and English with BD formats and honest AI writing help.",
+    "title": "About AI CV Builder BD",
+    "subtitle": "We help job seekers in Bangladesh create clear, professional CVs, for free and in their own language.",
+    "missionTitle": "Our mission",
+    "missionText": "Give every Bangladeshi job seeker, from SSC graduates to senior professionals, a simple tool to present their skills well, on any phone.",
+    "visionTitle": "Our vision",
+    "visionText": "A job market where a strong candidate is never overlooked because of a weak or badly formatted CV.",
+    "storyTitle": "Why we built it",
+    "story": "Popular international CV builders are English-only, don't know SSC/HSC or Bangladeshi CV conventions, and often charge to download. We built a bilingual builder with local formats, AI help that never invents facts, and a free PDF download.",
+    "whyTitle": "What makes us different",
+    "features": [
+      {
+        "title": "ATS-friendly layouts",
+        "text": "Single-column templates with standard headings that applicant tracking systems can read."
+      },
+      {
+        "title": "Honest AI suggestions",
+        "text": "The AI improves your wording but never adds jobs, degrees or numbers you didn't give it."
+      },
+      {
+        "title": "Professional templates",
+        "text": "Bangladeshi, government-style and international designs, with or without a photo."
+      },
+      {
+        "title": "Built for Bangladesh",
+        "text": "SSC/HSC and GPA/CGPA fields, personal details and references in the expected order."
+      },
+      {
+        "title": "Bangla and English",
+        "text": "Use the app and write your CV in either language, or translate between them."
+      },
+      {
+        "title": "Privacy first",
+        "text": "Your CV is private unless you choose to share a link. We never sell your data."
+      }
+    ],
+    "ctaTitle": "Ready to build your CV?",
+    "ctaText": "It's free and takes about 10 minutes."
+  },
+  "contact": {
+    "seoTitle": "Contact Us – AI CV Builder BD",
+    "seoDescription": "Questions about your CV, your account or payments? Contact the AI CV Builder BD support team by email or with our contact form.",
+    "title": "Contact us",
+    "intro": "Questions about your CV, your account or payments? Send us a message and we'll reply by email.",
+    "formTitle": "Send a message",
+    "name": "Your name",
+    "email": "Email",
+    "message": "Message",
+    "phone": "Phone",
+    "office": "Office",
+    "address": "Dhaka, Bangladesh",
+    "hours": "Sunday–Thursday, 10 am–6 pm",
+    "send": "Send message",
+    "sent": "Thanks! Your message has been sent. We'll reply by email.",
+    "failed": "Couldn't send your message. Please email us at {{email}}."
+  },
+  "templatesPage": {
+    "seoTitle": "CV Templates for Bangladesh – ATS & BD Formats",
+    "seoDescription": "Free CV templates for jobs in Bangladesh: ATS-friendly, Bangladeshi and government formats, with or without a photo. Fill in and download a PDF.",
+    "title": "CV templates for Bangladesh",
+    "intro": "Pick an ATS-friendly, Bangladeshi or international design. You can switch templates at any time without retyping anything.",
+    "upgradeTitle": "Unlock premium template designs",
+    "upgradeText": "Upgrade to Premium to access exclusive layouts and more AI requests.",
+    "premiumOnly": "Premium only",
+    "use": "Use this template",
+    "previewAlt": "Preview of the {{name}} CV template"
   }
 }

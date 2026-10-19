@@ -24,7 +24,8 @@ export default function PublicResumePage() {
 
   return (
     <>
-      <SEO title={data.title} description={description} url={`/r/${slug}`} image="/og-image.jpg" />
+      {/* Shared CVs contain personal contact details, so keep them out of search results */}
+      <SEO title={data.title} description={description} noIndex />
       <div className="min-h-screen bg-secondary/30 py-8 px-4">
         <div className="max-w-[800px] mx-auto">
           <p className="text-center text-sm text-muted mb-4">

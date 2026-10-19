@@ -192,4 +192,6 @@ export interface BlogPost {
   viewCount: number;
   metaTitle?: string;
   metaDescription?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }

@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import api from "@/lib/api";
 import { normalizeLanguage } from "@/lib/language";
+import { setLanguage } from "@/i18n";
 import { useAuthStore } from "@/store/authStore";
 import { useThemeStore } from "@/store/themeStore";
 import { useToast } from "@/components/ui/toast";
@@ -115,7 +116,7 @@ export default function SettingsPage() {
             <select
               className="w-full mt-1 rounded-lg border border-border bg-background px-3 py-2 text-sm"
               value={i18n.language}
-              onChange={(e) => i18n.changeLanguage(e.target.value)}
+              onChange={(e) => setLanguage(normalizeLanguage(e.target.value))}
             >
               <option value="en">English</option>
               <option value="bn">বাংলা</option>

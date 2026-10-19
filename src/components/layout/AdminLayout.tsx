@@ -15,7 +15,7 @@ const adminNavItems = [
   { to: "/admin/templates", label: "Templates", icon: Palette },
   { to: "/admin/content-manager", label: "Page Content", icon: Edit3 },
   { to: "/admin/menu-manager", label: "Menu Manager", icon: LinkIcon },
-  { to: "/admin#content", label: "Blog Manager", icon: FileText },
+  { to: "/admin/blog", label: "Blog Manager", icon: FileText },
   { to: "/admin/settings", label: "Settings", icon: Settings },
 ];
 

@@ -1,4 +1,8 @@
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
+import { GUIDES } from "@/content/guides";
+import { useLang } from "@/lib/useLang";
+import { SUPPORT_EMAIL, siteName } from "@/lib/site";
 import { usePageContent } from "@/context/PageContentContext";
 import { Globe } from "lucide-react";
 
@@ -21,114 +25,89 @@ const socialIcons: Record<string, React.ElementType> = {
 };
 
 export function Footer() {
+  const { t } = useTranslation();
+  const { lang, lp } = useLang();
   const { headerFooterContent } = usePageContent();
 
-  // Get dynamic content with fallbacks
-  const siteDescription = headerFooterContent.footerDescription || headerFooterContent.siteDescription || "AI-powered resume builder for Bangladesh.";
-  const contactEmail = headerFooterContent.contactEmail || "support@aicvbuilderbd.online";
-  const copyrightText = headerFooterContent.copyrightText || `© ${new Date().getFullYear()} AI CV Builder BD. All rights reserved.`;
+  const siteDescription = headerFooterContent.footerDescription || t("footer.description");
+  const contactEmail = headerFooterContent.contactEmail || SUPPORT_EMAIL;
+  const copyrightText = headerFooterContent.copyrightText || t("footer.copyright", { year: new Date().getFullYear(), name: siteName(lang) });
   const paymentMethods = headerFooterContent.paymentMethods || "bKash, Nagad, SSLCommerz";
-  
-  // Use dynamic footer links if available, otherwise use defaults
-  const footerLinks = headerFooterContent.footerLinks || [
-    { label: "About", href: "/about" },
-    { label: "Contact", href: "/contact" },
-    { label: "Pricing", href: "/pricing" },
-    { label: "Templates", href: "/templates" },
-  ];
-  
-  // Use dynamic social links if available
-  const socialLinks = headerFooterContent.socialLinks || [];
+
+  const companyLinks = (headerFooterContent.footerLinks || [
+    { label: t("nav.about"), href: "/about" },
+    { label: t("nav.contact"), href: "/contact" },
+    { label: t("nav.pricing"), href: "/pricing" },
+  ]).map((link) => ({ ...link, href: lp(link.href) }));
 
   const productLinks = [
-    { label: "Pricing", href: "/pricing" },
-    { label: "Templates", href: "/templates" },
-    { label: "Blog", href: "/blog" },
+    { label: t("footer.createCv"), href: "/register" },
+    { label: t("nav.templates"), href: lp("/templates") },
+    { label: t("nav.guides"), href: lp("/blog") },
   ];
 
+  const socialLinks = headerFooterContent.socialLinks || [];
+
   const getSocialIcon = (platform: string) => {
-    const iconName = platform.toLowerCase().split(' ')[0] as keyof typeof socialIcons;
+    const iconName = platform.toLowerCase().split(" ")[0] as keyof typeof socialIcons;
     return socialIcons[iconName] || Globe;
   };
 
+  const column = (title: string, links: Array<{ label: string; href: string }>) => (
+    <div>
+      <h2 className="mb-3 text-sm font-semibold">{title}</h2>
+      <ul className="space-y-2 text-sm text-muted">
+        {links.map((link) => (
+          <li key={link.href}>
+            <Link to={link.href} className="transition-colors hover:text-primary">{link.label}</Link>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+
   return (
-    <footer className="border-t border-border bg-secondary/30 mt-auto">
+    <footer className="mt-auto border-t border-border bg-secondary/30">
       <div className="container mx-auto px-4 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-          <div>
+        <div className="grid grid-cols-2 gap-8 md:grid-cols-5">
+          <div className="col-span-2">
             {headerFooterContent.footerLogo ? (
-              <img src={headerFooterContent.footerLogo} alt="AI CV Builder BD" className="h-8 object-contain" />
+              <img src={headerFooterContent.footerLogo} alt={siteName(lang)} className="h-8 object-contain" width="120" height="32" />
             ) : (
-              <span className="text-xl font-bold gradient-text">AI CV Builder BD</span>
+              <span className="text-xl font-bold gradient-text">{siteName(lang)}</span>
             )}
-            <p className="mt-2 text-sm text-muted">
-              {siteDescription}
+            <p className="mt-2 max-w-sm text-sm text-muted">{siteDescription}</p>
+            <p className="mt-3 text-sm">
+              <a href={`mailto:${contactEmail}`} className="text-muted transition-colors hover:text-primary">{contactEmail}</a>
             </p>
-            {/* Social Links */}
             {socialLinks.length > 0 && (
-              <div className="flex gap-3 mt-4">
-                {socialLinks.map((link, index) => {
+              <div className="mt-4 flex gap-3">
+                {socialLinks.map((link) => {
                   const Icon = getSocialIcon(link.platform);
                   return (
                     <a
-                      key={index}
+                      key={link.url}
                       href={link.url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="p-2 rounded-full bg-secondary hover:bg-primary hover:text-primary-foreground transition-colors"
+                      className="rounded-full bg-secondary p-2 transition-colors hover:bg-primary hover:text-primary-foreground"
                       aria-label={link.platform}
                     >
-                      <Icon className="h-4 w-4" />
+                      <Icon className="h-4 w-4" aria-hidden="true" />
                     </a>
                   );
                 })}
               </div>
             )}
           </div>
-          
-          <div>
-            <h4 className="font-semibold mb-3">Product</h4>
-            <ul className="space-y-2 text-sm text-muted">
-              {productLinks.map((link) => (
-                <li key={link.href}>
-                  <Link to={link.href} className="hover:text-primary transition-colors">
-                    {link.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-          
-          <div>
-            <h4 className="font-semibold mb-3">Company</h4>
-            <ul className="space-y-2 text-sm text-muted">
-              {footerLinks.map((link) => (
-                <li key={link.href}>
-                  <Link to={link.href} className="hover:text-primary transition-colors">
-                    {link.label}
-                  </Link>
-                </li>
-              ))}
-              {contactEmail && (
-                <li className="text-xs text-muted pt-2">
-                  <a href={`mailto:${contactEmail}`} className="hover:text-primary transition-colors">
-                    {contactEmail}
-                  </a>
-                </li>
-              )}
-            </ul>
-          </div>
-          
-          <div>
-            <h4 className="font-semibold mb-3">Payments</h4>
-            <p className="text-sm text-muted">{paymentMethods}</p>
-          </div>
+          {column(t("footer.guides"), GUIDES.slice(0, 5).map((guide) => ({ label: guide[lang].label, href: lp(`/${guide.slug}`) })))}
+          {column(t("footer.product"), productLinks)}
+          {column(t("footer.company"), companyLinks)}
         </div>
-        
-        <div className="mt-8 pt-8 border-t border-border">
-          <p className="text-center text-sm text-muted">
-            {copyrightText}
-          </p>
+
+        <div className="mt-8 flex flex-col items-center justify-between gap-2 border-t border-border pt-6 text-sm text-muted md:flex-row">
+          <p>{copyrightText}</p>
+          <p>{t("footer.payments")}: {paymentMethods}</p>
         </div>
       </div>
     </footer>

@@ -12,20 +12,25 @@ import { cn, formatCurrency } from "@/lib/utils";
 import { useAuthStore } from "@/store/authStore";
 import { usePageContent } from "@/context/PageContentContext";
 import type { SubscriptionPlan } from "@/types";
+import { useHydrated } from "@/lib/useHydrated";
+import { useLang } from "@/lib/useLang";
+import { breadcrumbLd } from "@/lib/jsonld";
 
 export default function PricingPage() {
   const { t } = useTranslation();
   const [yearly, setYearly] = useState(false);
   const { user } = useAuthStore();
-  const currentPlan = user?.subscription?.plan ?? null;
+  const hydrated = useHydrated();
+  const { lp } = useLang();
+  const currentPlan = hydrated ? user?.subscription?.plan ?? null : null;
   const { getPageContent } = usePageContent();
   const pricingContent = getPageContent("pricing");
 
   // Dynamic content from admin
   const pricingTitle = (pricingContent?.title as string) || t("pricing.title");
   const pricingSubtitle = (pricingContent?.subtitle as string) || t("pricing.subtitle");
-  const pricingBadge = (pricingContent?.badge as string) || "Flexible pricing for every stage";
-  const pricingFooter = (pricingContent?.footer as string) || "Pay with bKash, Nagad, SSLCommerz, or any Bangladeshi card";
+  const pricingBadge = (pricingContent?.badge as string) || t("pricing.badge");
+  const pricingFooter = (pricingContent?.footer as string) || t("pricing.footer");
 
   const { data: plans } = useQuery({
     queryKey: ["plans"],
@@ -37,7 +42,11 @@ export default function PricingPage() {
 
   return (
     <>
-      <SEO title={pricingTitle} description={pricingSubtitle} />
+      <SEO
+        title={t("pricing.seoTitle")}
+        description={t("pricing.seoDescription")}
+        jsonLd={breadcrumbLd([{ name: t("nav.home"), path: lp("/") }, { name: t("nav.pricing"), path: lp("/pricing") }])}
+      />
       <section className="py-20">
         <div className="container mx-auto px-4">
           <div className="mx-auto max-w-3xl text-center mb-12">
@@ -51,6 +60,9 @@ export default function PricingPage() {
               <span className={!yearly ? "font-medium" : "text-muted"}>{t("pricing.monthly")}</span>
               <button
                 type="button"
+                role="switch"
+                aria-checked={yearly}
+                aria-label={t("pricing.yearlyToggle")}
                 onClick={() => setYearly(!yearly)}
                 className={`relative w-12 h-6 rounded-full transition-colors ${yearly ? "bg-primary" : "bg-secondary"}`}
               >
@@ -59,7 +71,7 @@ export default function PricingPage() {
                 />
               </button>
               <span className={yearly ? "font-medium" : "text-muted"}>
-                {t("pricing.yearly")} <Badge variant="success" className="ml-1">Save 17%</Badge>
+                {t("pricing.yearly")} <Badge variant="success" className="ml-1">{t("pricing.save")}</Badge>
               </span>
             </div>
           </div>
@@ -81,7 +93,7 @@ export default function PricingPage() {
                 >
                   {isCurrentPlan && (
                     <div className="absolute right-4 top-4">
-                      <Badge variant="premium">Current plan</Badge>
+                      <Badge variant="premium">{t("pricing.currentPlan")}</Badge>
                     </div>
                   )}
                   <CardHeader>
@@ -105,7 +117,7 @@ export default function PricingPage() {
                     </ul>
                     {isCurrentPlan ? (
                       <Button variant="secondary" className="w-full" disabled>
-                        Current plan
+                        {t("pricing.currentPlan")}
                       </Button>
                     ) : (
                       <Button
