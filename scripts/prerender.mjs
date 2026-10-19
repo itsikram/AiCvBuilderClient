@@ -83,6 +83,43 @@ for (const url of PRERENDER_ROUTES) {
   console.log(`prerendered ${url}`);
 }
 
+const siteUrl = (
+  process.env.VITE_SITE_URL ||
+  process.env.VITE_APP_URL ||
+  process.env.SITE_URL ||
+  process.env.CLIENT_URL ||
+  "https://aicvbuilderbd.online"
+).replace(/\/+$/, "");
+const xmlEscape = (value) =>
+  value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+const routesByBase = new Map();
+for (const route of manifest) {
+  const base = route.path.replace(/^\/bn(?=\/|$)/, "") || "/";
+  const entry = routesByBase.get(base) ?? { lastmod: route.lastmod };
+  entry[route.lang] = route.path;
+  if (route.lastmod > entry.lastmod) entry.lastmod = route.lastmod;
+  routesByBase.set(base, entry);
+}
+
+const sitemapUrls = [];
+for (const entry of routesByBase.values()) {
+  const alternates = entry.en && entry.bn
+    ? [
+        `<xhtml:link rel="alternate" hreflang="en-BD" href="${xmlEscape(`${siteUrl}${entry.en}`)}"/>`,
+        `<xhtml:link rel="alternate" hreflang="bn-BD" href="${xmlEscape(`${siteUrl}${entry.bn}`)}"/>`,
+        `<xhtml:link rel="alternate" hreflang="x-default" href="${xmlEscape(`${siteUrl}${entry.en}`)}"/>`,
+      ].join("")
+    : "";
+  for (const route of [entry.en, entry.bn]) {
+    if (!route) continue;
+    sitemapUrls.push(
+      `<url><loc>${xmlEscape(`${siteUrl}${route}`)}</loc><lastmod>${xmlEscape(entry.lastmod)}</lastmod>${alternates}</url>`
+    );
+  }
+}
+const sitemap = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">\n${sitemapUrls.join("\n")}\n</urlset>\n`;
+fs.writeFileSync(path.join(dist, "sitemap.xml"), sitemap);
+
 // A page for unknown URLs, served with HTTP 404 by the API server.
 writePage("/404", path.join(dist, "404.html"), await render("/__not-found__"));
 
