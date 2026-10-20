@@ -24,3 +24,8 @@ dist-ssr
 *.sln
 *.sw?
 dist-ssr
+
+# Local env (.env.example and .env.production are committed, no secrets)
+.env
+.env.local
+.env.*.local
