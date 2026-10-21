@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -164,7 +164,10 @@ export default function PageContentManagerPage() {
     (c) => c.pageId === selectedPage && c.language === selectedLanguage
   );
 
-  useEffect(() => {
+  // Reload the form when the stored content or the selected page changes
+  const [loadedFrom, setLoadedFrom] = useState<[unknown, string]>();
+  if (!loadedFrom || loadedFrom[0] !== currentContent || loadedFrom[1] !== selectedPage) {
+    setLoadedFrom([currentContent, selectedPage]);
     if (currentContent) {
       // Flatten the content for editing - use existing content from database
       const flatContent: Record<string, string> = {};
@@ -186,7 +189,7 @@ export default function PageContentManagerPage() {
       setEditingContent(flatContent);
     }
     setIsEditing(false);
-  }, [currentContent, selectedPage]);
+  }
 
   const saveMutation = useMutation({
     mutationFn: async (payload: { pageId: string; language: string; content: Record<string, unknown> }) => {

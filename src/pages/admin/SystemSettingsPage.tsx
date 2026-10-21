@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -71,15 +71,16 @@ export default function SystemSettingsPage() {
     },
   });
 
-  useEffect(() => {
-    if (!settings) return;
+  const [loadedSettings, setLoadedSettings] = useState<typeof settings>();
+  if (settings && settings !== loadedSettings) {
+    setLoadedSettings(settings);
     const nextValues: Record<string, string> = {};
     for (const setting of settings) {
       nextValues[setting.key] = setting.value || "";
     }
     setValues(nextValues);
     setDirtyKeys({});
-  }, [settings]);
+  }
 
   const groupedSettings = useMemo(() => {
     return settingDefinitions.reduce<Record<string, SettingDefinition[]>>((acc, setting) => {

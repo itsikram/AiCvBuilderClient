@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,9 +19,11 @@ export default function SettingsPage() {
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(user?.avatar || null);
 
-  useEffect(() => {
+  const [shownAvatar, setShownAvatar] = useState(user?.avatar);
+  if (user?.avatar !== shownAvatar) {
+    setShownAvatar(user?.avatar);
     setAvatarPreview(user?.avatar || null);
-  }, [user?.avatar]);
+  }
 
   const saveProfile = async () => {
     try {

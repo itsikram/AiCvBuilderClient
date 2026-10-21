@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { CreditCard, ShieldCheck, XCircle } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -58,12 +58,14 @@ export default function BkashPaymentsPage() {
     },
   });
 
-  useEffect(() => {
+  const [loadedConfig, setLoadedConfig] = useState<BkashConfig | null>();
+  if (bkashConfig !== loadedConfig) {
+    setLoadedConfig(bkashConfig);
     if (bkashConfig) {
       setNumber(bkashConfig.number || "");
       setInstructions(bkashConfig.instructions || "");
     }
-  }, [bkashConfig]);
+  }
 
   const saveConfigMutation = useMutation({
     mutationFn: async () => {

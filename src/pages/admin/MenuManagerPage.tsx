@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -99,8 +99,10 @@ export default function MenuManagerPage() {
     },
   });
 
-  // Load existing content when language changes
-  useEffect(() => {
+  // Load existing content when the data or language changes
+  const [loadedFrom, setLoadedFrom] = useState<[unknown, string]>();
+  if (!loadedFrom || loadedFrom[0] !== pageContents || loadedFrom[1] !== selectedLanguage) {
+    setLoadedFrom([pageContents, selectedLanguage]);
     const homeContent = pageContents?.find(
       (c) => c.pageId === "home" && c.language === selectedLanguage
     );
@@ -185,7 +187,7 @@ export default function MenuManagerPage() {
     } else {
       setPaymentMethods("bKash, Nagad, SSLCommerz");
     }
-  }, [pageContents, selectedLanguage]);
+  }
 
   // Save mutation
   const saveMutation = useMutation({

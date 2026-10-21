@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import api from "@/lib/api";
+import api, { getErrorMessage } from "@/lib/api";
 import { useAuthStore } from "@/store/authStore";
 import { useToast } from "@/components/ui/toast";
 import { formatCurrency } from "@/lib/utils";
@@ -79,8 +79,8 @@ export default function BillingPage() {
       setBkashNumber("");
       setTransactionId("");
     },
-    onError: (error: any) => {
-      toast.add(error?.response?.data?.message || "Failed to submit BKash payment", "error");
+    onError: (error: unknown) => {
+      toast.add(getErrorMessage(error, "Failed to submit BKash payment"), "error");
     },
   });
 
