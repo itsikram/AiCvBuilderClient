@@ -199,12 +199,16 @@ for (const entry of routesByBase.values()) {
         `<xhtml:link rel="alternate" hreflang="en-BD" href="${xmlEscape(`${siteUrl}${entry.en}`)}"/>`,
         `<xhtml:link rel="alternate" hreflang="bn-BD" href="${xmlEscape(`${siteUrl}${entry.bn}`)}"/>`,
         `<xhtml:link rel="alternate" hreflang="x-default" href="${xmlEscape(`${siteUrl}${entry.en}`)}"/>`,
-      ].join("")
+      ].map((link) => `
+    ${link}`).join("")
     : "";
   for (const route of [entry.en, entry.bn]) {
     if (!route) continue;
     sitemapUrls.push(
-      `<url><loc>${xmlEscape(`${siteUrl}${route}`)}</loc><lastmod>${xmlEscape(entry.lastmod)}</lastmod>${alternates}</url>`
+      `  <url>
+    <loc>${xmlEscape(`${siteUrl}${route}`)}</loc>
+    <lastmod>${xmlEscape(entry.lastmod)}</lastmod>${alternates}
+  </url>`
     );
   }
 }
@@ -223,14 +227,20 @@ for (const post of await fetchBlogPosts()) {
   blogCount++;
   const lastmod = new Date(post.updatedAt || post.publishedAt || Date.now()).toISOString().slice(0, 10);
   const image = post.coverImage
-    ? `<image:image><image:loc>${xmlEscape(post.coverImage)}</image:loc></image:image>`
+    ? `
+    <image:image><image:loc>${xmlEscape(post.coverImage)}</image:loc></image:image>`
     : "";
-  sitemapUrls.push(`<url><loc>${xmlEscape(`${siteUrl}${urlPath}`)}</loc><lastmod>${lastmod}</lastmod>${image}</url>`);
+  sitemapUrls.push(`  <url>
+    <loc>${xmlEscape(`${siteUrl}${urlPath}`)}</loc>
+    <lastmod>${lastmod}</lastmod>${image}
+  </url>`);
   console.log(`prerendered ${urlPath}`);
 }
 
-const sitemap = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">\n${sitemapUrls.join("\n")}\n</urlset>\n`;
+// The stylesheet only changes how browsers display the file; crawlers ignore it.
+const sitemap = `<?xml version="1.0" encoding="UTF-8"?>\n<?xml-stylesheet type="text/xsl" href="/sitemap.xsl"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">\n${sitemapUrls.join("\n")}\n</urlset>\n`;
 fs.writeFileSync(path.join(dist, "sitemap.xml"), sitemap);
+fs.writeFileSync(path.join(dist, "sitemap.xsl"), sitemapXsl());
 
 fs.writeFileSync(
   path.join(dist, "robots.txt"),
@@ -249,6 +259,48 @@ if (problems.length) {
   process.exit(1);
 }
 console.log(`\nPrerendered ${manifest.length} routes + 404.`);
+
+/** Renders sitemap.xml as a readable table in browsers (which otherwise flatten it to text). */
+function sitemapXsl() {
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
+  xmlns:s="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
+<xsl:output method="html" encoding="UTF-8" indent="yes"/>
+<xsl:template match="/">
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="robots" content="noindex"/>
+<title>XML Sitemap</title>
+<style>
+body{font:14px/1.5 system-ui,sans-serif;margin:2rem;color:#1f2937}
+h1{font-size:1.4rem}
+table{border-collapse:collapse;width:100%}
+th,td{text-align:left;padding:.45rem .6rem;border-bottom:1px solid #e5e7eb;vertical-align:top}
+th{background:#f3f4f6}
+a{color:#2563eb;text-decoration:none}
+small{color:#6b7280}
+</style>
+</head>
+<body>
+<h1>XML Sitemap</h1>
+<p><xsl:value-of select="count(s:urlset/s:url)"/> URLs. This page is for people; search engines read the XML.</p>
+<table>
+<tr><th>URL</th><th>Languages</th><th>Last modified</th></tr>
+<xsl:for-each select="s:urlset/s:url">
+<tr>
+<td><a href="{s:loc}"><xsl:value-of select="s:loc"/></a></td>
+<td><small><xsl:for-each select="xhtml:link"><xsl:value-of select="@hreflang"/><xsl:if test="position() != last()">, </xsl:if></xsl:for-each></small></td>
+<td><xsl:value-of select="s:lastmod"/></td>
+</tr>
+</xsl:for-each>
+</table>
+</body>
+</html>
+</xsl:template>
+</xsl:stylesheet>
+`;
+}
 
 /** Apache rules for cPanel: clean URLs, SPA fallback, real 404s, caching and security headers. */
 function htaccess() {
@@ -289,6 +341,8 @@ function htaccess() {
 # delete the Options line.
 Options -MultiViews -Indexes
 DirectoryIndex index.html
+AddType application/xml .xml .xsl
+AddDefaultCharset UTF-8
 ErrorDocument 404 /404.html
 
 # Canonical URLs have no trailing slash; stop Apache adding one to prerendered folders
