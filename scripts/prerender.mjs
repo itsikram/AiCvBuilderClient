@@ -62,33 +62,6 @@ function checkLengths(url, head) {
   }
 }
 
-function writePage(url, outFile, { html, head, lang }) {
-  if (!head) throw new Error(`${url} rendered no <SEO> head data`);
-  // Inline scripts would be blocked by the CSP and break hydration
-  if (/<script(?![^>]*application\/ld\+json)[^>]*>/.test(html) || html.includes("<template")) {
-    throw new Error(`${url} prerendered with inline Suspense scripts; something suspended on the second pass`);
-  }
-  checkLengths(url, head);
-  const page = template
-    .replace(/<html lang="[^"]*">/, `<html lang="${lang === "bn" ? "bn-BD" : "en-BD"}">`)
-    .replace(/<!--head:start-->[\s\S]*?<!--head:end-->/, `<!--head:start-->\n${headHtml(head)}\n    <!--head:end-->`)
-    .replace('<div id="root"></div>', `<div id="root">${html}</div>`);
-  fs.mkdirSync(path.dirname(outFile), { recursive: true });
-  fs.writeFileSync(outFile, page);
-}
-
-const today = new Date().toISOString().slice(0, 10);
-const manifest = [];
-
-for (const url of PRERENDER_ROUTES) {
-  const result = await render(url);
-  const outFile = url === "/" ? path.join(dist, "index.html") : path.join(dist, url.slice(1), "index.html");
-  writePage(url, outFile, result);
-  const basePath = url.replace(/^\/bn(?=\/|$)/, "") || "/";
-  manifest.push({ path: url, lang: result.lang, lastmod: GUIDE_DATES[basePath] ?? today });
-  console.log(`prerendered ${url}`);
-}
-
 const siteUrl = (
   env.VITE_SITE_URL ||
   env.VITE_APP_URL ||
@@ -97,9 +70,104 @@ const siteUrl = (
   "https://aicvbuilderbd.online"
 ).replace(/\/+$/, "");
 const apiUrl = (env.VITE_API_URL || "/api/v1").replace(/\/+$/, "");
-const SITE_NAME = "AI CV Builder BD";
 const xmlEscape = (value) =>
   value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+
+/**
+ * `initialData` is the API data the page was rendered with; it is embedded as JSON
+ * (not executable, so the CSP allows it) and seeds the client cache before hydration.
+ * `lenient` turns length problems into warnings, for admin-written blog posts.
+ */
+function writePage(url, outFile, { html, head, lang }, { initialData, lenient = false } = {}) {
+  if (!head) throw new Error(`${url} rendered no <SEO> head data`);
+  // Inline scripts would be blocked by the CSP and break hydration
+  if (/<script(?![^>]*application\/ld\+json)[^>]*>/.test(html) || html.includes("<template")) {
+    throw new Error(`${url} prerendered with inline scripts; something suspended on the second pass, or the content has <script>`);
+  }
+  if (lenient) {
+    const before = problems.length;
+    checkLengths(url, head);
+    problems.splice(before).forEach((msg) => console.warn(`warn  ${msg}`));
+  } else {
+    checkLengths(url, head);
+  }
+  const data = initialData
+    ? `\n    <script type="application/json" id="prerender-data">${JSON.stringify(initialData).replace(/</g, "\\u003c")}</script>`
+    : "";
+  const page = template
+    .replace(/<html lang="[^"]*">/, `<html lang="${lang === "bn" ? "bn-BD" : "en-BD"}">`)
+    .replace(/<!--head:start-->[\s\S]*?<!--head:end-->/, `<!--head:start-->\n${headHtml(head)}\n    <!--head:end-->`)
+    .replace('<div id="root"></div>', `<div id="root">${html}</div>${data}`);
+  fs.mkdirSync(path.dirname(outFile), { recursive: true });
+  fs.writeFileSync(outFile, page);
+}
+
+// Some public pages show API data (plans, templates, blog posts). It is fetched here
+// and the pages are prerendered with it, so crawlers get the full content and links.
+// Posts published after this build still load (.htaccess falls back to the SPA shell)
+// but only reach the sitemap and get static HTML on the next build.
+async function getJson(urlPath) {
+  const res = await fetch(`${apiUrl}${urlPath}`, { signal: AbortSignal.timeout(60_000) });
+  if (!res.ok) throw new Error(`GET ${urlPath}: HTTP ${res.status}`);
+  return (await res.json()).data;
+}
+
+// Base path -> [react-query key, API path] pairs, matching the useQuery calls in each page
+const PAGE_DATA = {
+  "/pricing": () => [[["plans"], "/payments/plans"]],
+  "/templates": () => [[["templates"], "/templates"]],
+  "/blog": (lang) => [[["blogs", lang], `/blogs?language=${lang}`]],
+};
+
+const apiAvailable = /^https?:\/\//.test(apiUrl);
+if (!apiAvailable) console.warn(`warn  VITE_API_URL (${apiUrl}) is not absolute; prerendering without API data`);
+
+/** API data for a public page, or undefined (the page then prerenders its loading state). */
+async function fetchPageData(basePath, lang) {
+  if (!apiAvailable || !PAGE_DATA[basePath]) return undefined;
+  try {
+    return await Promise.all(PAGE_DATA[basePath](lang).map(async ([key, apiPath]) => [key, await getJson(apiPath)]));
+  } catch (error) {
+    console.warn(`warn  ${lang} ${basePath}: could not fetch API data (${error.message}); prerendering without it`);
+    return undefined;
+  }
+}
+
+async function fetchBlogPosts() {
+  if (!apiAvailable) return [];
+  try {
+    const summaries = [];
+    for (let page = 1; page <= 100; page++) {
+      const data = await getJson(`/blogs?page=${page}`);
+      summaries.push(...data.blogs);
+      if (!data.blogs.length || summaries.length >= data.total) break;
+    }
+    const posts = [];
+    for (const summary of summaries) {
+      if (!/^[a-z0-9-]+$/i.test(summary.slug)) continue;
+      posts.push(await getJson(`/blogs/${summary.slug}`));
+    }
+    return posts;
+  } catch (error) {
+    console.warn(`warn  could not fetch blog posts from ${apiUrl} (${error.message}); skipping blog prerender`);
+    return [];
+  }
+}
+
+const today = new Date().toISOString().slice(0, 10);
+const manifest = [];
+
+for (const url of PRERENDER_ROUTES) {
+  const basePath = url.replace(/^\/bn(?=\/|$)/, "") || "/";
+  const lang = url === "/bn" || url.startsWith("/bn/") ? "bn" : "en";
+  const initialData = await fetchPageData(basePath, lang);
+  const result = await render(url, initialData);
+  const outFile = url === "/" ? path.join(dist, "index.html") : path.join(dist, url.slice(1), "index.html");
+  writePage(url, outFile, result, { initialData });
+  manifest.push({ path: url, lang: result.lang, lastmod: GUIDE_DATES[basePath] ?? today });
+  console.log(`prerendered ${url}`);
+}
+
 const routesByBase = new Map();
 for (const route of manifest) {
   const base = route.path.replace(/^\/bn(?=\/|$)/, "") || "/";
@@ -125,81 +193,28 @@ for (const entry of routesByBase.values()) {
     );
   }
 }
-// Blog posts are client-rendered; give each one real head tags for crawlers and link previews.
-// Posts published after this build still load (.htaccess falls back to the SPA shell)
-// but only reach the sitemap on the next build.
-async function fetchPublishedPosts() {
-  if (!/^https?:\/\//.test(apiUrl)) {
-    console.warn(`warn  VITE_API_URL (${apiUrl}) is not absolute; skipping blog prerender`);
-    return [];
-  }
-  const posts = [];
+
+let blogCount = 0;
+for (const post of await fetchBlogPosts()) {
+  const urlPath = `${post.language === "bn" ? "/bn" : ""}/blog/${post.slug}`;
+  const initialData = [[["blog", post.slug], post]];
   try {
-    for (let page = 1; page <= 100; page++) {
-      const res = await fetch(`${apiUrl}/blogs?page=${page}`, { signal: AbortSignal.timeout(60_000) });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const { data } = await res.json();
-      posts.push(...data.blogs);
-      if (!data.blogs.length || posts.length >= data.total) break;
-    }
+    const result = await render(urlPath, initialData);
+    writePage(urlPath, path.join(dist, urlPath.slice(1), "index.html"), result, { initialData, lenient: true });
   } catch (error) {
-    console.warn(`warn  could not fetch blog posts from ${apiUrl} (${error.message}); skipping blog prerender`);
+    console.warn(`warn  skipped ${urlPath}: ${error.message}`);
+    continue;
   }
-  return posts;
-}
-
-function blogHead(post, canonical) {
-  const title = post.metaTitle || post.title;
-  const description = post.metaDescription || post.excerpt || "";
-  const image = post.coverImage || `${siteUrl}/og-image.jpg`;
-  const jsonLd = {
-    "@context": "https://schema.org",
-    "@type": "Article",
-    headline: post.title,
-    description,
-    mainEntityOfPage: canonical,
-    image,
-    datePublished: post.publishedAt,
-    dateModified: post.updatedAt,
-    author: { "@type": "Organization", name: SITE_NAME, url: siteUrl },
-    publisher: { "@id": `${siteUrl}/#organization` },
-  };
-  return [
-    `<title data-prerender>${escapeText(title)}</title>`,
-    `<meta data-prerender name="description" content="${escapeAttr(description)}" />`,
-    `<meta data-prerender name="robots" content="index, follow, max-image-preview:large" />`,
-    `<link data-prerender rel="canonical" href="${escapeAttr(canonical)}" />`,
-    `<meta data-prerender property="og:title" content="${escapeAttr(title)}" />`,
-    `<meta data-prerender property="og:description" content="${escapeAttr(description)}" />`,
-    `<meta data-prerender property="og:url" content="${escapeAttr(canonical)}" />`,
-    `<meta data-prerender property="og:type" content="article" />`,
-    `<meta data-prerender property="og:image" content="${escapeAttr(image)}" />`,
-    `<meta data-prerender property="og:site_name" content="${SITE_NAME}" />`,
-    `<meta data-prerender name="twitter:card" content="summary_large_image" />`,
-    `<script data-prerender type="application/ld+json">${JSON.stringify(jsonLd).replace(/</g, "\\u003c")}</script>`,
-  ]
-    .map((line) => `    ${line}`)
-    .join("\n");
-}
-
-const posts = await fetchPublishedPosts();
-for (const post of posts) {
-  if (!/^[a-z0-9-]+$/i.test(post.slug)) continue;
-  const lang = post.language === "bn" ? "bn" : "en";
-  const urlPath = `${lang === "bn" ? "/bn" : ""}/blog/${post.slug}`;
-  const canonical = `${siteUrl}${urlPath}`;
-  const page = template
-    .replace(/<html lang="[^"]*">/, `<html lang="${lang === "bn" ? "bn-BD" : "en-BD"}">`)
-    .replace(/<!--head:start-->[\s\S]*?<!--head:end-->/, `<!--head:start-->\n${blogHead(post, canonical)}\n    <!--head:end-->`);
-  const outFile = path.join(dist, urlPath.slice(1), "index.html");
-  fs.mkdirSync(path.dirname(outFile), { recursive: true });
-  fs.writeFileSync(outFile, page);
+  blogCount++;
   const lastmod = new Date(post.updatedAt || post.publishedAt || Date.now()).toISOString().slice(0, 10);
-  sitemapUrls.push(`<url><loc>${xmlEscape(canonical)}</loc><lastmod>${lastmod}</lastmod></url>`);
+  const image = post.coverImage
+    ? `<image:image><image:loc>${xmlEscape(post.coverImage)}</image:loc></image:image>`
+    : "";
+  sitemapUrls.push(`<url><loc>${xmlEscape(`${siteUrl}${urlPath}`)}</loc><lastmod>${lastmod}</lastmod>${image}</url>`);
+  console.log(`prerendered ${urlPath}`);
 }
-if (posts.length) console.log(`prerendered ${posts.length} blog posts`);
 
-const sitemap = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">\n${sitemapUrls.join("\n")}\n</urlset>\n`;
+const sitemap = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">\n${sitemapUrls.join("\n")}\n</urlset>\n`;
 fs.writeFileSync(path.join(dist, "sitemap.xml"), sitemap);
 
 fs.writeFileSync(
@@ -245,18 +260,26 @@ function htaccess() {
   const httpsRules =
     site.protocol === "https:"
       ? `
-  # http -> https and www -> apex
-  RewriteCond %{HTTPS} off [OR]
+  # http -> https (also behind a TLS-terminating proxy) and www -> apex
+  RewriteCond %{HTTPS} !=on
+  RewriteCond %{HTTP:X-Forwarded-Proto} !=https
+  RewriteRule ^ ${siteUrl}%{REQUEST_URI} [R=301,L]
   RewriteCond %{HTTP_HOST} ^www\\.${apexHost}$ [NC]
   RewriteRule ^ ${siteUrl}%{REQUEST_URI} [R=301,L]
 `
       : "";
 
   return `# Generated by scripts/prerender.mjs at build time; edit the script, not this file.
+# If the host answers every request with HTTP 500, its AllowOverride forbids Options:
+# delete the Options line.
 Options -MultiViews -Indexes
 DirectoryIndex index.html
-DirectorySlash Off
 ErrorDocument 404 /404.html
+
+# Canonical URLs have no trailing slash; stop Apache adding one to prerendered folders
+<IfModule mod_dir.c>
+  DirectorySlash Off
+</IfModule>
 
 <IfModule mod_rewrite.c>
   RewriteEngine On

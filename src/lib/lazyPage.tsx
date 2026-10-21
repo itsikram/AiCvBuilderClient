@@ -20,7 +20,7 @@ export function lazyPage<P extends Record<string, any>>(loader: () => Promise<{ 
 }
 
 type Preload = () => Promise<unknown>;
-let registry: { pages: Record<string, Preload>; guide: Preload; notFound: Preload } | null = null;
+let registry: { pages: Record<string, Preload>; guide: Preload; blogPost: Preload; notFound: Preload } | null = null;
 
 export const registerRoutePreloads = (value: NonNullable<typeof registry>) => {
   registry = value;
@@ -35,7 +35,9 @@ export async function preloadRoute(pathname: string): Promise<void> {
     await Promise.all([registry.guide(), loadGuideBody(guide.slug)]);
   } else if (registry.pages[base]) {
     await registry.pages[base]();
-  } else if (base !== "/" && !base.startsWith("/blog/")) {
+  } else if (base.startsWith("/blog/")) {
+    await registry.blogPost();
+  } else if (base !== "/") {
     await registry.notFound();
   }
 }

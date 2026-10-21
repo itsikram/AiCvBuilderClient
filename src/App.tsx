@@ -1,6 +1,6 @@
 import { useState, type ReactNode } from "react";
 import { BrowserRouter } from "react-router-dom";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClient, QueryClientProvider, type QueryKey } from "@tanstack/react-query";
 import { GoogleOAuthProvider } from "@react-oauth/google";
 import { Toaster } from "@/components/ui/toast";
 import { PageContentProvider } from "@/context/PageContentContext";
@@ -11,10 +11,15 @@ import { AppRoutes } from "@/routes";
 const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || "";
 
 /** Providers shared by the browser app and the build-time prerenderer. */
-export function AppProviders({ children }: { children: ReactNode }) {
-  const [queryClient] = useState(
-    () => new QueryClient({ defaultOptions: { queries: { staleTime: 60_000, retry: 1 } } })
-  );
+/** API responses a prerendered page was built with, so hydration matches the static HTML. */
+export type InitialQueryData = Array<[QueryKey, unknown]>;
+
+export function AppProviders({ children, initialData }: { children: ReactNode; initialData?: InitialQueryData }) {
+  const [queryClient] = useState(() => {
+    const client = new QueryClient({ defaultOptions: { queries: { staleTime: 60_000, retry: 1 } } });
+    for (const [key, data] of initialData ?? []) client.setQueryData(key, data);
+    return client;
+  });
   const content = (
     <QueryClientProvider client={queryClient}>
       <PageContentProvider>{children}</PageContentProvider>
@@ -34,9 +39,9 @@ export function AppShell() {
   );
 }
 
-export default function App() {
+export default function App({ initialData }: { initialData?: InitialQueryData }) {
   return (
-    <AppProviders>
+    <AppProviders initialData={initialData}>
       <BrowserRouter>
         <AppShell />
       </BrowserRouter>

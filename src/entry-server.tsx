@@ -2,7 +2,7 @@
 import { prerender } from "react-dom/static";
 import { StaticRouter } from "react-router-dom";
 import i18n from "@/i18n";
-import { AppProviders, AppShell } from "@/App";
+import { AppProviders, AppShell, type InitialQueryData } from "@/App";
 import { HeadCollectorContext, type HeadData } from "@/components/seo/head";
 import { getLangFromPath } from "@/lib/i18nRouting";
 import { GUIDES } from "@/content/guides";
@@ -18,7 +18,10 @@ export const GUIDE_DATES: Record<string, string> = Object.fromEntries(
   GUIDES.map((guide) => [`/${guide.slug}`, guide.updated])
 );
 
-export async function render(url: string): Promise<{ html: string; head: HeadData | undefined; lang: string }> {
+export async function render(
+  url: string,
+  initialData?: InitialQueryData
+): Promise<{ html: string; head: HeadData | undefined; lang: string }> {
   const lang = getLangFromPath(url);
   await i18n.changeLanguage(lang);
   let head: HeadData | undefined;
@@ -26,7 +29,7 @@ export async function render(url: string): Promise<{ html: string; head: HeadDat
 
   const tree = () => (
     <HeadCollectorContext.Provider value={collector}>
-      <AppProviders>
+      <AppProviders initialData={initialData}>
         <StaticRouter location={url}>
           <AppShell />
         </StaticRouter>

@@ -30,6 +30,7 @@ registerRoutePreloads({
     "/contact": ContactPage.preload,
   },
   guide: GuidePage.preload,
+  blogPost: BlogPostPage.preload,
   notFound: NotFoundPage.preload,
 });
 const PublicResumePage = lazy(() => import("@/pages/PublicResumePage"));

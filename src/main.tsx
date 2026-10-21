@@ -5,7 +5,7 @@ import "@fontsource/hind-siliguri/bengali-400.css";
 import "@fontsource/hind-siliguri/bengali-600.css";
 import "./index.css";
 import i18n, { resolveInitialLanguage } from "./i18n";
-import App from "./App.tsx";
+import App, { type InitialQueryData } from "./App.tsx";
 import { preloadRoute } from "@/lib/lazyPage";
 import { useThemeStore } from "./store/themeStore";
 
@@ -21,10 +21,18 @@ i18n.changeLanguage(resolveInitialLanguage(window.location.pathname));
 // so drop the static ones to avoid duplicate canonical/description tags.
 document.querySelectorAll("[data-prerender]").forEach((node) => node.remove());
 
+// API data a prerendered page (blog list or post) was built with; see scripts/prerender.mjs
+let initialData: InitialQueryData | undefined;
+try {
+  initialData = JSON.parse(document.getElementById("prerender-data")?.textContent || "null") ?? undefined;
+} catch {
+  initialData = undefined;
+}
+
 const container = document.getElementById("root")!;
 const app = (
   <StrictMode>
-    <App />
+    <App initialData={initialData} />
   </StrictMode>
 );
 
