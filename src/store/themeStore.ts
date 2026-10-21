@@ -3,6 +3,12 @@ import { persist } from "zustand/middleware";
 
 type Theme = "light" | "dark" | "system";
 
+/** Exactly one of .light/.dark on <html>; .light stops the CSS following a dark device setting. */
+export const applyThemeClass = (resolved: "light" | "dark") => {
+  document.documentElement.classList.toggle("dark", resolved === "dark");
+  document.documentElement.classList.toggle("light", resolved === "light");
+};
+
 interface ThemeState {
   theme: Theme;
   setTheme: (theme: Theme) => void;
@@ -19,7 +25,7 @@ export const useThemeStore = create<ThemeState>()(
       resolvedTheme: "light",
       setTheme: (theme) => {
         const resolved = theme === "system" ? getSystemTheme() : theme;
-        document.documentElement.classList.toggle("dark", resolved === "dark");
+        applyThemeClass(resolved);
         set({ theme, resolvedTheme: resolved });
       },
     }),
@@ -29,7 +35,7 @@ export const useThemeStore = create<ThemeState>()(
         if (state) {
           const resolved =
             state.theme === "system" ? getSystemTheme() : state.theme;
-          document.documentElement.classList.toggle("dark", resolved === "dark");
+          applyThemeClass(resolved);
           state.resolvedTheme = resolved;
         }
       },

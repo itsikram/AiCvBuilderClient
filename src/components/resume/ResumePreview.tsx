@@ -597,7 +597,19 @@ function FitToWidth({ children, showPageBreaks }: { children: ReactNode; showPag
   );
 }
 
+/** Headings use the CV language, which may differ from the UI language; load it if needed. */
+function useLanguageBundle(lang: CvLang) {
+  const [, setLoaded] = useState(0);
+  const ready = i18n.hasResourceBundle(lang, "translation");
+  useEffect(() => {
+    if (!ready) void i18n.loadLanguages(lang).then(() => setLoaded((n) => n + 1));
+  }, [lang, ready]);
+  return ready;
+}
+
 export function ResumePreview({ className, mode = "fit", showPageBreaks, ...props }: Props) {
+  const ready = useLanguageBundle(props.language ?? "en");
+  if (!ready) return mode === "print" ? null : <div className={cn("aspect-[210/297] w-full animate-pulse rounded bg-secondary", className)} aria-busy="true" />;
   if (mode === "print") return <CvPage {...props} print />;
   return (
     <div className={className}>

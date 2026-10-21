@@ -73,6 +73,20 @@ const apiUrl = (env.VITE_API_URL || "/api/v1").replace(/\/+$/, "");
 const xmlEscape = (value) =>
   value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 
+// Preload the body font for the page's language, so text doesn't re-render (and
+// move the LCP) when it swaps in. Bangla pages also show Latin text.
+const assetFiles = fs.readdirSync(path.join(dist, "assets"));
+const fontFile = (pattern) => assetFiles.find((f) => pattern.test(f));
+const FONT_PRELOADS = {
+  en: [fontFile(/^inter-latin-wght-normal-.*\.woff2$/)],
+  bn: [fontFile(/^hind-siliguri-bengali-400-normal-.*\.woff2$/), fontFile(/^inter-latin-wght-normal-.*\.woff2$/)],
+};
+const fontPreloads = (lang) =>
+  (FONT_PRELOADS[lang] ?? FONT_PRELOADS.en)
+    .filter(Boolean)
+    .map((file) => `<link rel="preload" href="/assets/${file}" as="font" type="font/woff2" crossorigin>`)
+    .join("\n    ");
+
 /**
  * `initialData` is the API data the page was rendered with; it is embedded as JSON
  * (not executable, so the CSP allows it) and seeds the client cache before hydration.
@@ -96,6 +110,7 @@ function writePage(url, outFile, { html, head, lang }, { initialData, lenient = 
     : "";
   const page = template
     .replace(/<html lang="[^"]*">/, `<html lang="${lang === "bn" ? "bn-BD" : "en-BD"}">`)
+    .replace("<!--head:start-->", `${fontPreloads(lang)}\n    <!--head:start-->`)
     .replace(/<!--head:start-->[\s\S]*?<!--head:end-->/, `<!--head:start-->\n${headHtml(head)}\n    <!--head:end-->`)
     .replace('<div id="root"></div>', `<div id="root">${html}</div>${data}`);
   fs.mkdirSync(path.dirname(outFile), { recursive: true });

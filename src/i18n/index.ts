@@ -1,7 +1,5 @@
-import i18n from "i18next";
+import i18n, { type BackendModule } from "i18next";
 import { initReactI18next } from "react-i18next";
-import en from "./locales/en.json";
-import bn from "./locales/bn.json";
 import { getLangFromPath, isLocalizedPath, stripLangPrefix, type Lang } from "@/lib/i18nRouting";
 
 const STORAGE_KEY = "i18nextLng";
@@ -24,14 +22,39 @@ export const resolveInitialLanguage = (pathname: string): Lang => {
   return readStoredLanguage() ?? "en";
 };
 
-i18n.use(initReactI18next).init({
-  resources: { en: { translation: en }, bn: { translation: bn } },
-  lng: "en",
-  fallbackLng: "en",
-  supportedLngs: ["en", "bn"],
-  interpolation: { escapeValue: false },
-  returnNull: false,
-});
+// Each language is its own chunk, loaded on first use, so visitors only download
+// the one they read. scripts/check-i18n.mjs keeps both files in step, so no
+// fallback language is needed.
+const loaders: Record<Lang, () => Promise<{ default: Record<string, unknown> }>> = {
+  en: () => import("./locales/en.json"),
+  bn: () => import("./locales/bn.json"),
+};
+
+const lazyLocales: BackendModule = {
+  type: "backend",
+  init: () => undefined,
+  read: (lng, _ns, callback) => {
+    const load = loaders[lng as Lang];
+    if (!load) return callback(new Error(`Unsupported language: ${lng}`), false);
+    load().then(
+      (m) => callback(null, m.default),
+      (error: Error) => callback(error, false)
+    );
+  },
+};
+
+/** Resolves once the first language has loaded; render the app after it. */
+export const i18nReady = i18n
+  .use(lazyLocales)
+  .use(initReactI18next)
+  .init({
+    lng: typeof window === "undefined" ? "en" : resolveInitialLanguage(window.location.pathname),
+    fallbackLng: false,
+    supportedLngs: ["en", "bn"],
+    load: "languageOnly",
+    interpolation: { escapeValue: false },
+    returnNull: false,
+  });
 
 /** Switches the UI language and remembers it for app pages. */
 export const setLanguage = (lang: Lang) => {

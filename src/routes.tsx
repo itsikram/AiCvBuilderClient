@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, type ReactNode } from "react";
+import { lazy, Suspense, useEffect, useRef, type ReactNode } from "react";
 import { Outlet, Route, Routes, useLocation } from "react-router-dom";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { ProtectedRoute, PublicRoute } from "@/components/auth/ProtectedRoute";
@@ -82,7 +82,13 @@ function LanguageScope({ lang }: { lang: Lang }) {
 
 function RouteLoader() {
   const { pathname } = useLocation();
+  const firstLoad = useRef(true);
   useEffect(() => {
+    // The first page is already on screen (prerendered or loading); show the bar only for navigation
+    if (firstLoad.current) {
+      firstLoad.current = false;
+      return;
+    }
     LoadingBar.start();
     const timer = setTimeout(() => LoadingBar.done(), 300);
     window.scrollTo(0, 0);

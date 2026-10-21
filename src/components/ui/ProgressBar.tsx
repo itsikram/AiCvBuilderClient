@@ -92,10 +92,11 @@ export function ProgressBar({
       style={{ height: `${height}px` }}
     >
       <div
-        className={`h-full ${color} transition-all duration-200 ease-out ${
+        // transform (not width) so the animation never triggers layout
+        className={`h-full w-full origin-left ${color} transition-transform duration-200 ease-out ${
           shadow ? "shadow-[0_0_10px_rgba(59,130,246,0.5)]" : ""
         }`}
-        style={{ width: `${progress}%` }}
+        style={{ transform: `scaleX(${progress / 100})` }}
       />
     </div>
   );

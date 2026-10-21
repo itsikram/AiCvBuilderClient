@@ -1,0 +1,16 @@
+{
+  "name": "AI CV Builder BD",
+  "short_name": "CV Builder BD",
+  "description": "Free AI CV maker for jobs in Bangladesh, in Bangla and English.",
+  "lang": "en-BD",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#2563eb",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

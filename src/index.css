@@ -1,6 +1,18 @@
 @import "tailwindcss";
 
-@custom-variant dark (&:where(.dark, .dark *));
+/* Dark when chosen (.dark) or, for the "system" setting, when the device prefers it.
+   Doing this in CSS means prerendered pages paint in the right theme before any JS
+   runs; the theme store sets .light to opt out. */
+@custom-variant dark {
+  &:where(.dark, .dark *) {
+    @slot;
+  }
+  @media (prefers-color-scheme: dark) {
+    &:where(:root:not(.light), :root:not(.light) *) {
+      @slot;
+    }
+  }
+}
 
 @theme {
   --font-sans: "Inter Variable", "Hind Siliguri", ui-sans-serif, system-ui, sans-serif;
@@ -16,12 +28,31 @@
   --radius: 0.75rem;
 }
 
+:root {
+  color-scheme: light;
+}
+
 .dark {
+  color-scheme: dark;
+  /* slate-400: 4.5:1+ contrast on the dark background and cards */
+  --color-muted: #94a3b8;
   --color-secondary: #1e293b;
   --color-border: #334155;
   --color-background: #0f172a;
   --color-foreground: #f8fafc;
   --color-card: #1e293b;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not(.light) {
+    color-scheme: dark;
+    --color-muted: #94a3b8;
+    --color-secondary: #1e293b;
+    --color-border: #334155;
+    --color-background: #0f172a;
+    --color-foreground: #f8fafc;
+    --color-card: #1e293b;
+  }
 }
 
 * {
