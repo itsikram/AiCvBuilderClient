@@ -1,13 +1,18 @@
 import { useState } from "react";
+import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Mail, Download, Loader2, Upload, FileText } from "lucide-react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Copy, Download, FileUp, Loader2, Mail, Printer, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import api from "@/lib/api";
-import { normalizeLanguage } from "@/lib/language";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/components/ui/toast";
+import { SelectField, TextAreaField, TextField } from "@/components/editor/fields";
+import { ImportDialog } from "@/components/editor/ImportDialog";
+import { QuotaNote } from "@/components/editor/ai";
+import api, { getErrorMessage } from "@/lib/api";
+import { AI_QUOTA_KEY, TONES, type Tone } from "@/lib/ai";
+import { confirmAction } from "@/lib/confirm";
+import { PRINT_ROOT_ID, printResume } from "@/lib/resume/print";
 import { formatDate } from "@/lib/utils";
 import type { Resume } from "@/types";
 
@@ -17,305 +22,237 @@ interface CoverLetter {
   companyName: string;
   jobTitle: string;
   content: string;
+  language?: "en" | "bn";
   createdAt: string;
 }
 
 export default function CoverLetterPage() {
+  const { t, i18n } = useTranslation();
   const toast = useToast();
   const queryClient = useQueryClient();
-  const { i18n } = useTranslation();
-  const [form, setForm] = useState({
-    companyName: "",
-    jobTitle: "",
-    jobDescription: "",
-  });
-  const [generated, setGenerated] = useState("");
-  const [resumeSource, setResumeSource] = useState<"saved" | "upload">("saved");
-  const [selectedResumeId, setSelectedResumeId] = useState("");
-  const [selectedResumeLabel, setSelectedResumeLabel] = useState("Select a resume to personalize the letter");
-  const [uploadStatus, setUploadStatus] = useState("Upload a PDF resume to personalize your cover letter.");
-  const [uploadProgress, setUploadProgress] = useState(0);
-  const [isUploadingResume, setIsUploadingResume] = useState(false);
+  const [form, setForm] = useState({ companyName: "", jobTitle: "", jobDescription: "" });
+  const [resumeId, setResumeId] = useState("");
+  const [language, setLanguage] = useState<"en" | "bn">(i18n.language === "bn" ? "bn" : "en");
+  const [tone, setTone] = useState<Tone>("formal");
+  const [current, setCurrent] = useState<{ id?: string; text: string; title: string; language: "en" | "bn" } | null>(null);
+  const [importOpen, setImportOpen] = useState(false);
 
-  const { data: letters } = useQuery({
+  const letters = useQuery({
     queryKey: ["cover-letters"],
-    queryFn: async () => {
-      const { data } = await api.get("/cover-letters");
-      return data.data as CoverLetter[];
-    },
+    queryFn: async () => (await api.get("/cover-letters")).data.data as CoverLetter[],
   });
-
-  const { data: resumes = [] } = useQuery<Resume[]>({
+  const resumes = useQuery({
     queryKey: ["resumes"],
-    queryFn: async () => {
-      const { data } = await api.get("/resumes");
-      return data.data as Resume[];
-    },
+    queryFn: async () => (await api.get("/resumes")).data.data as Resume[],
   });
 
-  const generateMutation = useMutation({
-    mutationFn: () =>
-      api.post("/cover-letters/generate", {
-        ...form,
-        resumeId: selectedResumeId || undefined,
-        language: normalizeLanguage(i18n.language),
-      }),
-    onSuccess: (res) => {
-      setGenerated(res.data.data.letter.content);
+  const generate = useMutation({
+    mutationFn: async () => (await api.post("/cover-letters/generate", { ...form, resumeId: resumeId || undefined, language, tone }, { timeout: 120_000 })).data.data,
+    onSuccess: (data: { letter: CoverLetter }) => {
+      setCurrent({ id: data.letter._id, text: data.letter.content, title: data.letter.title, language });
       queryClient.invalidateQueries({ queryKey: ["cover-letters"] });
-      toast.add("Cover letter generated!", "success");
+      toast.add(t("coverLetter.generated"), "success");
     },
-    onError: (err: unknown) => {
-      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
-      toast.add(msg || "Generation failed", "error");
-    },
+    onError: (error) => toast.add(getErrorMessage(error, t("common.error")), "error"),
+    onSettled: () => queryClient.invalidateQueries({ queryKey: AI_QUOTA_KEY }),
   });
 
-  const handleResumeUpload = async (file: File) => {
-    setIsUploadingResume(true);
-    setUploadProgress(5);
-    setUploadStatus("Uploading your resume...");
-
+  const remove = async (letter: CoverLetter) => {
+    const ok = await confirmAction({ title: t("coverLetter.deleteTitle"), text: t("coverLetter.deleteText", { title: letter.title }), confirmLabel: t("common.delete"), destructive: true });
+    if (!ok) return;
     try {
-      const formData = new FormData();
-      formData.append("file", file);
-
-      const { data } = await api.post("/resumes/upload-parse", formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-        onUploadProgress: (progressEvent) => {
-          if (progressEvent.total) {
-            const percent = Math.round((progressEvent.loaded * 100) / progressEvent.total);
-            setUploadProgress(Math.max(5, Math.min(95, percent)));
-          }
-        },
-      });
-
-      setUploadProgress(100);
-      setUploadStatus("Resume uploaded and ready to use.");
-      setSelectedResumeId(data.data.resumeId);
-      setSelectedResumeLabel(data.data.title || file.name);
-      setResumeSource("upload");
-      queryClient.invalidateQueries({ queryKey: ["resumes"] });
-      toast.add("Resume uploaded and ready to use", "success");
-    } catch (err: unknown) {
-      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
-      setUploadStatus(msg || "Upload failed. Please try again.");
-      toast.add(msg || "Upload failed", "error");
-    } finally {
-      setIsUploadingResume(false);
+      await api.delete(`/cover-letters/${letter._id}`);
+      if (current?.id === letter._id) setCurrent(null);
+      queryClient.invalidateQueries({ queryKey: ["cover-letters"] });
+      toast.add(t("coverLetter.deleted"), "success");
+    } catch (error) {
+      toast.add(getErrorMessage(error, t("common.error")), "error");
     }
   };
 
-  const exportPDF = async (id: string) => {
-    const res = await api.get(`/cover-letters/${id}/export-pdf`, { responseType: "blob" });
-    const url = window.URL.createObjectURL(new Blob([res.data]));
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "cover-letter.pdf";
-    a.click();
+  const serverPdf = async (letter: { id?: string; title: string }) => {
+    if (!letter.id) return;
+    try {
+      const res = await api.get(`/cover-letters/${letter.id}/export-pdf`, { responseType: "blob" });
+      const url = URL.createObjectURL(new Blob([res.data], { type: "application/pdf" }));
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${letter.title || "cover-letter"}.pdf`;
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(url), 10_000);
+    } catch (error) {
+      toast.add(getErrorMessage(error, t("common.error")), "error");
+    }
   };
+
+  const canGenerate = form.companyName.trim() && form.jobTitle.trim() && form.jobDescription.trim().length >= 20;
 
   return (
     <div className="w-full space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-bold flex items-center gap-2">
-            <Mail className="h-7 w-7 text-primary" />
-            Cover Letter Generator
-          </h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Pick a saved resume or upload a new one, then let AI write a tailored cover letter for the job.
-          </p>
-        </div>
+      <div>
+        <h1 className="flex items-center gap-2 text-2xl font-bold">
+          <Mail className="h-7 w-7 text-primary" aria-hidden />
+          {t("coverLetter.title")}
+        </h1>
+        <p className="mt-1 text-sm text-muted">{t("coverLetter.intro")}</p>
       </div>
 
       <div className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
-        <Card>
-          <CardHeader>
-            <CardTitle>Generate New Cover Letter</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <Input
-              placeholder="Company Name"
-              value={form.companyName}
-              onChange={(e) => setForm({ ...form, companyName: e.target.value })}
+        <form
+          className="space-y-4 rounded-xl border bg-card p-4 sm:p-5"
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (canGenerate) generate.mutate();
+          }}
+        >
+          <div className="grid gap-3 sm:grid-cols-2">
+            <TextField label={t("coverLetter.company")} value={form.companyName} onChange={(v) => setForm({ ...form, companyName: v })} required />
+            <TextField label={t("coverLetter.jobTitle")} value={form.jobTitle} onChange={(v) => setForm({ ...form, jobTitle: v })} required />
+          </div>
+          <TextAreaField
+            label={t("coverLetter.jobPost")}
+            hint={t("coverLetter.jobPostHint")}
+            placeholder={t("ai.tailor.placeholder")}
+            value={form.jobDescription}
+            onChange={(v) => setForm({ ...form, jobDescription: v })}
+            rows={7}
+          />
+          <div className="grid gap-3 sm:grid-cols-3">
+            <SelectField
+              className="sm:col-span-3"
+              label={t("coverLetter.cv")}
+              hint={resumes.data?.length ? undefined : t("coverLetter.noCv")}
+              value={resumeId}
+              onChange={setResumeId}
+              options={[{ value: "", label: t("coverLetter.noCvOption") }, ...(resumes.data ?? []).map((r) => ({ value: r._id, label: r.title }))]}
             />
-            <Input
-              placeholder="Job Title"
-              value={form.jobTitle}
-              onChange={(e) => setForm({ ...form, jobTitle: e.target.value })}
+            <SelectField
+              label={t("coverLetter.language")}
+              value={language}
+              onChange={(v) => setLanguage(v as "en" | "bn")}
+              options={[
+                { value: "en", label: "English" },
+                { value: "bn", label: "বাংলা" },
+              ]}
             />
-            <div>
-              <label className="mb-1 block text-sm font-medium">Job description</label>
-              <textarea
-                className="w-full min-h-[180px] rounded-lg border border-border bg-background px-3 py-2 text-sm"
-                placeholder="Paste the job description here..."
-                value={form.jobDescription}
-                onChange={(e) => setForm({ ...form, jobDescription: e.target.value })}
-              />
-            </div>
-
-            <div className="rounded-lg border border-border bg-secondary/30 p-4 space-y-3">
-              <div className="flex items-center justify-between gap-3">
-                <div>
-                  <p className="font-medium">Resume source</p>
-                  <p className="text-sm text-muted-foreground">
-                    {selectedResumeLabel}
-                  </p>
-                </div>
-                {selectedResumeId && (
-                  <Button variant="outline" size="sm" onClick={() => {
-                    setSelectedResumeId("");
-                    setSelectedResumeLabel("Select a resume to personalize the letter");
-                    setResumeSource("saved");
-                  }}>
-                    Clear
-                  </Button>
-                )}
-              </div>
-
-              <div className="flex rounded-lg bg-background p-1">
-                {(["saved", "upload"] as const).map((source) => (
-                  <button
-                    key={source}
-                    type="button"
-                    onClick={() => setResumeSource(source)}
-                    className={`flex-1 rounded-md px-3 py-2 text-sm font-medium transition ${
-                      resumeSource === source ? "bg-primary text-primary-foreground" : "text-muted-foreground"
-                    }`}
-                  >
-                    {source === "saved" ? "Saved resumes" : "Upload new"}
-                  </button>
-                ))}
-              </div>
-
-              {resumeSource === "saved" ? (
-                <div className="space-y-2">
-                  {resumes.length > 0 ? (
-                    resumes.map((resume) => {
-                      const isSelected = selectedResumeId === resume._id;
-                      return (
-                        <button
-                          key={resume._id}
-                          type="button"
-                          onClick={() => {
-                            setSelectedResumeId(resume._id);
-                            setSelectedResumeLabel(resume.title);
-                          }}
-                          className={`w-full rounded-lg border p-3 text-left transition ${
-                            isSelected ? "border-primary bg-primary/5" : "hover:border-primary"
-                          }`}
-                        >
-                          <div className="flex items-center gap-3">
-                            <FileText className="h-5 w-5 text-primary" />
-                            <div>
-                              <p className="font-medium">{resume.title}</p>
-                              <p className="text-xs text-muted-foreground">Last updated {formatDate(resume.updatedAt)}</p>
-                            </div>
-                          </div>
-                        </button>
-                      );
-                    })
-                  ) : (
-                    <div className="rounded-lg border border-dashed p-4 text-sm text-muted-foreground">
-                      You don’t have any saved resumes yet. Upload a new resume to get started.
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  <label className="block cursor-pointer rounded-lg border-2 border-dashed border-border p-5 text-center transition hover:border-primary">
-                    <Upload className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
-                    <p className="text-sm font-medium">Upload your existing resume</p>
-                    <p className="text-sm text-muted-foreground">PDF uploads are supported for AI parsing</p>
-                    <span className="mt-3 inline-flex rounded-md border border-border bg-background px-3 py-1 text-sm">
-                      Choose file
-                    </span>
-                    <input
-                      type="file"
-                      accept=".pdf"
-                      disabled={isUploadingResume}
-                      onChange={(e) => {
-                        const file = e.target.files?.[0];
-                        if (file) handleResumeUpload(file);
-                      }}
-                      className="sr-only"
-                    />
-                  </label>
-
-                  <div className="rounded-lg border bg-background p-4 space-y-3">
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="font-medium">{uploadStatus}</span>
-                      <span className="text-muted-foreground">{isUploadingResume ? `${uploadProgress}%` : "Ready"}</span>
-                    </div>
-                    <div className="h-2 rounded-full bg-secondary overflow-hidden">
-                      <div
-                        className="h-full rounded-full bg-primary transition-all"
-                        style={{ width: `${isUploadingResume ? uploadProgress : 0}%` }}
-                      />
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            <Button
-              variant="gradient"
-              onClick={() => generateMutation.mutate()}
-              disabled={generateMutation.isPending}
-              className="w-full"
-            >
-              {generateMutation.isPending ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Mail className="h-4 w-4" />
-              )}
-              Generate with AI
+            <SelectField className="sm:col-span-2" label={t("ai.tone")} value={tone} onChange={(v) => setTone(v as Tone)} options={TONES.map((x) => ({ value: x, label: t(`ai.tones.${x}`) }))} />
+          </div>
+          <button type="button" className="flex items-center gap-1.5 text-sm text-primary underline underline-offset-2" onClick={() => setImportOpen(true)}>
+            <FileUp className="h-4 w-4" /> {t("coverLetter.importCv")}
+          </button>
+          <div className="flex flex-wrap items-center gap-3">
+            <Button type="submit" variant="gradient" disabled={!canGenerate || generate.isPending}>
+              {generate.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Mail className="h-4 w-4" />}
+              {generate.isPending ? t("ai.working") : t("coverLetter.generate")}
             </Button>
-          </CardContent>
-        </Card>
+            <QuotaNote />
+          </div>
+        </form>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Generated Cover Letter</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {generated ? (
-              <div className="rounded-lg border border-border bg-secondary/30 p-4 whitespace-pre-wrap text-sm leading-7">
-                {generated}
-              </div>
-            ) : (
-              <div className="rounded-lg border border-dashed p-6 text-sm text-muted-foreground">
-                Your AI-generated cover letter will appear here after you generate it.
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-
-      {letters && letters.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Saved Cover Letters</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {letters.map((letter) => (
-              <div
-                key={letter._id}
-                className="flex items-center justify-between p-3 border border-border rounded-lg"
-              >
-                <div>
-                  <p className="font-medium">{letter.title}</p>
-                  <p className="text-xs text-muted-foreground">{formatDate(letter.createdAt)}</p>
-                </div>
-                <Button variant="outline" size="sm" onClick={() => exportPDF(letter._id)}>
-                  <Download className="h-4 w-4" />
+        <section className="space-y-3 rounded-xl border bg-card p-4 sm:p-5" aria-labelledby="letter-heading">
+          <h2 id="letter-heading" className="font-semibold">
+            {current?.title || t("coverLetter.result")}
+          </h2>
+          {current ? (
+            <>
+              <label htmlFor="letter-text" className="sr-only">
+                {t("coverLetter.result")}
+              </label>
+              <textarea
+                id="letter-text"
+                className="min-h-[360px] w-full rounded-lg border bg-background p-3 text-base leading-7 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:text-sm"
+                lang={current.language}
+                value={current.text}
+                onChange={(e) => setCurrent({ ...current, text: e.target.value })}
+              />
+              <p className="text-xs text-muted">{t("coverLetter.editHint")}</p>
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={async () => {
+                    await navigator.clipboard?.writeText(current.text).catch(() => undefined);
+                    toast.add(t("coverLetter.copied"), "success");
+                  }}
+                >
+                  <Copy className="h-4 w-4" /> {t("coverLetter.copy")}
+                </Button>
+                <Button type="button" variant="outline" onClick={() => void printResume(current.title)}>
+                  <Printer className="h-4 w-4" /> {t("editor.download.button")}
                 </Button>
               </div>
+            </>
+          ) : generate.isPending ? (
+            <div className="space-y-2" aria-busy="true">
+              <Skeleton className="h-4 w-3/4" />
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-5/6" />
+              <Skeleton className="h-4 w-2/3" />
+            </div>
+          ) : (
+            <p className="rounded-lg border border-dashed p-6 text-sm text-muted">{t("coverLetter.empty")}</p>
+          )}
+        </section>
+      </div>
+
+      <section className="rounded-xl border bg-card p-4 sm:p-5" aria-labelledby="saved-heading">
+        <h2 id="saved-heading" className="mb-3 font-semibold">
+          {t("coverLetter.saved")}
+        </h2>
+        {letters.isLoading ? (
+          <div className="space-y-2">
+            <Skeleton className="h-14" />
+            <Skeleton className="h-14" />
+          </div>
+        ) : letters.data?.length ? (
+          <ul className="space-y-2">
+            {letters.data.map((letter) => (
+              <li key={letter._id} className="flex flex-wrap items-center justify-between gap-2 rounded-lg border p-3">
+                <button
+                  type="button"
+                  className="min-w-0 flex-1 text-left"
+                  onClick={() => setCurrent({ id: letter._id, text: letter.content, title: letter.title, language: letter.language === "bn" ? "bn" : "en" })}
+                >
+                  <span className="block truncate font-medium">{letter.title}</span>
+                  <span className="text-xs text-muted">{formatDate(letter.createdAt)}</span>
+                </button>
+                <div className="flex gap-1">
+                  {letter.language !== "bn" && (
+                    <Button variant="ghost" size="icon" onClick={() => void serverPdf({ id: letter._id, title: letter.title })} aria-label={`${t("editor.download.button")}: ${letter.title}`}>
+                      <Download className="h-4 w-4" />
+                    </Button>
+                  )}
+                  <Button variant="ghost" size="icon" className="text-red-600" onClick={() => void remove(letter)} aria-label={`${t("common.delete")}: ${letter.title}`}>
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              </li>
             ))}
-          </CardContent>
-        </Card>
-      )}
+          </ul>
+        ) : (
+          <p className="text-sm text-muted">{t("coverLetter.noneSaved")}</p>
+        )}
+      </section>
+
+      <ImportDialog
+        open={importOpen}
+        onOpenChange={setImportOpen}
+        onImported={(r) => {
+          queryClient.invalidateQueries({ queryKey: ["resumes"] });
+          setResumeId(r.resumeId);
+        }}
+      />
+
+      {/* Print copy of the letter (Bangla-safe "Save as PDF") */}
+      {current &&
+        createPortal(
+          <div id={PRINT_ROOT_ID} aria-hidden>
+            <article className="cv-page cv-page--print whitespace-pre-wrap" lang={current.language} style={{ width: "210mm", padding: "22mm 22mm", fontFamily: '"Inter Variable", "Hind Siliguri", sans-serif', fontSize: "11pt", lineHeight: 1.6, color: "#111827" }}>
+              {current.text}
+            </article>
+          </div>,
+          document.body
+        )}
     </div>
   );
 }
