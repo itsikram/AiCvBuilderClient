@@ -1,13 +1,18 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Target, Loader2, Upload, FileText } from "lucide-react";
+import { FileUp, Loader2, Target } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import api from "@/lib/api";
-import { normalizeLanguage } from "@/lib/language";
 import { useToast } from "@/components/ui/toast";
+import { SelectField, TextAreaField } from "@/components/editor/fields";
+import { ImportDialog } from "@/components/editor/ImportDialog";
+import { QuotaNote } from "@/components/editor/ai";
+import api, { getErrorMessage } from "@/lib/api";
+import { AI_QUOTA_KEY } from "@/lib/ai";
+import { normalizeLanguage } from "@/lib/language";
+import { normalizeContent } from "@/lib/resume/model";
+import { cn } from "@/lib/utils";
 import type { Resume, ResumeContent } from "@/types";
 
 interface ATSResult {
@@ -19,366 +24,189 @@ interface ATSResult {
   recommendations: string[];
 }
 
-const buildResumeTextFromContent = (content: ResumeContent) => {
-  const lines = [
-    content.personalInfo.fullName,
-    content.personalInfo.email,
-    content.personalInfo.phone,
-    content.personalInfo.location,
-    content.personalInfo.summary,
-    content.skills.length ? `Skills: ${content.skills.join(", ")}` : "",
-    content.projects.length
-      ? `Projects: ${content.projects.map((project) => `${project.name} - ${project.description}`).join(" | ")}`
-      : "",
-    content.experience.length
-      ? `Experience: ${content.experience
-          .map((experience) => `${experience.position} at ${experience.company} - ${experience.bullets.filter(Boolean).join(" | ")}`)
-          .join(" | ")}`
-      : "",
-    content.education.length
-      ? `Education: ${content.education
-          .map((education) => `${education.degree} at ${education.institution}`)
-          .join(" | ")}`
-      : "",
-    content.languages.length
-      ? `Languages: ${content.languages.map((language) => `${language.name} (${language.proficiency})`).join(", ")}`
-      : "",
-    content.certifications.length
-      ? `Certifications: ${content.certifications.map((certification) => certification.name).join(", ")}`
-      : "",
-    content.awards.length ? `Awards: ${content.awards.map((award) => award.title).join(", ")}` : "",
-    content.publications.length
-      ? `Publications: ${content.publications.map((publication) => publication.title).join(", ")}`
-      : "",
-    content.volunteerExperience.length
-      ? `Volunteer: ${content.volunteerExperience.map((volunteer) => volunteer.role).join(", ")}`
-      : "",
-    content.references.length
-      ? `References: ${content.references.map((reference) => reference.name).join(", ")}`
-      : "",
-    content.interests.length ? `Interests: ${content.interests.join(", ")}` : "",
-    content.courses.length ? `Courses: ${content.courses.map((course) => course.name).join(", ")}` : "",
-    content.memberships.length
-      ? `Memberships: ${content.memberships.map((membership) => membership.organization).join(", ")}`
-      : "",
-  ].filter(Boolean);
-
-  return lines.join("\n");
+/** Plain-text CV for the checker (what an applicant tracking system would read). */
+const cvText = (raw: ResumeContent) => {
+  const c = normalizeContent(raw);
+  const p = c.personalInfo;
+  const list = (label: string, items: string[]) => (items.length ? `${label}: ${items.join(" | ")}` : "");
+  return [
+    [p.fullName, p.jobTitle].filter(Boolean).join(" - "),
+    [p.email, p.phone, p.location].filter(Boolean).join(" | "),
+    c.careerObjective && `Career Objective: ${c.careerObjective}`,
+    p.summary && `Summary: ${p.summary}`,
+    list("Experience", c.experience.map((e) => `${e.position} at ${e.company}: ${e.bullets.filter(Boolean).join("; ")}`)),
+    list("Education", c.education.map((e) => [e.degree, e.field, e.institution, e.passingYear, e.gpa && `GPA ${e.gpa}`].filter(Boolean).join(", "))),
+    list("Training", (c.trainings ?? []).map((x) => `${x.title}, ${x.institute}`)),
+    list("Skills", c.skills.filter(Boolean)),
+    list("Projects", c.projects.map((x) => `${x.name}: ${x.description}`)),
+    list("Certifications", c.certifications.map((x) => x.name)),
+    list("Languages", c.languages.map((x) => `${x.name} (${x.proficiency})`)),
+  ]
+    .filter(Boolean)
+    .join("\n");
 };
 
 export default function ATSCheckerPage() {
+  const { t, i18n } = useTranslation();
   const toast = useToast();
   const queryClient = useQueryClient();
-  const { i18n } = useTranslation();
-  const [resumeText, setResumeText] = useState("");
+  const [source, setSource] = useState<"saved" | "text">("saved");
+  const [resumeId, setResumeId] = useState("");
+  const [pasted, setPasted] = useState("");
   const [jobDescription, setJobDescription] = useState("");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<ATSResult | null>(null);
-  const [resumeSource, setResumeSource] = useState<"text" | "saved" | "upload">("text");
-  const [selectedResumeId, setSelectedResumeId] = useState("");
-  const [selectedResumeLabel, setSelectedResumeLabel] = useState("Choose a saved resume or upload one to analyze.");
-  const [uploadStatus, setUploadStatus] = useState("Upload a PDF or DOCX resume to use it in the ATS check.");
-  const [uploadProgress, setUploadProgress] = useState(0);
-  const [isUploadingResume, setIsUploadingResume] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
 
-  const { data: resumes = [] } = useQuery<Resume[]>({
+  const { data: resumes = [] } = useQuery({
     queryKey: ["resumes"],
-    queryFn: async () => {
-      const { data } = await api.get("/resumes");
-      return data.data as Resume[];
-    },
+    queryFn: async () => (await api.get("/resumes")).data.data as Resume[],
   });
 
-  const handleResumeUpload = async (file: File) => {
-    setIsUploadingResume(true);
-    setUploadProgress(5);
-    setUploadStatus("Uploading your resume...");
+  const selected = resumes.find((r) => r._id === resumeId);
+  const text = source === "saved" ? (selected ? cvText(selected.content) : "") : pasted.trim();
 
-    try {
-      const formData = new FormData();
-      formData.append("file", file);
-
-      const { data } = await api.post("/resumes/upload-parse", formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-        onUploadProgress: (progressEvent) => {
-          if (progressEvent.total) {
-            const percent = Math.round((progressEvent.loaded * 100) / progressEvent.total);
-            setUploadProgress(Math.max(5, Math.min(95, percent)));
-          }
-        },
-      });
-
-      const parsedContent = data.data.content as ResumeContent;
-      const parsedText = buildResumeTextFromContent(parsedContent);
-
-      setUploadProgress(100);
-      setUploadStatus("Resume uploaded and ready to analyze.");
-      setSelectedResumeId(data.data.resumeId);
-      setSelectedResumeLabel(data.data.title || file.name);
-      setResumeText(parsedText);
-      setResumeSource("upload");
-      queryClient.invalidateQueries({ queryKey: ["resumes"] });
-      toast.add("Resume uploaded and ready to use", "success");
-    } catch (err: unknown) {
-      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
-      setUploadStatus(msg || "Upload failed. Please try again.");
-      toast.add(msg || "Upload failed", "error");
-    } finally {
-      setIsUploadingResume(false);
-    }
-  };
-
-  const resolveResumeText = () => {
-    if (resumeSource === "saved") {
-      const selected = resumes.find((resume) => resume._id === selectedResumeId);
-      if (!selected) {
-        return "";
-      }
-      return buildResumeTextFromContent(selected.content);
-    }
-
-    if (resumeSource === "upload") {
-      return resumeText.trim();
-    }
-
-    return resumeText.trim();
-  };
-
-  const handleCheck = async () => {
-    const textToCheck = resolveResumeText();
-
-    if (textToCheck.length < 50) {
-      toast.add("Please provide at least 50 characters of resume text", "error");
+  const check = async () => {
+    if (text.length < 50) {
+      toast.add(t("ats.tooShort"), "error");
       return;
     }
-
     setLoading(true);
     try {
-      const { data } = await api.post("/resumes/ai/ats-check", {
-        resumeText: textToCheck,
-        jobDescription,
-        language: normalizeLanguage(i18n.language),
-      });
+      const { data } = await api.post(
+        "/resumes/ai/ats-check",
+        { resumeText: text, jobDescription: jobDescription || undefined, language: normalizeLanguage(i18n.language) },
+        { timeout: 120_000 }
+      );
       setResult(data.data);
-    } catch (err: unknown) {
-      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
-      toast.add(msg || "ATS check failed. Premium may be required.", "error");
+    } catch (error) {
+      toast.add(getErrorMessage(error, t("ats.failed")), "error");
     } finally {
       setLoading(false);
+      queryClient.invalidateQueries({ queryKey: AI_QUOTA_KEY });
     }
   };
 
   return (
     <div className="w-full space-y-6">
       <div>
-        <h1 className="text-2xl font-bold flex items-center gap-2">
-          <Target className="h-7 w-7 text-primary" />
-          ATS Score Checker
+        <h1 className="flex items-center gap-2 text-2xl font-bold">
+          <Target className="h-7 w-7 text-primary" aria-hidden />
+          {t("ats.title")}
         </h1>
-        <p className="text-sm text-muted-foreground">
-          Analyze a saved resume, an uploaded resume, or paste your own text for ATS compatibility.
-        </p>
+        <p className="mt-1 text-sm text-muted">{t("ats.intro")}</p>
       </div>
 
       <div className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Resume source</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center justify-between gap-3">
-              <div>
-                <p className="font-medium">Selected resume</p>
-                <p className="text-sm text-muted-foreground">{selectedResumeLabel}</p>
-              </div>
-              {selectedResumeId && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    setSelectedResumeId("");
-                    setSelectedResumeLabel("Choose a saved resume or upload one to analyze.");
-                    setResumeSource("text");
-                    setResumeText("");
-                  }}
-                >
-                  Clear
-                </Button>
-              )}
-            </div>
+        <section className="space-y-4 rounded-xl border bg-card p-4 sm:p-5" aria-label={t("ats.source")}>
+          <div className="flex gap-1 rounded-lg bg-secondary p-1" role="tablist" aria-label={t("ats.source")}>
+            {(["saved", "text"] as const).map((s) => (
+              <button
+                key={s}
+                type="button"
+                role="tab"
+                aria-selected={source === s}
+                onClick={() => setSource(s)}
+                className={cn("flex-1 rounded-md px-3 py-2 text-sm font-medium", source === s ? "bg-background shadow-sm" : "text-muted")}
+              >
+                {t(`ats.sources.${s}`)}
+              </button>
+            ))}
+          </div>
 
-            <div className="flex rounded-lg bg-secondary p-1">
-              {(["text", "saved", "upload"] as const).map((source) => (
-                <button
-                  key={source}
-                  type="button"
-                  onClick={() => setResumeSource(source)}
-                  className={`flex-1 rounded-md px-3 py-2 text-sm font-medium transition ${
-                    resumeSource === source ? "bg-background text-foreground shadow-sm" : "text-muted-foreground"
-                  }`}
-                >
-                  {source === "text" ? "Paste text" : source === "saved" ? "Saved resumes" : "Upload new"}
-                </button>
-              ))}
-            </div>
-
-            {resumeSource === "text" ? (
-              <div>
-                <label className="mb-1 block text-sm font-medium">Resume text</label>
-                <textarea
-                  className="w-full min-h-[260px] rounded-lg border border-border bg-background px-3 py-2 text-sm"
-                  placeholder="Paste your resume content here..."
-                  value={resumeText}
-                  onChange={(e) => setResumeText(e.target.value)}
-                />
-              </div>
-            ) : resumeSource === "saved" ? (
-              <div className="space-y-2">
-                {resumes.length > 0 ? (
-                  resumes.map((resume) => {
-                    const isSelected = selectedResumeId === resume._id;
-                    return (
-                      <button
-                        key={resume._id}
-                        type="button"
-                        onClick={() => {
-                          setSelectedResumeId(resume._id);
-                          setSelectedResumeLabel(resume.title);
-                          setResumeText(buildResumeTextFromContent(resume.content));
-                        }}
-                        className={`w-full rounded-lg border p-3 text-left transition ${
-                          isSelected ? "border-primary bg-primary/5" : "hover:border-primary"
-                        }`}
-                      >
-                        <div className="flex items-center gap-3">
-                          <FileText className="h-5 w-5 text-primary" />
-                          <div>
-                            <p className="font-medium">{resume.title}</p>
-                            <p className="text-xs text-muted-foreground">Last updated {new Date(resume.updatedAt).toLocaleDateString()}</p>
-                          </div>
-                        </div>
-                      </button>
-                    );
-                  })
-                ) : (
-                  <div className="rounded-lg border border-dashed p-4 text-sm text-muted-foreground">
-                    You don’t have any saved resumes yet. Upload a new resume to get started.
-                  </div>
-                )}
-              </div>
-            ) : (
-              <div className="space-y-3">
-                <label className="block cursor-pointer rounded-lg border-2 border-dashed border-border p-5 text-center transition hover:border-primary">
-                  <Upload className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
-                  <p className="text-sm font-medium">Upload your existing resume</p>
-                  <p className="text-sm text-muted-foreground">PDF or DOCX uploads are supported</p>
-                  <span className="mt-3 inline-flex rounded-md border border-border bg-background px-3 py-1 text-sm">
-                    Choose file
-                  </span>
-                  <input
-                    type="file"
-                    accept=".pdf,.docx,.doc"
-                    disabled={isUploadingResume}
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (file) handleResumeUpload(file);
-                    }}
-                    className="sr-only"
-                  />
-                </label>
-
-                <div className="rounded-lg border bg-secondary/30 p-4 space-y-3">
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="font-medium">{uploadStatus}</span>
-                    <span className="text-muted-foreground">{isUploadingResume ? `${uploadProgress}%` : "Ready"}</span>
-                  </div>
-                  <div className="h-2 rounded-full bg-secondary overflow-hidden">
-                    <div
-                      className="h-full rounded-full bg-primary transition-all"
-                      style={{ width: `${isUploadingResume ? uploadProgress : 0}%` }}
-                    />
-                  </div>
-                </div>
-              </div>
-            )}
-
-            <div>
-              <label className="mb-1 block text-sm font-medium">Job description (optional)</label>
-              <textarea
-                className="w-full min-h-[180px] rounded-lg border border-border bg-background px-3 py-2 text-sm"
-                placeholder="Paste job description for targeted ATS analysis..."
-                value={jobDescription}
-                onChange={(e) => setJobDescription(e.target.value)}
+          {source === "saved" ? (
+            <div className="space-y-2">
+              <SelectField
+                label={t("ats.chooseCv")}
+                value={resumeId}
+                onChange={setResumeId}
+                options={[{ value: "", label: t("ats.chooseCvOption") }, ...resumes.map((r) => ({ value: r._id, label: r.title }))]}
               />
+              <button type="button" className="flex items-center gap-1.5 text-sm text-primary underline underline-offset-2" onClick={() => setImportOpen(true)}>
+                <FileUp className="h-4 w-4" /> {t("coverLetter.importCv")}
+              </button>
             </div>
+          ) : (
+            <TextAreaField label={t("ats.cvText")} placeholder={t("ats.cvTextPlaceholder")} value={pasted} onChange={setPasted} rows={10} />
+          )}
 
-            <Button variant="gradient" onClick={handleCheck} disabled={loading} className="w-full">
+          <TextAreaField label={t("ats.jobPost")} hint={t("ats.jobPostHint")} placeholder={t("ai.tailor.placeholder")} value={jobDescription} onChange={setJobDescription} rows={6} />
+
+          <div className="flex flex-wrap items-center gap-3">
+            <Button variant="gradient" onClick={() => void check()} disabled={loading}>
               {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Target className="h-4 w-4" />}
-              Check ATS Score
+              {loading ? t("ai.working") : t("ats.run")}
             </Button>
-          </CardContent>
-        </Card>
+            <QuotaNote />
+          </div>
+        </section>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Analysis Results</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {result ? (
-              <div className="space-y-5">
-                <div className="flex items-center gap-4">
-                  <div className="text-5xl font-bold gradient-text">{result.score}%</div>
-                  <Badge variant={result.score >= 80 ? "success" : "secondary"} className="text-lg px-3">
-                    Grade {result.grade}
-                  </Badge>
-                </div>
-                <div className="grid gap-6 md:grid-cols-2">
-                  <div>
-                    <h3 className="font-semibold mb-2 text-green-600">Strengths</h3>
-                    <ul className="list-disc list-inside text-sm space-y-1">
-                      {result.strengths.map((s) => (
-                        <li key={s}>{s}</li>
-                      ))}
-                    </ul>
-                  </div>
-                  <div>
-                    <h3 className="font-semibold mb-2 text-red-600">Weaknesses</h3>
-                    <ul className="list-disc list-inside text-sm space-y-1">
-                      {result.weaknesses.map((w) => (
-                        <li key={w}>{w}</li>
-                      ))}
-                    </ul>
-                  </div>
-                </div>
-                {result.keywordAnalysis.missing.length > 0 && (
-                  <div>
-                    <h3 className="font-semibold mb-2">Missing Keywords</h3>
-                    <div className="flex flex-wrap gap-2">
-                      {result.keywordAnalysis.missing.map((k) => (
-                        <Badge key={k} variant="outline">
-                          {k}
-                        </Badge>
-                      ))}
-                    </div>
-                  </div>
-                )}
+        <section className="rounded-xl border bg-card p-4 sm:p-5" aria-labelledby="ats-results" aria-live="polite">
+          <h2 id="ats-results" className="mb-4 font-semibold">
+            {t("ats.results")}
+          </h2>
+          {result ? (
+            <div className="space-y-5">
+              <div className="flex items-center gap-4">
+                <div className="gradient-text text-5xl font-bold">{result.score}%</div>
+                <Badge variant={result.score >= 80 ? "success" : "secondary"} className="px-3 text-lg">
+                  {t("ats.grade", { grade: result.grade })}
+                </Badge>
+              </div>
+              <div className="grid gap-6 md:grid-cols-2">
                 <div>
-                  <h3 className="font-semibold mb-2">Recommendations</h3>
-                  <ul className="list-disc list-inside text-sm space-y-1">
-                    {result.recommendations.map((r) => (
-                      <li key={r}>{r}</li>
+                  <h3 className="mb-2 font-semibold text-green-700 dark:text-green-400">{t("ats.strengths")}</h3>
+                  <ul className="list-inside list-disc space-y-1 text-sm">
+                    {result.strengths.map((s) => (
+                      <li key={s}>{s}</li>
+                    ))}
+                  </ul>
+                </div>
+                <div>
+                  <h3 className="mb-2 font-semibold text-red-700 dark:text-red-400">{t("ats.weaknesses")}</h3>
+                  <ul className="list-inside list-disc space-y-1 text-sm">
+                    {result.weaknesses.map((w) => (
+                      <li key={w}>{w}</li>
                     ))}
                   </ul>
                 </div>
               </div>
-            ) : (
-              <div className="rounded-lg border border-dashed p-6 text-sm text-muted-foreground">
-                Your ATS score will appear here after you run the analysis.
+              {result.keywordAnalysis.missing.length > 0 && (
+                <div>
+                  <h3 className="mb-2 font-semibold">{t("ai.tailor.missing")}</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {result.keywordAnalysis.missing.map((k) => (
+                      <Badge key={k} variant="outline">
+                        {k}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
+              <div>
+                <h3 className="mb-2 font-semibold">{t("ats.recommendations")}</h3>
+                <ul className="list-inside list-disc space-y-1 text-sm">
+                  {result.recommendations.map((r) => (
+                    <li key={r}>{r}</li>
+                  ))}
+                </ul>
               </div>
-            )}
-          </CardContent>
-        </Card>
+            </div>
+          ) : (
+            <p className="rounded-lg border border-dashed p-6 text-sm text-muted">{t("ats.empty")}</p>
+          )}
+        </section>
       </div>
+
+      <ImportDialog
+        open={importOpen}
+        onOpenChange={setImportOpen}
+        onImported={(r) => {
+          queryClient.invalidateQueries({ queryKey: ["resumes"] });
+          setSource("saved");
+          setResumeId(r.resumeId);
+        }}
+      />
     </div>
   );
 }

@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import { CreditCard, Smartphone, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { TextField } from "@/components/editor/fields";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import api, { getErrorMessage } from "@/lib/api";
@@ -17,6 +18,7 @@ interface BkashConfig {
 }
 
 export default function BillingPage() {
+  const { t } = useTranslation();
   const { user } = useAuthStore();
   const toast = useToast();
   const [yearly, setYearly] = useState(false);
@@ -57,10 +59,10 @@ export default function BillingPage() {
       if (data.gatewayUrl) {
         window.location.href = data.gatewayUrl;
       } else {
-        toast.add(data.message || "Payment initiated", "info");
+        toast.add(data.message || t("billing.initiated"), "info");
       }
     },
-    onError: () => toast.add("Payment failed", "error"),
+    onError: (error: unknown) => toast.add(getErrorMessage(error, t("billing.failed")), "error"),
   });
 
   const submitBkashMutation = useMutation({
@@ -75,12 +77,12 @@ export default function BillingPage() {
       return data.data;
     },
     onSuccess: (data) => {
-      toast.add(data.message || "BKash payment submitted for review", "success");
+      toast.add(data.message || t("billing.bkashSubmitted"), "success");
       setBkashNumber("");
       setTransactionId("");
     },
     onError: (error: unknown) => {
-      toast.add(getErrorMessage(error, "Failed to submit BKash payment"), "error");
+      toast.add(getErrorMessage(error, t("billing.bkashFailed")), "error");
     },
   });
 
@@ -88,22 +90,22 @@ export default function BillingPage() {
 
   return (
     <div className="max-w-2xl space-y-6">
-      <h1 className="text-2xl font-bold">Billing & Subscription</h1>
+      <h1 className="text-2xl font-bold">{t("billing.title")}</h1>
 
       <Card>
         <CardContent className="pt-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-muted">Current Plan</p>
-              <p className="text-xl font-bold capitalize">{user?.subscription?.plan || "free"}</p>
+              <p className="text-sm text-muted">{t("billing.currentPlan")}</p>
+              <p className="text-xl font-bold">{isPremium ? t("dashboardNav.premium") : t("dashboardNav.free")}</p>
             </div>
             <Badge variant={isPremium ? "premium" : "secondary"}>
-              {user?.subscription?.status || "active"}
+              {t(`billing.status.${user?.subscription?.status || "active"}`, { defaultValue: user?.subscription?.status || "active" })}
             </Badge>
           </div>
           {user?.subscription?.expiresAt && (
             <p className="text-sm text-muted mt-2">
-              Expires: {new Date(user.subscription.expiresAt).toLocaleDateString()}
+              {t("billing.expires", { date: new Date(user.subscription.expiresAt).toLocaleDateString() })}
             </p>
           )}
         </CardContent>
@@ -112,38 +114,35 @@ export default function BillingPage() {
       {!isPremium && premiumPlan && (
         <Card className="border-primary">
           <CardHeader>
-            <CardTitle>Upgrade to Premium</CardTitle>
+            <CardTitle>{t("billing.upgradeTitle")}</CardTitle>
             <p className="text-3xl font-bold">
               {formatCurrency(yearly ? premiumPlan.priceYearly : premiumPlan.priceMonthly)}
               <span className="text-sm font-normal text-muted">
-                /{yearly ? "year" : "month"}
+                {yearly ? t("pricing.perYear") : t("pricing.perMonth")}
               </span>
             </p>
           </CardHeader>
           <CardContent className="space-y-4">
             <label className="flex items-center gap-2 cursor-pointer">
-              <input type="checkbox" checked={yearly} onChange={(e) => setYearly(e.target.checked)} />
-              <span className="text-sm">Yearly billing (save 17%)</span>
+              <input type="checkbox" className="h-5 w-5 accent-primary" checked={yearly} onChange={(e) => setYearly(e.target.checked)} />
+              <span className="text-sm">{t("billing.yearly")}</span>
             </label>
 
-            <Input
-              placeholder="Coupon code (e.g. AICVBD20)"
-              value={couponCode}
-              onChange={(e) => setCouponCode(e.target.value)}
-            />
+            <TextField label={t("billing.coupon")} placeholder="AICVBD20" value={couponCode} onChange={setCouponCode} autoCapitalize="characters" />
 
-            <p className="text-sm font-medium">Payment Method</p>
+            <p className="text-sm font-medium" id="pay-method">{t("billing.method")}</p>
             <div className="grid grid-cols-3 gap-2">
               {(["sslcommerz", "bkash", "nagad"] as const).map((p) => (
                 <button
                   key={p}
                   type="button"
+                  aria-pressed={provider === p}
                   onClick={() => setProvider(p)}
                   className={`p-3 rounded-lg border text-sm capitalize transition-colors ${
                     provider === p ? "border-primary bg-primary/10" : "border-border"
                   }`}
                 >
-                  {p === "sslcommerz" ? "Card/SSL" : p}
+                  {p === "sslcommerz" ? t("billing.card") : p === "bkash" ? "bKash" : "Nagad"}
                 </button>
               ))}
             </div>
@@ -151,33 +150,19 @@ export default function BillingPage() {
             {provider === "bkash" ? (
               <div className="rounded-2xl border border-dashed border-primary/40 bg-primary/5 p-4 space-y-4">
                 <div>
-                  <p className="text-sm font-semibold">Pay via BKash</p>
-                  <p className="text-sm text-muted">Send your payment to the admin-configured BKash number and submit the details below for manual review.</p>
+                  <p className="text-sm font-semibold">{t("billing.bkashTitle")}</p>
+                  <p className="text-sm text-muted">{t("billing.bkashText")}</p>
                 </div>
 
                 <div className="rounded-xl bg-background/90 p-3 border border-border">
-                  <p className="text-xs uppercase tracking-[0.2em] text-muted">BKash number</p>
-                  <p className="mt-1 text-lg font-bold">{bkashConfig?.number || "Admin has not configured a BKash number yet"}</p>
+                  <p className="text-xs uppercase tracking-wider text-muted">{t("billing.bkashNumber")}</p>
+                  <p className="mt-1 text-lg font-bold">{bkashConfig?.number || t("billing.bkashMissing")}</p>
                   {bkashConfig?.instructions && <p className="mt-2 text-sm text-muted">{bkashConfig.instructions}</p>}
                 </div>
 
                 <div className="grid gap-3">
-                  <div>
-                    <label className="text-sm font-medium">BKash Number You Sent To</label>
-                    <Input
-                      value={bkashNumber}
-                      onChange={(e) => setBkashNumber(e.target.value)}
-                      placeholder="01xxxxxxxxx"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium">Transaction ID</label>
-                    <Input
-                      value={transactionId}
-                      onChange={(e) => setTransactionId(e.target.value)}
-                      placeholder="Enter your BKash transaction ID"
-                    />
-                  </div>
+                  <TextField label={t("billing.bkashFrom")} value={bkashNumber} onChange={setBkashNumber} placeholder="01xxxxxxxxx" type="tel" inputMode="tel" />
+                  <TextField label={t("billing.trxId")} value={transactionId} onChange={setTransactionId} placeholder={t("billing.trxPlaceholder")} />
                 </div>
 
                 <Button
@@ -187,7 +172,7 @@ export default function BillingPage() {
                   disabled={submitBkashMutation.isPending || !bkashConfig?.number}
                 >
                   <Send className="h-4 w-4" />
-                  Submit for Admin Review
+                  {t("billing.submitReview")}
                 </Button>
               </div>
             ) : (
@@ -198,13 +183,13 @@ export default function BillingPage() {
                 disabled={payMutation.isPending}
               >
                 <CreditCard className="h-4 w-4" />
-                Pay Now
+                {t("billing.payNow")}
               </Button>
             )}
 
             <p className="text-xs text-muted text-center flex items-center justify-center gap-1">
               <Smartphone className="h-3 w-3" />
-              Secure payments via Bangladesh payment gateways
+              {t("billing.secure")}
             </p>
           </CardContent>
         </Card>

@@ -3,9 +3,10 @@ import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { TextField } from "@/components/editor/fields";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { SEO } from "@/components/seo/SEO";
-import api from "@/lib/api";
+import api, { getErrorMessage } from "@/lib/api";
 import { useAuthStore } from "@/store/authStore";
 import { useToast } from "@/components/ui/toast";
 
@@ -36,11 +37,10 @@ export default function RegisterPage() {
 
       const { data } = await api.post("/auth/register", formData);
       setAuth(data.data.user, data.data.accessToken);
-      toast.add("Account created! Check email to verify.", "success");
+      toast.add(t("auth.created"), "success");
       navigate("/dashboard");
     } catch (err: unknown) {
-      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
-      toast.add(msg || "Registration failed", "error");
+      toast.add(getErrorMessage(err, t("auth.registerFailed")), "error");
     } finally {
       setLoading(false);
     }
@@ -66,65 +66,44 @@ export default function RegisterPage() {
         <Card className="w-full max-w-md">
           <CardHeader className="text-center">
             <CardTitle className="text-2xl">{t("auth.register")}</CardTitle>
-            <CardDescription>Start free — 2 resumes included</CardDescription>
+            <CardDescription>{t("auth.registerSubtitle")}</CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="text-sm font-medium">Profile picture (optional)</label>
+                <p className="text-sm font-medium">{t("auth.photo")}</p>
                 <div className="mt-2 flex items-center gap-4">
                   <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-full border border-dashed border-border bg-secondary">
                     {previewUrl ? (
                       <img src={previewUrl} alt="Preview" className="h-full w-full object-cover" />
                     ) : (
-                      <span className="text-xs text-muted">No image</span>
+                      <span className="text-xs text-muted">{t("auth.noImage")}</span>
                     )}
                   </div>
-                  <label className="inline-flex cursor-pointer items-center rounded-lg border border-border px-3 py-2 text-sm font-medium">
-                    Choose image
+                  <label className="inline-flex cursor-pointer items-center rounded-lg border border-border px-3 py-2 text-sm font-medium focus-within:ring-2 focus-within:ring-primary">
+                    {t("auth.chooseImage")}
                     <Input
                       type="file"
                       accept="image/*"
-                      className="hidden"
+                      className="sr-only"
                       onChange={(e) => handlePictureChange(e.target.files?.[0] || null)}
                     />
                   </label>
                 </div>
               </div>
-              <div>
-                <label className="text-sm font-medium">{t("auth.name")}</label>
-                <Input
-                  value={form.name}
-                  onChange={(e) => setForm({ ...form, name: e.target.value })}
-                  required
-                />
-              </div>
-              <div>
-                <label className="text-sm font-medium">{t("auth.email")}</label>
-                <Input
-                  type="email"
-                  value={form.email}
-                  onChange={(e) => setForm({ ...form, email: e.target.value })}
-                  required
-                />
-              </div>
-              <div>
-                <label className="text-sm font-medium">{t("auth.password")}</label>
-                <Input
-                  type="password"
-                  value={form.password}
-                  onChange={(e) => setForm({ ...form, password: e.target.value })}
-                  required
-                  minLength={8}
-                />
-              </div>
-              <div>
-                <label className="text-sm font-medium">Referral Code (optional)</label>
-                <Input
-                  value={form.referralCode}
-                  onChange={(e) => setForm({ ...form, referralCode: e.target.value })}
-                />
-              </div>
+              <TextField label={t("auth.name")} value={form.name} onChange={(name) => setForm({ ...form, name })} required autoComplete="name" />
+              <TextField label={t("auth.email")} type="email" value={form.email} onChange={(email) => setForm({ ...form, email })} required autoComplete="email" inputMode="email" />
+              <TextField
+                label={t("auth.password")}
+                hint={t("auth.passwordHint")}
+                type="password"
+                value={form.password}
+                onChange={(password) => setForm({ ...form, password })}
+                required
+                minLength={8}
+                autoComplete="new-password"
+              />
+              <TextField label={t("auth.referral")} value={form.referralCode} onChange={(referralCode) => setForm({ ...form, referralCode })} />
               <Button type="submit" className="w-full" variant="gradient" disabled={loading}>
                 {loading ? t("common.loading") : t("nav.register")}
               </Button>

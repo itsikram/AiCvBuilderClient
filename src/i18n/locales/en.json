@@ -68,7 +68,19 @@
     "forgotPassword": "Forgot password?",
     "noAccount": "Don't have an account?",
     "hasAccount": "Already have an account?",
-    "orContinueWith": "Or continue with"
+    "orContinueWith": "Or continue with",
+    "registerSubtitle": "Start free. Your first CVs are included.",
+    "loginSubtitle": "Log in to continue building your CV.",
+    "photo": "Profile picture (optional)",
+    "noImage": "No image",
+    "chooseImage": "Choose image",
+    "referral": "Referral code (optional)",
+    "passwordHint": "At least 8 characters.",
+    "created": "Account created! Check your email to verify it.",
+    "registerFailed": "Couldn't create your account. Please try again.",
+    "welcome": "Welcome back!",
+    "loginFailed": "Couldn't log you in. Check your email and password.",
+    "googleFailed": "Google sign-in failed. Please try again."
   },
   "dashboard": {
     "welcome": "Welcome back",
@@ -76,7 +88,14 @@
     "createResume": "Create New Resume",
     "recentActivity": "Recent Activity",
     "aiUsage": "AI Usage This Month",
-    "upgradePrompt": "Upgrade to Premium for unlimited resumes and AI features"
+    "upgradePrompt": "Upgrade to Premium for unlimited resumes and AI features",
+    "subtitle": "Build, improve and download your CVs.",
+    "cvCount": "CVs",
+    "aiLeftToday": "AI requests left today",
+    "referrals": "Referrals",
+    "freePlan": "Free plan",
+    "referralCode": "Referral code: {{code}}",
+    "viewAll": "View all"
   },
   "resume": {
     "builder": "Resume Builder",
@@ -833,5 +852,76 @@
     "logout": "Log out",
     "seoTitle": "Dashboard – AI CV Builder BD",
     "seoDescription": "Your private AI CV Builder BD workspace for CVs, cover letters and billing."
+  },
+  "settings": {
+    "profile": "Profile",
+    "picture": "Profile picture",
+    "uploadPicture": "Upload a new picture",
+    "referralCode": "Referral code",
+    "referralHint": "Share this code to earn referral rewards.",
+    "preferences": "Preferences",
+    "language": "App language",
+    "theme": "Theme",
+    "themes": {
+      "light": "Light",
+      "dark": "Dark",
+      "system": "Same as device"
+    },
+    "saved": "Settings saved",
+    "saveFailed": "Couldn't save your settings."
+  },
+  "ats": {
+    "title": "ATS checker",
+    "intro": "See how applicant tracking systems read your CV, with or without a specific job post.",
+    "source": "CV to check",
+    "sources": {
+      "saved": "My CVs",
+      "text": "Paste text"
+    },
+    "chooseCv": "Choose a CV",
+    "chooseCvOption": "Select a CV…",
+    "cvText": "CV text",
+    "cvTextPlaceholder": "Paste the text of your CV here…",
+    "jobPost": "Job post (optional)",
+    "jobPostHint": "Add the job post to check keywords for that job.",
+    "run": "Check my CV",
+    "results": "Results",
+    "empty": "Your score and suggestions will appear here.",
+    "grade": "Grade {{grade}}",
+    "strengths": "Strengths",
+    "weaknesses": "Weaknesses",
+    "recommendations": "Recommendations",
+    "tooShort": "Choose a CV or paste at least a few lines of text.",
+    "failed": "The ATS check didn't work. Please try again."
+  },
+  "billing": {
+    "title": "Billing & subscription",
+    "currentPlan": "Current plan",
+    "status": {
+      "active": "Active",
+      "cancelled": "Cancelled",
+      "expired": "Expired",
+      "trial": "Trial"
+    },
+    "expires": "Renews or expires on {{date}}",
+    "upgradeTitle": "Upgrade to Premium",
+    "yearly": "Pay yearly (save 17%)",
+    "coupon": "Coupon code (optional)",
+    "method": "Payment method",
+    "card": "Card / SSLCommerz",
+    "bkashTitle": "Pay with bKash",
+    "bkashText": "Send the payment to the bKash number below, then enter your details for review.",
+    "bkashNumber": "bKash number",
+    "bkashMissing": "bKash payments aren't set up yet.",
+    "bkashFrom": "Your bKash number",
+    "trxId": "Transaction ID",
+    "trxPlaceholder": "e.g. 9A7B6C5D4E",
+    "submitReview": "Submit for review",
+    "payNow": "Pay now",
+    "secure": "Secure payment through Bangladeshi payment gateways",
+    "initiated": "Payment started",
+    "failed": "Payment couldn't be started. Please try again.",
+    "bkashSubmitted": "Payment submitted. We'll activate Premium after review.",
+    "bkashFailed": "Couldn't submit your bKash payment."
   }
 }

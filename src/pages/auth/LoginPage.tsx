@@ -3,10 +3,10 @@ import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { GoogleLogin } from "@react-oauth/google";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { TextField } from "@/components/editor/fields";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { SEO } from "@/components/seo/SEO";
-import api from "@/lib/api";
+import api, { getErrorMessage } from "@/lib/api";
 import { useAuthStore } from "@/store/authStore";
 import { useToast } from "@/components/ui/toast";
 
@@ -28,11 +28,10 @@ export default function LoginPage() {
     try {
       const { data } = await api.post("/auth/login", { email, password });
       setAuth(data.data.user, data.data.accessToken);
-      toast.add("Welcome back!", "success");
+      toast.add(t("auth.welcome"), "success");
       navigate(from);
     } catch (err: unknown) {
-      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
-      toast.add(msg || "Login failed", "error");
+      toast.add(getErrorMessage(err, t("auth.loginFailed")), "error");
     } finally {
       setLoading(false);
     }
@@ -44,7 +43,7 @@ export default function LoginPage() {
       setAuth(data.data.user, data.data.accessToken);
       navigate(from);
     } catch {
-      toast.add("Google login failed", "error");
+      toast.add(t("auth.googleFailed"), "error");
     }
   };
 
@@ -55,18 +54,12 @@ export default function LoginPage() {
         <Card className="w-full max-w-md">
           <CardHeader className="text-center">
             <CardTitle className="text-2xl">{t("auth.login")}</CardTitle>
-            <CardDescription>AI CV Builder BD — AI Resume Builder</CardDescription>
+            <CardDescription>{t("auth.loginSubtitle")}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <label className="text-sm font-medium">{t("auth.email")}</label>
-                <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
-              </div>
-              <div>
-                <label className="text-sm font-medium">{t("auth.password")}</label>
-                <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
-              </div>
+              <TextField label={t("auth.email")} type="email" value={email} onChange={setEmail} required autoComplete="email" inputMode="email" />
+              <TextField label={t("auth.password")} type="password" value={password} onChange={setPassword} required autoComplete="current-password" />
               <div className="flex justify-end">
                 <Link to="/forgot-password" className="text-sm text-primary hover:underline">
                   {t("auth.forgotPassword")}
