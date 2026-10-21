@@ -152,23 +152,19 @@ it to wake up. A paid instance (about US$7/month) stays awake.
 
 Only if your cPanel has *Software* → **Setup Node.js App**.
 
-1. On your computer, build the API:
+1. On your computer, build the upload bundle:
 
    ```bash
-   cd AiCvBuilderServer
+   cd aicvbuilderbd-server
    npm ci
-   npm run build
+   npm run package:cpanel
    ```
 
-2. Create a startup file named `app.cjs` next to `package.json` with this one line. Passenger loads
-   startup files with `require()`, and the API is an ES module, so this small wrapper imports it:
-
-   ```js
-   import("./dist/index.js");
-   ```
-
-3. Zip `dist/`, `app.cjs`, `package.json` and `package-lock.json` (**not** `node_modules`, `src` or `.env`).
-4. cPanel → *Setup Node.js App* → *Create Application*:
+   This writes `deploy/aicv-api-cpanel.zip` with `dist/`, the `app.cjs` startup file (Passenger loads
+   startup files with `require()`, and the API is an ES module), `package*.json`, and an `.npmrc` that
+   stops cPanel's NPM Install from installing dev dependencies.
+2. If the app already exists in cPanel, skip to step 4: upload the zip into its root and extract it.
+3. cPanel → *Setup Node.js App* → *Create Application*:
    - **Node.js version**: the newest 20.x or 22.x offered
    - **Application mode**: Production
    - **Application root**: `aicv-api` (a folder in your home directory, not inside `public_html`)
@@ -176,14 +172,17 @@ Only if your cPanel has *Software* → **Setup Node.js App**.
    - **Application startup file**: `app.cjs`
    - *Environment variables*: add every variable from step 4 (*Add Variable* for each). Don't set `PORT`;
      Passenger sets it.
-   - Click **Create**.
-5. cPanel → *File Manager* → open `aicv-api` → *Upload* the zip → *Extract*.
-6. Back in *Setup Node.js App*, click **Run NPM Install**, wait for it to finish, then **Restart**.
-7. Check `https://api.aicvbuilderbd.online/api/v1/health`.
-8. Seed once from your computer as in step 5a (allow your own IP in Atlas while you do it).
+   - Click **Create**. cPanel puts its own placeholder `app.js` in the folder; you can delete it.
+4. cPanel → *File Manager* → open `aicv-api` (turn on *Show Hidden Files* in *Settings*) → delete the old
+   `dist/` → *Upload* the zip → *Extract*.
+5. Back in *Setup Node.js App*, click **Run NPM Install**, wait for it to finish, then **Restart**.
+6. Check `https://api.aicvbuilderbd.online/api/v1/health`. `database.state` should be `connected`; if it
+   isn't, `database.lastError` says why (usually the Atlas IP allowlist). Startup errors are in
+   `aicv-api/stderr.log`.
+7. Seed once from your computer as in step 5a (allow your own IP in Atlas while you do it).
 
-To update the API later: build again, upload and extract the new `dist/` (and `package*.json` if
-dependencies changed, then *Run NPM Install*), and click **Restart**.
+To update the API later: run `npm run package:cpanel` again, repeat steps 4–5 (*Run NPM Install* is only
+needed when dependencies changed), and click **Restart**.
 
 ## Step 6. The website (frontend)
 
