@@ -112,7 +112,7 @@ comments is in the API repository's `.env.example`.
 |---|---|
 | `NODE_ENV` | `production` |
 | `SITE_URL` | `https://aicvbuilderbd.online` |
-| `COOKIE_SAME_SITE` | `lax` (API on `api.aicvbuilderbd.online`); `none` only if the API stays on `*.onrender.com` |
+| `COOKIE_SAME_SITE` | leave empty while the API is on `*.onrender.com` (production defaults to `none`); `lax` once it's on `api.aicvbuilderbd.online` |
 | `MONGODB_URI` | from step 3 |
 | `JWT_SECRET`, `JWT_REFRESH_SECRET` | from step 3 (two different values) |
 | `GEMINI_API_KEYS` | your new Gemini keys, comma-separated, no spaces |
@@ -272,3 +272,13 @@ Common problems:
 | API times out on start | Atlas IP allowlist | Add the host's IP (or `0.0.0.0/0` for Render free) |
 | Every page 500 after upload | `Options` not allowed | Delete the `Options` line in `.htaccess` |
 | Old version still showing | Browser cache | Hashed assets change on every build; hard-refresh, or clear the cache once |
+| Console: `tccl.min.js` / inline script blocked by Content Security Policy | GoDaddy injects its own traffic-analytics script into every page | Harmless: the site's policy blocks it and nothing breaks. To remove the errors, turn off GoDaddy's website analytics / traffic tracking for the domain |
+| New API code isn't live | Render didn't redeploy | Render → the service → *Events* should show the latest commit; otherwise *Manual Deploy* → *Deploy latest commit* |
+
+### Current live setup (2026-10-21)
+
+The site in `public_html` talks to the API at `https://aicvbuilderserver-4qfy.onrender.com` (set in
+`.env.production`). Checked from the live origin: CORS allows `https://aicvbuilderbd.online` (and `www`),
+`/api/v1/health`, page content and login respond, http/www redirect to https apex, unknown pages return 404.
+Moving the API to `api.aicvbuilderbd.online` later only needs the CNAME (step 1), the custom domain on Render,
+`VITE_API_URL` updated, a rebuild and re-upload.
