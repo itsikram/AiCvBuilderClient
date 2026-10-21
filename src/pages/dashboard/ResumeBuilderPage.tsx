@@ -1,1616 +1,564 @@
-import { useEffect, useState } from "react";
-import { useParams, useNavigate, useSearchParams } from "react-router-dom";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMemo, useRef, useState } from "react";
+import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
-import { Save, Download, Sparkles, Share2, ChevronUp, ChevronDown, Plus, Trash2, Upload, FileText, Loader2, Settings, Eye, X } from "lucide-react";
+import axios from "axios";
+import {
+  AlertTriangle,
+  ArrowLeft,
+  ArrowRight,
+  Check,
+  CloudOff,
+  Download,
+  Eye,
+  FileUp,
+  Loader2,
+  Pencil,
+  Share2,
+  Sparkles,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ResumePreview } from "@/components/resume/ResumePreview";
-import TemplateSettingsModal from "@/components/resume/TemplateSettingsModal";
 import { Skeleton } from "@/components/ui/skeleton";
-import api from "@/lib/api";
 import { useToast } from "@/components/ui/toast";
-import { formatDate } from "@/lib/utils";
-import type { Resume, ResumeContent, Experience, Template } from "@/types";
+import { ResumePreview } from "@/components/resume/ResumePreview";
+import { PrintableResume } from "@/components/resume/PrintableResume";
+import { templateStyle } from "@/components/resume/templates";
+import { useResumeDraft, type SaveStatus } from "@/components/editor/useResumeDraft";
+import {
+  DetailsSection,
+  EducationSection,
+  ExperienceSection,
+  LanguagesSection,
+  MoreSections,
+  ObjectiveSection,
+  PersonalSection,
+  ReferencesSection,
+  SkillsSection,
+  TrainingSection,
+} from "@/components/editor/sections";
+import { SectionOrder } from "@/components/editor/SectionOrder";
+import { DesignPanel } from "@/components/editor/DesignPanel";
+import { AiToolsDialog, type AiTool } from "@/components/editor/AiToolsDialog";
+import { ImportDialog } from "@/components/editor/ImportDialog";
+import { DownloadDialog } from "@/components/editor/DownloadDialog";
+import { EditorSection } from "@/components/editor/fields";
+import api, { getErrorMessage } from "@/lib/api";
+import { useAiQuota } from "@/lib/ai";
+import { completeness, normalizeContent, sectionHasContent, SECTION_IDS, type CvLang } from "@/lib/resume/model";
+import { cn } from "@/lib/utils";
+import { useAuthStore } from "@/store/authStore";
+import type { Resume, Template } from "@/types";
 
-type ResumeWithUploadMeta = Resume & {
-  uploadedAt?: string;
-  uploadedFileName?: string;
-  uploadedFileUrl?: string;
-};
-
-type UploadTab = "new" | "previous";
-
-const defaultSectionOrder = ["summary", "experience", "education", "skills", "projects"];
-const fontOptions = [
-  "Inter, ui-sans-serif, system-ui",
-  "Georgia, serif",
-  "Arial, sans-serif",
-  "Poppins, sans-serif",
-  "Times New Roman, serif",
-];
-
-const defaultContent = (): ResumeContent => ({
-  personalInfo: {
-    fullName: "",
-    email: "",
-    phone: "",
-    location: "Dhaka, Bangladesh",
-    summary: "",
-    profilePhotoSize: "medium",
-    profilePhotoAlignment: "center",
-  },
-  experience: [],
-  education: [],
-  projects: [],
-  skills: [],
-  languages: [
-    { id: crypto.randomUUID(), name: "Bangla", proficiency: "native" },
-    { id: crypto.randomUUID(), name: "English", proficiency: "fluent" },
-  ],
-  certifications: [],
-  awards: [],
-  publications: [],
-  volunteerExperience: [],
-  references: [],
-  interests: [],
-  courses: [],
-  memberships: [],
-  customSections: [],
-});
+const STEPS = ["basics", "background", "finish"] as const;
 
 export default function ResumeBuilderPage() {
   const { id } = useParams<{ id: string }>();
+  if (!id || id === "new") return <NewCvStart />;
+  // key: a fresh editor (and autosave state) for each CV
+  return <EditorLoader key={id} id={id} />;
+}
+
+// ---------------------------------------------------------------------------
+// New CV: pick a language and a starting format
+// ---------------------------------------------------------------------------
+
+function NewCvStart() {
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
-  const { t } = useTranslation();
   const toast = useToast();
-  const queryClient = useQueryClient();
-  const isNew = id === "new";
-  const [searchParams] = useSearchParams();
-  const templateFromUrl = searchParams.get("template");
+  const [params] = useSearchParams();
+  const fromTemplate = params.get("template");
+  const [title, setTitle] = useState("");
+  const [language, setLanguage] = useState<CvLang>(i18n.language === "bn" ? "bn" : "en");
+  const [format, setFormat] = useState<"bd" | "ats">(fromTemplate && templateStyle(fromTemplate).layout !== "bd" ? "ats" : "bd");
+  const [busy, setBusy] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
 
-  const [title, setTitle] = useState("My Resume");
-  const [content, setContent] = useState<ResumeContent>(defaultContent());
-  const [sectionOrder, setSectionOrder] = useState(defaultSectionOrder);
-  const [aiModal, setAiModal] = useState(false);
-  const [tailorModal, setTailorModal] = useState(false);
-  const [uploadModal, setUploadModal] = useState(false);
-  const [templateModal, setTemplateModal] = useState(false);
-  const [templateSettingsModalOpen, setTemplateSettingsModalOpen] = useState(false);
-  const [previewModalOpen, setPreviewModalOpen] = useState(false);
-  const [selectedTemplate, setSelectedTemplate] = useState(templateFromUrl || "modern-ats");
-  const [theme, setTheme] = useState<Record<string, string>>({});
-  const [uploadTab, setUploadTab] = useState<UploadTab>("new");
-  const [selectedPreviousUploadId, setSelectedPreviousUploadId] = useState("");
-  const [uploadProgress, setUploadProgress] = useState(0);
-  const [analysisProgress, setAnalysisProgress] = useState(0);
-  const [uploadStatus, setUploadStatus] = useState("Choose a PDF or DOCX file to import your resume.");
-  const [isUploadingResume, setIsUploadingResume] = useState(false);
-  const [isTailoringResume, setIsTailoringResume] = useState(false);
-  const [tailorJobDescription, setTailorJobDescription] = useState("");
-  const [showPageBreaks, setShowPageBreaks] = useState(false);
-  const [aiForm, setAiForm] = useState({
-    name: "",
-    jobTitle: "",
-    skills: "",
-    experience: "",
-    education: "",
-    projects: "",
-  });
+  const create = async () => {
+    setBusy(true);
+    try {
+      const templateId = fromTemplate || (format === "bd" ? "professional-bd" : "modern-ats");
+      const { data } = await api.post("/resumes", {
+        title: title.trim() || t("editor.untitled"),
+        templateId,
+        language,
+        format: format === "bd" ? "bangladeshi" : "ats",
+      });
+      navigate(`/dashboard/resumes/${data.data._id}`, { replace: true });
+    } catch (error) {
+      toast.add(getErrorMessage(error, t("common.error")), "error");
+      setBusy(false);
+    }
+  };
 
-  const { data: resume, isLoading } = useQuery({
+  const option = (value: "bd" | "ats") => (
+    <label
+      className={cn(
+        "flex cursor-pointer gap-3 rounded-xl border-2 p-4 transition focus-within:ring-2 focus-within:ring-primary",
+        format === value ? "border-primary bg-primary/5" : "border-border hover:border-primary/40"
+      )}
+    >
+      <input type="radio" name="format" className="mt-1 h-4 w-4 accent-primary" checked={format === value} onChange={() => setFormat(value)} />
+      <span>
+        <span className="block font-semibold">{t(`newCv.${value}Title`)}</span>
+        <span className="block text-sm text-muted">{t(`newCv.${value}Text`)}</span>
+      </span>
+    </label>
+  );
+
+  return (
+    <div className="mx-auto max-w-xl space-y-6">
+      <div>
+        <h1 className="text-2xl font-bold">{t("newCv.title")}</h1>
+        <p className="mt-1 text-muted">{t("newCv.intro")}</p>
+      </div>
+      <form
+        className="space-y-5 rounded-2xl border bg-card p-5"
+        onSubmit={(e) => {
+          e.preventDefault();
+          void create();
+        }}
+      >
+        <div>
+          <label htmlFor="new-cv-title" className="mb-1 block text-sm font-medium">
+            {t("newCv.name")}
+          </label>
+          <input
+            id="new-cv-title"
+            className="h-11 w-full rounded-lg border bg-background px-3 text-base focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+            placeholder={t("newCv.namePlaceholder")}
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            maxLength={200}
+          />
+        </div>
+        <fieldset>
+          <legend className="mb-2 text-sm font-medium">{t("newCv.language")}</legend>
+          <div className="grid grid-cols-2 gap-2">
+            {(["en", "bn"] as const).map((lang) => (
+              <label
+                key={lang}
+                className={cn(
+                  "flex cursor-pointer items-center justify-center gap-2 rounded-lg border-2 p-3 font-medium focus-within:ring-2 focus-within:ring-primary",
+                  language === lang ? "border-primary bg-primary/5" : "border-border"
+                )}
+              >
+                <input type="radio" name="lang" className="sr-only" checked={language === lang} onChange={() => setLanguage(lang)} />
+                {lang === "en" ? "English" : "বাংলা"}
+              </label>
+            ))}
+          </div>
+        </fieldset>
+        {!fromTemplate && (
+          <fieldset className="space-y-2">
+            <legend className="mb-2 text-sm font-medium">{t("newCv.format")}</legend>
+            {option("bd")}
+            {option("ats")}
+          </fieldset>
+        )}
+        <Button type="submit" variant="gradient" size="lg" className="w-full" disabled={busy}>
+          {busy ? <Loader2 className="h-5 w-5 animate-spin" /> : <ArrowRight className="h-5 w-5" />}
+          {busy ? t("newCv.creating") : t("newCv.create")}
+        </Button>
+      </form>
+      <button type="button" className="mx-auto flex items-center gap-2 text-sm font-medium text-primary underline underline-offset-2" onClick={() => setImportOpen(true)}>
+        <FileUp className="h-4 w-4" />
+        {t("newCv.importInstead")}
+      </button>
+      <ImportDialog open={importOpen} onOpenChange={setImportOpen} onImported={(r) => navigate(`/dashboard/resumes/${r.resumeId}`, { replace: true })} />
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Loading
+// ---------------------------------------------------------------------------
+
+function EditorLoader({ id }: { id: string }) {
+  const { t } = useTranslation();
+  const query = useQuery({
     queryKey: ["resume", id],
-    queryFn: async () => {
-      const { data } = await api.get(`/resumes/${id}`);
-      return data.data as Resume;
-    },
-    enabled: !isNew && !!id,
+    queryFn: async () => (await api.get(`/resumes/${id}`)).data.data as Resume,
+    // The editor owns the state once loaded; refetching would not be applied anyway
+    staleTime: Infinity,
+    refetchOnWindowFocus: false,
+    retry: (count, error) => !(axios.isAxiosError(error) && error.response?.status === 404) && count < 2,
   });
 
-  const { data: templates } = useQuery({
-    queryKey: ["templates"],
-    queryFn: async () => {
-      const { data } = await api.get("/templates");
-      return data.data as Template[];
-    },
-  });
-
-  const { data: resumes = [] } = useQuery<ResumeWithUploadMeta[]>({
-    queryKey: ["resumes"],
-    queryFn: async () => {
-      const { data } = await api.get("/resumes");
-      return data.data as ResumeWithUploadMeta[];
-    },
-    enabled: uploadModal,
-  });
-
-  useEffect(() => {
-    if (resume) {
-      setTitle(resume.title);
-      setContent(resume.content);
-      setSectionOrder(resume.sectionOrder);
-      setSelectedTemplate(resume.templateId || "modern-ats");
-      setTheme((resume.theme as Record<string, string>) || {});
-    }
-  }, [resume]);
-
-  useEffect(() => {
-    if (!uploadModal) {
-      setUploadTab("new");
-      setSelectedPreviousUploadId("");
-      setUploadProgress(0);
-      setAnalysisProgress(0);
-      setUploadStatus("Choose a PDF or DOCX file to import your resume.");
-      setIsUploadingResume(false);
-    }
-  }, [uploadModal]);
-
-  const saveMutation = useMutation({
-    mutationFn: async (options?: { templateId?: string }) => {
-      const templateId = options?.templateId || selectedTemplate || templateFromUrl || "modern-ats";
-      const themePayload = theme && Object.keys(theme).length > 0 ? theme : {}; 
-
-      if (isNew) {
-        const { data } = await api.post("/resumes", { title, templateId });
-        await api.patch(`/resumes/${data.data._id}`, { content, sectionOrder, theme: themePayload });
-        return data.data._id as string;
-      }
-
-      await api.patch(`/resumes/${id}`, { title, content, sectionOrder, theme: themePayload });
-      return id!;
-    },
-    onSuccess: (resumeId) => {
-      queryClient.invalidateQueries({ queryKey: ["resumes"] });
-      toast.add("Resume saved!", "success");
-      if (isNew) {
-        navigate(`/dashboard/resumes/${resumeId}`, { replace: true });
-      }
-    },
-    onError: () => toast.add("Failed to save", "error"),
-  });
-
-  const generateAI = async () => {
-    try {
-      const { data } = await api.post("/resumes/ai/generate", {
-        ...aiForm,
-        resumeId: isNew ? undefined : id,
-        language: "en",
-      });
-      const result = data.data;
-      setContent((prev) => ({
-        ...prev,
-        personalInfo: {
-          ...prev.personalInfo,
-          fullName: aiForm.name,
-          summary: result.summary,
-        },
-        skills: result.skills,
-      }));
-      setAiModal(false);
-      toast.add("AI content generated!", "success");
-    } catch (err: unknown) {
-      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
-      toast.add(msg || "AI generation failed", "error");
-    }
-  };
-
-  const tailorResumeForJob = async () => {
-    if (isNew || !id) {
-      toast.add("Save this resume first before tailoring it for a job description.", "error");
-      return;
-    }
-
-    if (!tailorJobDescription.trim()) {
-      toast.add("Please paste a job description to tailor your resume.", "error");
-      return;
-    }
-
-    try {
-      setIsTailoringResume(true);
-      const { data } = await api.post("/resumes/ai/tailor", {
-        resumeId: id,
-        jobDescription: tailorJobDescription,
-        language: "en",
-      });
-
-      const tailored = data.data as {
-        summary?: string;
-        skills?: string[];
-        experienceBullets?: Array<{ bullets?: string[] }>;
-      };
-
-      setContent((prev) => ({
-        ...prev,
-        personalInfo: {
-          ...prev.personalInfo,
-          summary: tailored.summary || prev.personalInfo.summary,
-        },
-        skills: tailored.skills?.length ? tailored.skills : prev.skills,
-        experience: prev.experience.map((experience, index) => {
-          const tailoredBullets = tailored.experienceBullets?.[index]?.bullets;
-          if (tailoredBullets?.length) {
-            return { ...experience, bullets: tailoredBullets };
-          }
-          return experience;
-        }),
-      }));
-
-      queryClient.invalidateQueries({ queryKey: ["resume", id] });
-      setTailorModal(false);
-      setTailorJobDescription("");
-      toast.add("Resume tailored for the job description!", "success");
-    } catch (err: unknown) {
-      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
-      toast.add(msg || "Resume tailoring failed", "error");
-    } finally {
-      setIsTailoringResume(false);
-    }
-  };
-
-  const applyImportedResume = (
-    nextTitle: string,
-    nextContent: ResumeContent,
-    nextSectionOrder?: string[],
-    nextTemplateId?: string,
-    nextTheme?: Record<string, string>
-  ) => {
-    setTitle(nextTitle || "My Resume");
-    setContent(nextContent);
-    setSectionOrder(nextSectionOrder && nextSectionOrder.length ? nextSectionOrder : defaultSectionOrder);
-    if (nextTemplateId) {
-      setSelectedTemplate(nextTemplateId);
-    }
-    setTheme(nextTheme || {});
-  };
-
-  const loadPreviousUpload = (resumeToLoad: ResumeWithUploadMeta) => {
-    setUploadModal(false);
-    if (!isNew && id !== resumeToLoad._id) {
-      navigate(`/dashboard/resumes/${resumeToLoad._id}`, { replace: false });
-      return;
-    }
-
-    applyImportedResume(
-      resumeToLoad.title,
-      resumeToLoad.content,
-      resumeToLoad.sectionOrder,
-      resumeToLoad.templateId,
-      (resumeToLoad.theme as Record<string, string>) || {}
-    );
-    toast.add(`Loaded ${resumeToLoad.title}`, "success");
-  };
-
-  const handleResumeUpload = async (file: File) => {
-    let analysisInterval: ReturnType<typeof setInterval> | undefined;
-
-    try {
-      setIsUploadingResume(true);
-      setUploadProgress(5);
-      setAnalysisProgress(0);
-      setUploadStatus("Uploading your resume file...");
-
-      const formData = new FormData();
-      formData.append("file", file);
-      if (!isNew && id) {
-        formData.append("resumeId", id);
-      }
-
-      const { data } = await api.post("/resumes/upload-parse", formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-        onUploadProgress: (progressEvent) => {
-          if (progressEvent.total) {
-            const percent = Math.round((progressEvent.loaded * 100) / progressEvent.total);
-            setUploadProgress(Math.max(5, Math.min(95, percent)));
-          }
-        },
-      });
-
-      setUploadProgress(100);
-      setUploadStatus("AI is analyzing the uploaded resume...");
-      setAnalysisProgress(10);
-
-      analysisInterval = setInterval(() => {
-        setAnalysisProgress((current) => {
-          if (current >= 95) {
-            return current;
-          }
-          return Math.min(95, current + 8);
-        });
-      }, 240);
-
-      const parsedContent = data.data.content as ResumeContent;
-      applyImportedResume(data.data.title || title, parsedContent);
-      queryClient.invalidateQueries({ queryKey: ["resumes"] });
-      if (isNew && data.data.resumeId) {
-        navigate(`/dashboard/resumes/${data.data.resumeId}`, { replace: true });
-      } else if (id) {
-        queryClient.invalidateQueries({ queryKey: ["resume", id] });
-      }
-
-      setAnalysisProgress(100);
-      setUploadStatus("Resume uploaded and parsed successfully.");
-      toast.add("Resume uploaded and parsed!", "success");
-    } catch (err: unknown) {
-      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
-      setUploadStatus(msg || "Upload failed. Please try again.");
-      toast.add(msg || "Upload failed", "error");
-    } finally {
-      if (analysisInterval) {
-        clearInterval(analysisInterval);
-      }
-      setIsUploadingResume(false);
-      setUploadModal(false);
-    }
-  };
-
-  const exportPDF = async () => {
-    try {
-      const res = await api.get(`/resumes/${id}/export-pdf`, { responseType: "blob" });
-      const url = window.URL.createObjectURL(new Blob([res.data]));
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `${title}.pdf`;
-      a.click();
-      toast.add("PDF downloaded!", "success");
-    } catch {
-      toast.add("Export failed", "error");
-    }
-  };
-
-  const toggleShare = async () => {
-    const { data } = await api.post(`/resumes/${id}/toggle-public`);
-    toast.add(data.data.isPublic ? "Resume is now public" : "Resume is private", "success");
-  };
-
-  const updatePersonal = (field: string, value: string) => {
-    setContent((prev) => ({
-      ...prev,
-      personalInfo: { ...prev.personalInfo, [field]: value },
-    }));
-  };
-
-  const setThemeValue = (key: string, value: string) => {
-    setTheme((prev) => ({ ...prev, [key]: value }));
-  };
-
-  const handleOwnerPhotoUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    if (!file.type.startsWith("image/")) {
-      toast.add("Please choose an image file for your profile picture.", "error");
-      return;
-    }
-
-    const reader = new FileReader();
-    reader.onload = () => {
-      const result = typeof reader.result === "string" ? reader.result : "";
-      setContent((prev) => ({
-        ...prev,
-        personalInfo: { ...prev.personalInfo, profilePhoto: result },
-      }));
-    };
-    reader.readAsDataURL(file);
-  };
-
-  const addExperience = () => {
-    const exp: Experience = {
-      id: crypto.randomUUID(),
-      company: "",
-      position: "",
-      startDate: "",
-      endDate: "",
-      current: false,
-      bullets: [""],
-    };
-    setContent((prev) => ({ ...prev, experience: [...prev.experience, exp] }));
-  };
-
-  const addEducation = () => {
-    const edu = {
-      id: crypto.randomUUID(),
-      institution: "",
-      degree: "",
-      field: "",
-      startDate: "",
-      endDate: "",
-      gpa: "",
-    };
-    setContent((prev) => ({ ...prev, education: [...prev.education, edu] }));
-  };
-
-  const moveSection = (index: number, direction: "up" | "down") => {
-    const newOrder = [...sectionOrder];
-    const target = direction === "up" ? index - 1 : index + 1;
-    if (target < 0 || target >= newOrder.length) return;
-    [newOrder[index], newOrder[target]] = [newOrder[target], newOrder[index]];
-    setSectionOrder(newOrder);
-  };
-
-  if (!isNew && isLoading) {
+  if (query.isLoading) {
     return (
-      <div className="grid lg:grid-cols-2 gap-6">
-        <Skeleton className="h-96" />
-        <Skeleton className="h-96" />
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,0.9fr)]" aria-busy="true">
+        <div className="space-y-4">
+          <Skeleton className="h-12" />
+          <Skeleton className="h-64" />
+          <Skeleton className="h-48" />
+        </div>
+        <Skeleton className="hidden h-[640px] lg:block" />
       </div>
     );
   }
+  if (query.isError || !query.data) {
+    const notFound = axios.isAxiosError(query.error) && query.error.response?.status === 404;
+    return (
+      <div className="mx-auto max-w-md rounded-2xl border bg-card p-6 text-center">
+        <AlertTriangle className="mx-auto mb-3 h-8 w-8 text-amber-500" aria-hidden />
+        <p className="font-medium">{notFound ? t("editor.notFound") : t("editor.loadFailed")}</p>
+        <div className="mt-4 flex justify-center gap-2">
+          {!notFound && <Button onClick={() => query.refetch()}>{t("common.retry")}</Button>}
+          <Button variant="outline" asChild>
+            <Link to="/dashboard/resumes">{t("editor.backToList")}</Link>
+          </Button>
+        </div>
+      </div>
+    );
+  }
+  return <Editor resume={query.data} />;
+}
+
+// ---------------------------------------------------------------------------
+// Editor
+// ---------------------------------------------------------------------------
+
+function SaveIndicator({ status }: { status: SaveStatus }) {
+  const { t } = useTranslation();
+  const icon =
+    status.kind === "saved" ? (
+      <Check className="h-4 w-4 text-green-600" />
+    ) : status.kind === "offline" ? (
+      <CloudOff className="h-4 w-4 text-amber-600" />
+    ) : status.kind === "rejected" || status.kind === "retrying" ? (
+      <AlertTriangle className="h-4 w-4 text-red-600" />
+    ) : (
+      <Loader2 className="h-4 w-4 animate-spin text-muted" />
+    );
+  const text = status.kind === "rejected" ? t("editor.status.rejected", { message: status.message }) : t(`editor.status.${status.kind}`);
+  return (
+    <p className={cn("flex items-center gap-1.5 text-xs", status.kind === "rejected" ? "text-red-700" : "text-muted")} role="status" aria-live="polite">
+      {icon}
+      <span className="truncate">{text}</span>
+    </p>
+  );
+}
+
+function StrengthCard({ score, items, onJump, compact }: { score: number; items: ReturnType<typeof completeness>["items"]; onJump: (step: number) => void; compact?: boolean }) {
+  const { t } = useTranslation();
+  const todo = items.filter((i) => !i.done);
+  const color = score >= 80 ? "bg-green-500" : score >= 50 ? "bg-amber-500" : "bg-red-500";
+  return (
+    <div className="rounded-xl border bg-card p-4">
+      <div className="flex items-center justify-between gap-3">
+        <p className="text-sm font-semibold">{t("editor.strength")}</p>
+        <p className="text-sm font-bold">{score}%</p>
+      </div>
+      <div className="mt-2 h-2 overflow-hidden rounded-full bg-secondary" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={score} aria-label={t("editor.strength")}>
+        <div className={cn("h-full rounded-full transition-all", color)} style={{ width: `${score}%` }} />
+      </div>
+      {todo.length === 0 ? (
+        <p className="mt-2 text-xs text-muted">{t("editor.strengthDone")}</p>
+      ) : (
+        !compact && (
+          <>
+            <p className="mt-3 text-xs text-muted">{t("editor.strengthHint")}</p>
+            <ul className="mt-1.5 space-y-1">
+              {todo.slice(0, 4).map((item) => (
+                <li key={item.key}>
+                  <button type="button" className="text-left text-sm text-primary hover:underline" onClick={() => onJump(item.step)}>
+                    {t(`editor.checks.${item.key}`)}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </>
+        )
+      )}
+    </div>
+  );
+}
+
+function Editor({ resume }: { resume: Resume }) {
+  const { t } = useTranslation();
+  const toast = useToast();
+  const user = useAuthStore((s) => s.user);
+  const draft = useResumeDraft(resume);
+  const { doc, update, setContent, status } = draft;
+  const [step, setStep] = useState(0);
+  const [view, setView] = useState<"edit" | "preview">("edit");
+  const [showBreaks, setShowBreaks] = useState(false);
+  const [dialog, setDialog] = useState<null | "ai" | "import" | "download">(null);
+  const [aiTool, setAiTool] = useState<AiTool>("tailor");
+  const top = useRef<HTMLDivElement>(null);
+  const quota = useAiQuota();
+  const { data: templates } = useQuery({
+    queryKey: ["templates"],
+    queryFn: async () => (await api.get("/templates")).data.data as Template[],
+    staleTime: 5 * 60_000,
+  });
+
+  const strength = useMemo(() => completeness(doc.content), [doc.content]);
+  const watermark = quota.data?.watermarkPdf ?? user?.subscription?.plan !== "premium";
+  const hasContent = useMemo(() => SECTION_IDS.some((id) => id !== "languages" && id !== "personalDetails" && sectionHasContent(id, doc.content)), [doc.content]);
+  const sectionProps = { content: doc.content, setContent, language: doc.language };
+
+  const goTo = (next: number) => {
+    setStep(next);
+    setView("edit");
+    requestAnimationFrame(() => top.current?.scrollIntoView({ behavior: "smooth", block: "start" }));
+  };
+
+  const chooseTemplate = (slug: string) => {
+    const template = templates?.find((tpl) => tpl.slug === slug);
+    if (template?.locked) return;
+    // Colours come from the new template; fonts and sizes are kept
+    update((d) => ({
+      ...d,
+      templateId: slug,
+      theme: Object.fromEntries(Object.entries(d.theme).filter(([k]) => !["accentColor", "headingColor", "textColor"].includes(k) && !k.startsWith("gradient"))),
+    }));
+  };
+
+  const share = async () => {
+    try {
+      const { data } = await api.post(`/resumes/${resume._id}/toggle-public`);
+      if (data.data.isPublic && data.data.publicUrl) {
+        await navigator.clipboard?.writeText(data.data.publicUrl).catch(() => undefined);
+        toast.add(t("editor.share.public"), "success");
+      } else {
+        toast.add(t("editor.share.private"), "info");
+      }
+    } catch (error) {
+      toast.add(getErrorMessage(error, t("common.error")), "error");
+    }
+  };
+
+  const openAi = (tool: AiTool) => {
+    setAiTool(tool);
+    setDialog("ai");
+  };
+
+  const preview = (
+    <ResumePreview content={doc.content} templateId={doc.templateId} theme={doc.theme} sectionOrder={doc.sectionOrder} language={doc.language} showPageBreaks={showBreaks} watermark={watermark} />
+  );
 
   return (
-    <div className="space-y-4">
-      <div className="flex flex-wrap items-center gap-3 justify-between">
-        <Input
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          className="max-w-xs font-semibold text-lg border-none shadow-none focus-visible:ring-0"
-        />
+    <div className="space-y-4 pb-24 lg:pb-0">
+      {/* Toolbar */}
+      <div ref={top} className="scroll-mt-4 flex flex-wrap items-center gap-2">
+        <div className="min-w-0 flex-1 basis-56">
+          <label htmlFor="cv-title" className="sr-only">
+            {t("editor.cvTitle")}
+          </label>
+          <div className="flex items-center gap-2">
+            <Pencil className="h-4 w-4 shrink-0 text-muted" aria-hidden />
+            <input
+              id="cv-title"
+              className="min-w-0 flex-1 rounded-md bg-transparent px-1 py-1 text-lg font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+              value={doc.title}
+              maxLength={200}
+              onChange={(e) => update((d) => ({ ...d, title: e.target.value }))}
+              onBlur={() => !doc.title.trim() && update((d) => ({ ...d, title: t("editor.untitled") }))}
+            />
+          </div>
+          <SaveIndicator status={status} />
+        </div>
         <div className="flex flex-wrap gap-2">
-          <Button variant="outline" onClick={() => setTemplateModal(true)}>
-            <Upload className="h-4 w-4" />
-            Change Template
+          <Button variant="outline" size="sm" onClick={() => openAi("tailor")}>
+            <Sparkles className="h-4 w-4 text-violet-600" />
+            {t("editor.toolbar.ai")}
           </Button>
-          <Button variant="outline" onClick={() => setTemplateSettingsModalOpen(true)}>
-            <Settings className="h-4 w-4" />
-            Template Settings
+          <Button variant="outline" size="sm" onClick={() => setDialog("import")}>
+            <FileUp className="h-4 w-4" />
+            <span className="hidden sm:inline">{t("editor.toolbar.import")}</span>
           </Button>
-          <Button variant="outline" onClick={() => setUploadModal(true)}>
-            <Upload className="h-4 w-4" />
-            Upload Resume
+          <Button variant="outline" size="sm" onClick={() => void share()} aria-label={t("editor.share.button")}>
+            <Share2 className="h-4 w-4" />
+            <span className="hidden sm:inline">{t("editor.share.button")}</span>
           </Button>
-          <Button variant="outline" onClick={() => setAiModal(true)}>
-            <Sparkles className="h-4 w-4" />
-            {t("resume.generateAI")}
+          <Button variant="gradient" size="sm" onClick={() => setDialog("download")}>
+            <Download className="h-4 w-4" />
+            {t("editor.download.button")}
           </Button>
-          <Button variant="outline" onClick={() => setTailorModal(true)}>
-            <Sparkles className="h-4 w-4" />
-            Tailor for job
+        </div>
+      </div>
+
+      {draft.pendingDraft && (
+        <div className="flex flex-wrap items-center gap-3 rounded-xl border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900" role="alert">
+          <span className="flex-1">{t("editor.restoreDraft", { time: new Date(draft.pendingDraft.at).toLocaleString() })}</span>
+          <Button size="sm" onClick={draft.restoreDraft}>
+            {t("editor.restore")}
           </Button>
-          <Button variant="outline" onClick={() => saveMutation.mutate({})} disabled={saveMutation.isPending}>
-            <Save className="h-4 w-4" />
-            {t("resume.save")}
+          <Button size="sm" variant="ghost" onClick={draft.discardDraft}>
+            {t("editor.discard")}
           </Button>
-          {!isNew && (
+        </div>
+      )}
+
+      {/* Steps */}
+      <nav aria-label={t("editor.stepLabel", { n: step + 1, total: STEPS.length, name: t(`editor.steps.${STEPS[step]}`) })}>
+        <ol className="grid grid-cols-3 gap-2">
+          {STEPS.map((name, i) => (
+            <li key={name}>
+              <button
+                type="button"
+                onClick={() => goTo(i)}
+                aria-current={step === i ? "step" : undefined}
+                className={cn(
+                  "flex w-full items-center gap-2 rounded-xl border px-2 py-2 text-left text-xs font-medium transition sm:px-3 sm:text-sm",
+                  step === i ? "border-primary bg-primary text-white shadow" : i < step ? "border-primary/40 bg-primary/5" : "bg-card hover:border-primary/40"
+                )}
+              >
+                <span className={cn("flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs", step === i ? "bg-white text-primary" : "bg-secondary")}>
+                  {i < step ? <Check className="h-3.5 w-3.5" /> : i + 1}
+                </span>
+                <span className="min-w-0 leading-tight">{t(`editor.steps.${name}`)}</span>
+              </button>
+            </li>
+          ))}
+        </ol>
+      </nav>
+
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,0.9fr)]">
+        {/* Form */}
+        <div className={cn("min-w-0 space-y-4", view === "preview" && "hidden lg:block")}>
+          {step === 0 && (
             <>
-              <Button variant="outline" onClick={exportPDF}>
-                <Download className="h-4 w-4" />
-                {t("resume.export")}
-              </Button>
-              <Button variant="outline" onClick={toggleShare}>
-                <Share2 className="h-4 w-4" />
-                Share
-              </Button>
+              <EditorSection title={t("editor.cvLanguage")} hint={t("editor.cvLanguageHint")}>
+                <div className="grid grid-cols-2 gap-2" role="radiogroup" aria-label={t("editor.cvLanguage")}>
+                  {(["en", "bn"] as const).map((lang) => (
+                    <button
+                      key={lang}
+                      type="button"
+                      role="radio"
+                      aria-checked={doc.language === lang}
+                      onClick={() => update((d) => ({ ...d, language: lang }))}
+                      className={cn(
+                        "flex items-center justify-center gap-1.5 rounded-lg border-2 px-3 py-2.5 text-sm font-medium",
+                        doc.language === lang ? "border-primary bg-primary text-white" : "border-border hover:border-primary/40"
+                      )}
+                    >
+                      {t(lang === "en" ? "editor.langEn" : "editor.langBn")}
+                    </button>
+                  ))}
+                </div>
+              </EditorSection>
+              <PersonalSection {...sectionProps} />
+              <ObjectiveSection {...sectionProps} />
             </>
           )}
-        </div>
-      </div>
-
-      <div className="grid lg:grid-cols-2 gap-6">
-        <div className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">{t("resume.personalInfo")}</CardTitle>
-            </CardHeader>
-            <CardContent className="grid gap-3">
-              <div className="rounded-lg border border-dashed border-border p-4">
-                <label className="flex cursor-pointer flex-col items-center gap-2 text-center">
-                  <span className="text-sm font-medium">Upload owner picture</span>
-                  <span className="text-xs text-muted-foreground">PNG, JPG, or WEBP</span>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleOwnerPhotoUpload}
-                    className="sr-only"
-                  />
-                  <span className="rounded-md border border-border bg-secondary px-3 py-1 text-xs">Choose image</span>
-                </label>
-                {content.personalInfo.profilePhoto && (
-                  <div className="mt-3 flex flex-col items-center gap-3">
-                    <div className="relative">
-                      <img
-                        src={content.personalInfo.profilePhoto}
-                        alt="Owner preview"
-                        className={`rounded-full object-cover border ${
-                          content.personalInfo.profilePhotoSize === "large"
-                            ? "h-32 w-32"
-                            : content.personalInfo.profilePhotoSize === "small"
-                              ? "h-16 w-16"
-                              : "h-24 w-24"
-                        }`}
-                      />
-                      <button
-                        onClick={() => {
-                          setContent({
-                            ...content,
-                            personalInfo: { ...content.personalInfo, profilePhoto: "" },
-                          });
-                        }}
-                        className="absolute -top-2 -right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 shadow"
-                      >
-                        <Trash2 className="h-3 w-3" />
-                      </button>
-                    </div>
-                  </div>
-                )}
-                <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                  <div>
-                    <label className="text-xs font-medium">Image size</label>
-                    <select
-                      className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
-                      value={content.personalInfo.profilePhotoSize || "medium"}
-                      onChange={(e) =>
-                        setContent({
-                          ...content,
-                          personalInfo: {
-                            ...content.personalInfo,
-                            profilePhotoSize: e.target.value as "small" | "medium" | "large",
-                          },
-                        })
-                      }
-                    >
-                      <option value="small">Small</option>
-                      <option value="medium">Medium</option>
-                      <option value="large">Large</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="text-xs font-medium">Image alignment</label>
-                    <select
-                      className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
-                      value={content.personalInfo.profilePhotoAlignment || "center"}
-                      onChange={(e) =>
-                        setContent({
-                          ...content,
-                          personalInfo: {
-                            ...content.personalInfo,
-                            profilePhotoAlignment: e.target.value as "left" | "center" | "right",
-                          },
-                        })
-                      }
-                    >
-                      <option value="left">Left</option>
-                      <option value="center">Center</option>
-                      <option value="right">Right</option>
-                    </select>
-                  </div>
-                </div>
-              </div>
-              {(["fullName", "email", "phone", "location", "linkedin", "portfolio", "github", "website", "summary"] as const).map((field) => (
-                <div key={field}>
-                  <label className="text-xs font-medium capitalize">{field}</label>
-                  {field === "summary" ? (
-                    <textarea
-                      className="w-full mt-1 rounded-lg border border-border bg-background px-3 py-2 text-sm min-h-[80px]"
-                      value={content.personalInfo[field] || ""}
-                      onChange={(e) => updatePersonal(field, e.target.value)}
-                    />
-                  ) : (
-                    <Input
-                      className="mt-1"
-                      value={content.personalInfo[field] || ""}
-                      onChange={(e) => updatePersonal(field, e.target.value)}
-                    />
-                  )}
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Typography & Colors</CardTitle>
-            </CardHeader>
-            <CardContent className="grid gap-3">
-              <div>
-                <label className="text-xs font-medium">Font family</label>
-                <select
-                  className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
-                  value={theme.fontFamily || fontOptions[0]}
-                  onChange={(e) => setThemeValue("fontFamily", e.target.value)}
-                >
-                  {fontOptions.map((font) => (
-                    <option key={font} value={font}>
-                      {font.split(",")[0]}
-                    </option>
+          {step === 1 && (
+            <>
+              <EducationSection {...sectionProps} />
+              <ExperienceSection {...sectionProps} />
+              <TrainingSection {...sectionProps} />
+              <SkillsSection {...sectionProps} />
+              <LanguagesSection {...sectionProps} />
+            </>
+          )}
+          {step === 2 && (
+            <>
+              <DetailsSection {...sectionProps} />
+              <ReferencesSection {...sectionProps} />
+              <MoreSections {...sectionProps} />
+              <SectionOrder order={doc.sectionOrder} onChange={(sectionOrder) => update((d) => ({ ...d, sectionOrder }))} content={doc.content} />
+              <DesignPanel templates={templates} templateId={doc.templateId} theme={doc.theme} onTemplate={chooseTemplate} onTheme={(theme) => update((d) => ({ ...d, theme }))} />
+              <EditorSection title={t("ai.tools")} hint={t("ai.honest")}>
+                <div className="grid gap-2 sm:grid-cols-3">
+                  {(["tailor", "grammar", "translate"] as const).map((tool) => (
+                    <Button key={tool} variant="outline" className="h-auto justify-start whitespace-normal py-3 text-left" onClick={() => openAi(tool)}>
+                      <Sparkles className="h-4 w-4 shrink-0 text-violet-600" />
+                      {t(`ai.${tool}.title`)}
+                    </Button>
                   ))}
-                </select>
+                </div>
+              </EditorSection>
+              <div className="rounded-xl border-2 border-primary/30 bg-primary/5 p-5 text-center">
+                <p className="font-semibold">{t("editor.download.ready")}</p>
+                <p className="mt-1 text-sm text-muted">{t("editor.download.readyText")}</p>
+                <Button variant="gradient" size="lg" className="mt-3" onClick={() => setDialog("download")}>
+                  <Download className="h-5 w-5" />
+                  {t("editor.download.button")}
+                </Button>
               </div>
-              <div className="grid gap-3 sm:grid-cols-3">
-                <label className="text-xs font-medium">
-                  Heading color
-                  <input
-                    type="color"
-                    className="mt-1 h-10 w-full rounded border border-border bg-transparent"
-                    value={theme.headingColor || "#0f172a"}
-                    onChange={(e) => setThemeValue("headingColor", e.target.value)}
-                  />
-                </label>
-                <label className="text-xs font-medium">
-                  Body color
-                  <input
-                    type="color"
-                    className="mt-1 h-10 w-full rounded border border-border bg-transparent"
-                    value={theme.textColor || "#111827"}
-                    onChange={(e) => setThemeValue("textColor", e.target.value)}
-                  />
-                </label>
-                <label className="text-xs font-medium">
-                  Accent color
-                  <input
-                    type="color"
-                    className="mt-1 h-10 w-full rounded border border-border bg-transparent"
-                    value={theme.accentColor || "#1d4ed8"}
-                    onChange={(e) => setThemeValue("accentColor", e.target.value)}
-                  />
-                </label>
-              </div>
-            </CardContent>
-          </Card>
+            </>
+          )}
 
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="text-base">{t("resume.experience")}</CardTitle>
-              <Button size="sm" variant="outline" onClick={addExperience}>
-                <Plus className="h-4 w-4" />
+          <div className="flex items-center justify-between gap-2 pt-2">
+            <Button variant="outline" disabled={step === 0} onClick={() => goTo(step - 1)}>
+              <ArrowLeft className="h-4 w-4" />
+              {t("editor.back")}
+            </Button>
+            {step < STEPS.length - 1 && (
+              <Button onClick={() => goTo(step + 1)}>
+                {t("editor.next", { name: t(`editor.steps.${STEPS[step + 1]}`) })}
+                <ArrowRight className="h-4 w-4" />
               </Button>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {content.experience.map((exp, idx) => (
-                <div key={exp.id} className="p-3 border border-border rounded-lg space-y-3">
-                  <div className="grid grid-cols-2 gap-2">
-                    <Input placeholder="Position" value={exp.position} onChange={(e) => {
-                      const exps = [...content.experience];
-                      exps[idx] = { ...exp, position: e.target.value };
-                      setContent({ ...content, experience: exps });
-                    }} />
-                    <Input placeholder="Company" value={exp.company} onChange={(e) => {
-                      const exps = [...content.experience];
-                      exps[idx] = { ...exp, company: e.target.value };
-                      setContent({ ...content, experience: exps });
-                    }} />
-                  </div>
-                  <div className="space-y-2">
-                    {exp.bullets.map((bullet, bulletIdx) => (
-                      <div key={`${exp.id}-${bulletIdx}`} className="flex gap-2">
-                        <Input
-                          placeholder={`Bullet ${bulletIdx + 1}`}
-                          value={bullet}
-                          onChange={(e) => {
-                            const exps = [...content.experience];
-                            const bullets = [...exp.bullets];
-                            bullets[bulletIdx] = e.target.value;
-                            exps[idx] = { ...exp, bullets };
-                            setContent({ ...content, experience: exps });
-                          }}
-                        />
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => {
-                            const exps = [...content.experience];
-                            const bullets = exp.bullets.filter((_, currentIdx) => currentIdx !== bulletIdx);
-                            exps[idx] = { ...exp, bullets: bullets.length ? bullets : [""] };
-                            setContent({ ...content, experience: exps });
-                          }}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="flex justify-between gap-2">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => {
-                        const exps = [...content.experience];
-                        exps[idx] = { ...exp, bullets: [...exp.bullets, ""] };
-                        setContent({ ...content, experience: exps });
-                      }}
-                    >
-                      <Plus className="h-4 w-4" />
-                      Add bullet
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => {
-                        setContent({ ...content, experience: content.experience.filter((_, i) => i !== idx) });
-                      }}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="text-base">Education</CardTitle>
-              <Button size="sm" variant="outline" onClick={addEducation}>
-                <Plus className="h-4 w-4" />
-              </Button>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {content.education.map((edu, idx) => (
-                <div key={edu.id} className="p-3 border border-border rounded-lg space-y-2">
-                  <div className="grid gap-2 sm:grid-cols-2">
-                    <Input
-                      placeholder="Institution"
-                      value={edu.institution}
-                      onChange={(e) => {
-                        const education = [...content.education];
-                        education[idx] = { ...edu, institution: e.target.value };
-                        setContent({ ...content, education });
-                      }}
-                    />
-                    <Input
-                      placeholder="Degree"
-                      value={edu.degree}
-                      onChange={(e) => {
-                        const education = [...content.education];
-                        education[idx] = { ...edu, degree: e.target.value };
-                        setContent({ ...content, education });
-                      }}
-                    />
-                  </div>
-                  <div className="grid gap-2 sm:grid-cols-2">
-                    <Input
-                      placeholder="Field of study"
-                      value={edu.field || ""}
-                      onChange={(e) => {
-                        const education = [...content.education];
-                        education[idx] = { ...edu, field: e.target.value };
-                        setContent({ ...content, education });
-                      }}
-                    />
-                    <Input
-                      placeholder="GPA"
-                      value={edu.gpa || ""}
-                      onChange={(e) => {
-                        const education = [...content.education];
-                        education[idx] = { ...edu, gpa: e.target.value };
-                        setContent({ ...content, education });
-                      }}
-                    />
-                  </div>
-                  <div className="grid gap-2 sm:grid-cols-2">
-                    <Input
-                      type="date"
-                      value={edu.startDate}
-                      onChange={(e) => {
-                        const education = [...content.education];
-                        education[idx] = { ...edu, startDate: e.target.value };
-                        setContent({ ...content, education });
-                      }}
-                    />
-                    <Input
-                      type="date"
-                      value={edu.endDate}
-                      onChange={(e) => {
-                        const education = [...content.education];
-                        education[idx] = { ...edu, endDate: e.target.value };
-                        setContent({ ...content, education });
-                      }}
-                    />
-                  </div>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={() => {
-                      setContent({ ...content, education: content.education.filter((_, i) => i !== idx) });
-                    }}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Section Order (drag via arrows)</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              {sectionOrder.map((section, i) => (
-                <div key={section} className="flex items-center justify-between p-2 border border-border rounded">
-                  <span className="capitalize text-sm">{section}</span>
-                  <div className="flex gap-1">
-                    <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => moveSection(i, "up")}>
-                      <ChevronUp className="h-4 w-4" />
-                    </Button>
-                    <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => moveSection(i, "down")}>
-                      <ChevronDown className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="text-base">{t("resume.skills")}</CardTitle>
-              <Button size="sm" variant="outline" onClick={() => {
-                setContent({
-                  ...content,
-                  skills: [...content.skills, ""],
-                });
-              }}>
-                <Plus className="h-4 w-4" />
-              </Button>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              {content.skills.map((skill, idx) => (
-                <div key={idx} className="flex gap-2">
-                  <Input
-                    placeholder={`Skill ${idx + 1}`}
-                    value={skill}
-                    onChange={(e) => {
-                      const newSkills = [...content.skills];
-                      newSkills[idx] = e.target.value;
-                      setContent({ ...content, skills: newSkills });
-                    }}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") {
-                        e.preventDefault();
-                        if (skill.trim()) {
-                          setContent({
-                            ...content,
-                            skills: [...content.skills, ""],
-                          });
-                        }
-                      } else if (e.key === "Backspace" && !skill && content.skills.length > 1) {
-                        setContent({
-                          ...content,
-                          skills: content.skills.filter((_, i) => i !== idx),
-                        });
-                      }
-                    }}
-                  />
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={() => {
-                      setContent({
-                        ...content,
-                        skills: content.skills.filter((_, i) => i !== idx),
-                      });
-                    }}
-                    disabled={content.skills.length <= 1}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="text-base">Languages</CardTitle>
-              <Button size="sm" variant="outline" onClick={() => {
-                setContent({
-                  ...content,
-                  languages: [...content.languages, { id: crypto.randomUUID(), name: "", proficiency: "intermediate" }],
-                });
-              }}>
-                <Plus className="h-4 w-4" />
-              </Button>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              {content.languages.map((lang, idx) => (
-                <div key={lang.id} className="flex gap-2">
-                  <Input
-                    placeholder="Language"
-                    value={lang.name}
-                    onChange={(e) => {
-                      const langs = [...content.languages];
-                      langs[idx] = { ...langs[idx], name: e.target.value };
-                      setContent({ ...content, languages: langs });
-                    }}
-                  />
-                  <select
-                    className="border rounded px-2 py-1"
-                    value={lang.proficiency}
-                    onChange={(e) => {
-                      const langs = [...content.languages];
-                      langs[idx] = { ...langs[idx], proficiency: e.target.value as any };
-                      setContent({ ...content, languages: langs });
-                    }}
-                  >
-                    <option value="native">Native</option>
-                    <option value="fluent">Fluent</option>
-                    <option value="intermediate">Intermediate</option>
-                    <option value="basic">Basic</option>
-                  </select>
-                  <Button size="sm" variant="ghost" onClick={() => {
-                    setContent({ ...content, languages: content.languages.filter((_, i) => i !== idx) });
-                  }}>
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="text-base">Certifications</CardTitle>
-              <Button size="sm" variant="outline" onClick={() => {
-                setContent({
-                  ...content,
-                  certifications: [...content.certifications, { id: crypto.randomUUID(), name: "", issuer: "", date: "", credentialId: "", credentialUrl: "" }],
-                });
-              }}>
-                <Plus className="h-4 w-4" />
-              </Button>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              {content.certifications.map((cert, idx) => (
-                <div key={cert.id} className="p-3 border border-border rounded-lg space-y-2">
-                  <Input placeholder="Certification Name" value={cert.name} onChange={(e) => {
-                    const certs = [...content.certifications];
-                    certs[idx] = { ...certs[idx], name: e.target.value };
-                    setContent({ ...content, certifications: certs });
-                  }} />
-                  <Input placeholder="Issuer" value={cert.issuer} onChange={(e) => {
-                    const certs = [...content.certifications];
-                    certs[idx] = { ...certs[idx], issuer: e.target.value };
-                    setContent({ ...content, certifications: certs });
-                  }} />
-                  <Input type="date" value={cert.date} onChange={(e) => {
-                    const certs = [...content.certifications];
-                    certs[idx] = { ...certs[idx], date: e.target.value };
-                    setContent({ ...content, certifications: certs });
-                  }} />
-                  <Button size="sm" variant="ghost" onClick={() => {
-                    setContent({ ...content, certifications: content.certifications.filter((_, i) => i !== idx) });
-                  }}>
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="text-base">Awards</CardTitle>
-              <Button size="sm" variant="outline" onClick={() => {
-                setContent({
-                  ...content,
-                  awards: [...content.awards, { id: crypto.randomUUID(), title: "", issuer: "", date: "", description: "" }],
-                });
-              }}>
-                <Plus className="h-4 w-4" />
-              </Button>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              {content.awards.map((award, idx) => (
-                <div key={award.id} className="p-3 border border-border rounded-lg space-y-2">
-                  <Input placeholder="Award Title" value={award.title} onChange={(e) => {
-                    const awards = [...content.awards];
-                    awards[idx] = { ...awards[idx], title: e.target.value };
-                    setContent({ ...content, awards });
-                  }} />
-                  <Input placeholder="Issuer" value={award.issuer} onChange={(e) => {
-                    const awards = [...content.awards];
-                    awards[idx] = { ...awards[idx], issuer: e.target.value };
-                    setContent({ ...content, awards });
-                  }} />
-                  <Input type="date" value={award.date} onChange={(e) => {
-                    const awards = [...content.awards];
-                    awards[idx] = { ...awards[idx], date: e.target.value };
-                    setContent({ ...content, awards });
-                  }} />
-                  <Button size="sm" variant="ghost" onClick={() => {
-                    setContent({ ...content, awards: content.awards.filter((_, i) => i !== idx) });
-                  }}>
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="text-base">Publications</CardTitle>
-              <Button size="sm" variant="outline" onClick={() => {
-                setContent({
-                  ...content,
-                  publications: [...content.publications, { id: crypto.randomUUID(), title: "", publisher: "", date: "", url: "", description: "" }],
-                });
-              }}>
-                <Plus className="h-4 w-4" />
-              </Button>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              {content.publications.map((pub, idx) => (
-                <div key={pub.id} className="p-3 border border-border rounded-lg space-y-2">
-                  <Input placeholder="Publication Title" value={pub.title} onChange={(e) => {
-                    const pubs = [...content.publications];
-                    pubs[idx] = { ...pubs[idx], title: e.target.value };
-                    setContent({ ...content, publications: pubs });
-                  }} />
-                  <Input placeholder="Publisher" value={pub.publisher} onChange={(e) => {
-                    const pubs = [...content.publications];
-                    pubs[idx] = { ...pubs[idx], publisher: e.target.value };
-                    setContent({ ...content, publications: pubs });
-                  }} />
-                  <Input type="date" value={pub.date} onChange={(e) => {
-                    const pubs = [...content.publications];
-                    pubs[idx] = { ...pubs[idx], date: e.target.value };
-                    setContent({ ...content, publications: pubs });
-                  }} />
-                  <Button size="sm" variant="ghost" onClick={() => {
-                    setContent({ ...content, publications: content.publications.filter((_, i) => i !== idx) });
-                  }}>
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="text-base">Volunteer Experience</CardTitle>
-              <Button size="sm" variant="outline" onClick={() => {
-                setContent({
-                  ...content,
-                  volunteerExperience: [...content.volunteerExperience, { id: crypto.randomUUID(), organization: "", role: "", startDate: "", endDate: "", current: false, description: "" }],
-                });
-              }}>
-                <Plus className="h-4 w-4" />
-              </Button>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              {content.volunteerExperience.map((vol, idx) => (
-                <div key={vol.id} className="p-3 border border-border rounded-lg space-y-2">
-                  <Input placeholder="Organization" value={vol.organization} onChange={(e) => {
-                    const vols = [...content.volunteerExperience];
-                    vols[idx] = { ...vols[idx], organization: e.target.value };
-                    setContent({ ...content, volunteerExperience: vols });
-                  }} />
-                  <Input placeholder="Role" value={vol.role} onChange={(e) => {
-                    const vols = [...content.volunteerExperience];
-                    vols[idx] = { ...vols[idx], role: e.target.value };
-                    setContent({ ...content, volunteerExperience: vols });
-                  }} />
-                  <div className="flex gap-2">
-                    <Input type="date" value={vol.startDate} onChange={(e) => {
-                      const vols = [...content.volunteerExperience];
-                      vols[idx] = { ...vols[idx], startDate: e.target.value };
-                      setContent({ ...content, volunteerExperience: vols });
-                    }} />
-                    <Input type="date" value={vol.endDate} onChange={(e) => {
-                      const vols = [...content.volunteerExperience];
-                      vols[idx] = { ...vols[idx], endDate: e.target.value };
-                      setContent({ ...content, volunteerExperience: vols });
-                    }} />
-                  </div>
-                  <Button size="sm" variant="ghost" onClick={() => {
-                    setContent({ ...content, volunteerExperience: content.volunteerExperience.filter((_, i) => i !== idx) });
-                  }}>
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="text-base">References</CardTitle>
-              <Button size="sm" variant="outline" onClick={() => {
-                setContent({
-                  ...content,
-                  references: [...content.references, { id: crypto.randomUUID(), name: "", position: "", company: "", email: "", phone: "", relationship: "" }],
-                });
-              }}>
-                <Plus className="h-4 w-4" />
-              </Button>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              {content.references.map((ref, idx) => (
-                <div key={ref.id} className="p-3 border border-border rounded-lg space-y-2">
-                  <Input placeholder="Name" value={ref.name} onChange={(e) => {
-                    const refs = [...content.references];
-                    refs[idx] = { ...refs[idx], name: e.target.value };
-                    setContent({ ...content, references: refs });
-                  }} />
-                  <Input placeholder="Position" value={ref.position} onChange={(e) => {
-                    const refs = [...content.references];
-                    refs[idx] = { ...refs[idx], position: e.target.value };
-                    setContent({ ...content, references: refs });
-                  }} />
-                  <Input placeholder="Company" value={ref.company} onChange={(e) => {
-                    const refs = [...content.references];
-                    refs[idx] = { ...refs[idx], company: e.target.value };
-                    setContent({ ...content, references: refs });
-                  }} />
-                  <Button size="sm" variant="ghost" onClick={() => {
-                    setContent({ ...content, references: content.references.filter((_, i) => i !== idx) });
-                  }}>
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Interests</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Input
-                placeholder="Reading, Hiking, Photography (comma separated)"
-                value={content.interests.join(", ")}
-                onChange={(e) =>
-                  setContent({
-                    ...content,
-                    interests: e.target.value.split(",").map((s) => s.trim()).filter(Boolean),
-                  })
-                }
-              />
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="text-base">Courses</CardTitle>
-              <Button size="sm" variant="outline" onClick={() => {
-                setContent({
-                  ...content,
-                  courses: [...content.courses, { id: crypto.randomUUID(), name: "", provider: "", date: "", certificateUrl: "" }],
-                });
-              }}>
-                <Plus className="h-4 w-4" />
-              </Button>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              {content.courses.map((course, idx) => (
-                <div key={course.id} className="p-3 border border-border rounded-lg space-y-2">
-                  <Input placeholder="Course Name" value={course.name} onChange={(e) => {
-                    const courses = [...content.courses];
-                    courses[idx] = { ...courses[idx], name: e.target.value };
-                    setContent({ ...content, courses });
-                  }} />
-                  <Input placeholder="Provider" value={course.provider} onChange={(e) => {
-                    const courses = [...content.courses];
-                    courses[idx] = { ...courses[idx], provider: e.target.value };
-                    setContent({ ...content, courses });
-                  }} />
-                  <Input type="date" value={course.date} onChange={(e) => {
-                    const courses = [...content.courses];
-                    courses[idx] = { ...courses[idx], date: e.target.value };
-                    setContent({ ...content, courses });
-                  }} />
-                  <Button size="sm" variant="ghost" onClick={() => {
-                    setContent({ ...content, courses: content.courses.filter((_, i) => i !== idx) });
-                  }}>
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="text-base">Professional Memberships</CardTitle>
-              <Button size="sm" variant="outline" onClick={() => {
-                setContent({
-                  ...content,
-                  memberships: [...content.memberships, { id: crypto.randomUUID(), organization: "", role: "", startDate: "", endDate: "", current: false }],
-                });
-              }}>
-                <Plus className="h-4 w-4" />
-              </Button>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              {content.memberships.map((mem, idx) => (
-                <div key={mem.id} className="p-3 border border-border rounded-lg space-y-2">
-                  <Input placeholder="Organization" value={mem.organization} onChange={(e) => {
-                    const mems = [...content.memberships];
-                    mems[idx] = { ...mems[idx], organization: e.target.value };
-                    setContent({ ...content, memberships: mems });
-                  }} />
-                  <Input placeholder="Role" value={mem.role} onChange={(e) => {
-                    const mems = [...content.memberships];
-                    mems[idx] = { ...mems[idx], role: e.target.value };
-                    setContent({ ...content, memberships: mems });
-                  }} />
-                  <div className="flex gap-2">
-                    <Input type="date" value={mem.startDate} onChange={(e) => {
-                      const mems = [...content.memberships];
-                      mems[idx] = { ...mems[idx], startDate: e.target.value };
-                      setContent({ ...content, memberships: mems });
-                    }} />
-                    <Input type="date" value={mem.endDate} onChange={(e) => {
-                      const mems = [...content.memberships];
-                      mems[idx] = { ...mems[idx], endDate: e.target.value };
-                      setContent({ ...content, memberships: mems });
-                    }} />
-                  </div>
-                  <Button size="sm" variant="ghost" onClick={() => {
-                    setContent({ ...content, memberships: content.memberships.filter((_, i) => i !== idx) });
-                  }}>
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
+            )}
+          </div>
         </div>
 
-        {/* Desktop Preview - Hidden on mobile */}
-        <div className="hidden lg:block lg:sticky lg:top-4">
-          <div className="flex items-center justify-between mb-2">
-            <p className="text-sm font-medium">{t("resume.preview")}</p>
-            <label className="flex items-center gap-2 text-xs text-muted-foreground cursor-pointer">
-              <input
-                type="checkbox"
-                className="rounded border-border"
-                onChange={(e) => setShowPageBreaks(e.target.checked)}
-                checked={showPageBreaks}
-              />
-              Show page breaks
+        {/* Preview: beside the form on desktop, a toggle on phones */}
+        <aside className={cn("min-w-0 space-y-3 lg:sticky lg:top-4 lg:self-start", view === "edit" && "hidden lg:block")} aria-label={t("editor.preview")}>
+          <StrengthCard score={strength.score} items={strength.items} onJump={goTo} compact={view === "preview"} />
+          <div className="flex items-center justify-between">
+            <p className="text-sm font-medium">{t("editor.preview")}</p>
+            <label className="flex items-center gap-2 text-xs text-muted">
+              <input type="checkbox" className="h-4 w-4 accent-primary" checked={showBreaks} onChange={(e) => setShowBreaks(e.target.checked)} />
+              {t("editor.showPageBreaks")}
             </label>
           </div>
-          <ResumePreview content={content} templateId={selectedTemplate} theme={theme} className="w-full" showPageBreaks={showPageBreaks} />
+          <div className="lg:max-h-[calc(100vh-14rem)] lg:overflow-y-auto lg:rounded-lg">{preview}</div>
+        </aside>
+      </div>
+
+      {/* Phone: switch between editing and the preview */}
+      <div className="fixed inset-x-0 bottom-3 z-40 flex justify-center lg:hidden">
+        <div className="flex rounded-full border bg-card p-1 shadow-xl" role="tablist" aria-label={t("editor.viewMode")}>
+          {(["edit", "preview"] as const).map((mode) => (
+            <button
+              key={mode}
+              type="button"
+              role="tab"
+              aria-selected={view === mode}
+              onClick={() => setView(mode)}
+              className={cn("flex items-center gap-1.5 rounded-full px-5 py-2.5 text-sm font-medium", view === mode ? "bg-primary text-white" : "text-muted")}
+            >
+              {mode === "edit" ? <Pencil className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              {t(`editor.${mode}`)}
+            </button>
+          ))}
         </div>
       </div>
 
-      {aiModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <Card className="w-full max-w-lg">
-            <CardHeader>
-              <CardTitle>AI Resume Generator</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {Object.entries(aiForm).map(([key, val]) => (
-                <div key={key}>
-                  <label className="text-xs font-medium capitalize">{key}</label>
-                  <Input
-                    value={val}
-                    onChange={(e) => setAiForm({ ...aiForm, [key]: e.target.value })}
-                  />
-                </div>
-              ))}
-              <div className="flex gap-2 pt-2">
-                <Button variant="gradient" onClick={generateAI}>Generate</Button>
-                <Button variant="outline" onClick={() => setAiModal(false)}>Cancel</Button>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      )}
+      <PrintableResume content={doc.content} templateId={doc.templateId} theme={doc.theme} sectionOrder={doc.sectionOrder} language={doc.language} watermark={watermark} />
 
-      {uploadModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <Card className="w-full max-w-2xl">
-            <CardHeader>
-              <CardTitle>Upload Current Resume</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex rounded-lg bg-secondary p-1">
-                {(["new", "previous"] as UploadTab[]).map((tab) => (
-                  <button
-                    key={tab}
-                    type="button"
-                    onClick={() => setUploadTab(tab)}
-                    className={`flex-1 rounded-md px-3 py-2 text-sm font-medium transition ${
-                      uploadTab === tab ? "bg-background text-foreground shadow-sm" : "text-muted-foreground"
-                    }`}
-                  >
-                    {tab === "new" ? "Upload new" : "Previous uploads"}
-                  </button>
-                ))}
-              </div>
-
-              {uploadTab === "new" ? (
-                <div className="space-y-4">
-                  <label className="block cursor-pointer rounded-lg border-2 border-dashed border-border p-6 text-center transition hover:border-primary">
-                    <Upload className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
-                    <p className="text-sm text-muted-foreground mb-2">Upload your existing resume (PDF or DOCX)</p>
-                    <span className="inline-flex rounded-md border border-border bg-secondary px-3 py-1 text-sm">Choose file</span>
-                    <input
-                      type="file"
-                      accept=".pdf,.docx,.doc"
-                      disabled={isUploadingResume}
-                      onChange={(e) => {
-                        const file = e.target.files?.[0];
-                        if (file) handleResumeUpload(file);
-                      }}
-                      className="sr-only"
-                    />
-                  </label>
-
-                  <div className="rounded-lg border bg-secondary/30 p-4 space-y-3">
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="font-medium">{uploadStatus}</span>
-                      <span className="text-muted-foreground">{isUploadingResume ? `${Math.max(uploadProgress, analysisProgress)}%` : "Idle"}</span>
-                    </div>
-                    <div className="h-2 rounded-full bg-secondary overflow-hidden">
-                      <div
-                        className="h-full rounded-full bg-primary transition-all"
-                        style={{ width: `${isUploadingResume ? Math.max(uploadProgress, analysisProgress) : 0}%` }}
-                      />
-                    </div>
-                    <div className="grid gap-2 sm:grid-cols-2 text-sm text-muted-foreground">
-                      <div>
-                        <p className="font-medium text-foreground">Uploading</p>
-                        <p>{uploadProgress}% complete</p>
-                      </div>
-                      <div>
-                        <p className="font-medium text-foreground">AI analyzing</p>
-                        <p>{analysisProgress}% complete</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {(resumes as ResumeWithUploadMeta[])
-                    .filter((resumeItem) => resumeItem.uploadedAt || resumeItem.uploadedFileName)
-                    .map((resumeItem) => {
-                      const isSelected = selectedPreviousUploadId === resumeItem._id;
-                      return (
-                        <button
-                          key={resumeItem._id}
-                          type="button"
-                          onClick={() => setSelectedPreviousUploadId(resumeItem._id)}
-                          className={`w-full rounded-lg border p-4 text-left transition ${
-                            isSelected ? "border-primary bg-primary/5" : "hover:border-primary"
-                          }`}
-                        >
-                          <div className="flex items-start justify-between gap-3">
-                            <div className="flex items-start gap-3">
-                              <FileText className="h-5 w-5 text-primary mt-0.5" />
-                              <div>
-                                <p className="font-semibold">{resumeItem.title}</p>
-                                <p className="text-sm text-muted-foreground">
-                                  Uploaded {resumeItem.uploadedAt ? formatDate(resumeItem.uploadedAt) : "recently"}
-                                  {resumeItem.uploadedFileName ? ` · ${resumeItem.uploadedFileName}` : ""}
-                                </p>
-                              </div>
-                            </div>
-                            <span className="text-xs rounded-full bg-secondary px-2 py-1">{resumeItem.format}</span>
-                          </div>
-                        </button>
-                      );
-                    })}
-
-                  {!(resumes as ResumeWithUploadMeta[]).some((resumeItem) => resumeItem.uploadedAt || resumeItem.uploadedFileName) && (
-                    <div className="rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground">
-                      No previous uploads yet. Upload a resume to build your first imported draft.
-                    </div>
-                  )}
-
-                  <div className="flex justify-end gap-2 pt-2">
-                    <Button variant="outline" onClick={() => setUploadModal(false)} disabled={isUploadingResume}>
-                      Cancel
-                    </Button>
-                    <Button
-                      onClick={() => {
-                        const selected = (resumes as ResumeWithUploadMeta[]).find((resumeItem) => resumeItem._id === selectedPreviousUploadId);
-                        if (selected) loadPreviousUpload(selected);
-                      }}
-                      disabled={!selectedPreviousUploadId || isUploadingResume}
-                    >
-                      Load selected
-                    </Button>
-                  </div>
-                </div>
-              )}
-
-              <div className="flex gap-2 pt-2">
-                {uploadTab === "new" && (
-                  <Button variant="outline" onClick={() => setUploadModal(false)} disabled={isUploadingResume}>
-                    Cancel
-                  </Button>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      )}
-
-      {tailorModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <Card className="w-full max-w-2xl">
-            <CardHeader>
-              <CardTitle>Tailor this resume for a job</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <p className="text-sm text-muted-foreground">
-                Paste the job description and AI will rewrite the summary, skills, and matching experience bullets for this resume.
-              </p>
-              <textarea
-                className="w-full min-h-[220px] rounded-lg border border-border bg-background px-3 py-2 text-sm"
-                placeholder="Paste the job description here..."
-                value={tailorJobDescription}
-                onChange={(e) => setTailorJobDescription(e.target.value)}
-              />
-              <div className="flex justify-end gap-2">
-                <Button variant="outline" onClick={() => setTailorModal(false)} disabled={isTailoringResume}>
-                  Cancel
-                </Button>
-                <Button variant="gradient" onClick={tailorResumeForJob} disabled={isTailoringResume}>
-                  {isTailoringResume ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
-                  Tailor Resume
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      )}
-
-      {/* Mobile Preview Modal */}
-      {previewModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 lg:hidden">
-          <div className="relative w-full max-w-3xl max-h-[90vh] overflow-y-auto bg-white rounded-lg shadow-2xl">
-            <div className="sticky top-0 z-10 flex items-center justify-between p-4 bg-white border-b">
-              <h2 className="text-lg font-semibold">{t("resume.preview")}</h2>
-              <div className="flex items-center gap-2">
-                <label className="flex items-center gap-2 text-xs text-muted-foreground cursor-pointer">
-                  <input
-                    type="checkbox"
-                    className="rounded border-border"
-                    onChange={(e) => setShowPageBreaks(e.target.checked)}
-                    checked={showPageBreaks}
-                  />
-                  <span>Show page breaks</span>
-                </label>
-                <button
-                  onClick={() => setPreviewModalOpen(false)}
-                  className="p-2 rounded-full hover:bg-gray-100"
-                >
-                  <X className="h-5 w-5" />
-                </button>
-              </div>
-            </div>
-            <div className="p-4">
-              <ResumePreview content={content} templateId={selectedTemplate} theme={theme} className="w-full" showPageBreaks={showPageBreaks} />
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Mobile Sticky Preview Button */}
-      <div className="lg:hidden fixed bottom-6 right-6 z-40">
-        <button
-          onClick={() => setPreviewModalOpen(true)}
-          className="flex items-center gap-2 px-4 py-3 bg-gradient-to-r from-blue-600 to-violet-600 text-white rounded-full shadow-lg hover:shadow-xl transition-shadow"
-        >
-          <Eye className="h-5 w-5" />
-          <span className="font-medium">Preview</span>
-        </button>
-      </div>
-
-      {templateModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <Card className="w-full max-w-4xl max-h-[80vh] overflow-y-auto">
-            <CardHeader>
-              <CardTitle>Choose a Template</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {templates?.map((template) => {
-                  // Get template image - use slug-based local image or fallback
-                  const templateImages: Record<string, string> = {
-                    "modern-ats": "/templates/modern-ats.svg",
-                    "classic": "/templates/classic.svg",
-                    "professional-bd": "/templates/professional-bd.svg",
-                    "creative": "/templates/creative.svg",
-                    "minimalist": "/templates/minimalist.svg",
-                    "executive-pro": "/templates/executive-pro.svg",
-                    "academic": "/templates/academic.svg",
-                    "tech-pro": "/templates/tech-pro.svg",
-                    "startup": "/templates/startup.svg",
-                    "bold-modern": "/templates/bold-modern.svg",
-                    "international": "/templates/international.svg",
-                    "bd-gov": "/templates/bd-gov.svg",
-                  };
-                  const imageSrc = (template.slug && templateImages[template.slug]) || 
-                                   (template.thumbnail ? template.thumbnail.replace(/\.png$/i, ".svg") : "/templates/fallback.svg");
-
-                  return (
-                    <div
-                      key={template._id}
-                      className={`border rounded-lg p-4 transition-colors ${
-                        selectedTemplate === template.slug ? "border-primary bg-primary/5" : ""
-                      } ${template.locked ? "opacity-60 cursor-not-allowed" : "cursor-pointer hover:border-primary"}`}
-                      onClick={() => {
-                        if (!template.locked) setSelectedTemplate(template.slug);
-                      }}
-                    >
-                      <div className="h-32 bg-gradient-to-br from-blue-100 to-violet-100 dark:from-blue-900/30 dark:to-violet-900/30 flex items-center justify-center mb-3 rounded overflow-hidden">
-                        <img
-                          src={imageSrc}
-                          alt={template.name}
-                          className="h-full w-full object-cover"
-                          onError={(e) => {
-                            (e.target as HTMLImageElement).src = "/templates/fallback.svg";
-                          }}
-                        />
-                      </div>
-                      <h3 className="font-semibold mb-1">{template.name}</h3>
-                      <p className="text-sm text-muted mb-2">{template.description}</p>
-                      <span className="text-xs capitalize bg-secondary px-2 py-1 rounded">{template.category}</span>
-                      {template.isPremium && <span className="ml-2 text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded">Premium</span>}
-                      {template.locked && <span className="ml-2 text-xs bg-muted px-2 py-1 rounded">Locked</span>}
-                    </div>
-                  );
-                })}
-              </div>
-              <div className="flex gap-2 pt-4 justify-end">
-                <Button variant="outline" onClick={() => setTemplateModal(false)}>Cancel</Button>
-                <Button
-                  variant="gradient"
-                  onClick={async () => {
-                    if (!selectedTemplate) return;
-                    try {
-                      const chosenTemplate = templates?.find((template) => template.slug === selectedTemplate);
-                      if (chosenTemplate?.defaultTheme) {
-                        setTheme((chosenTemplate.defaultTheme as Record<string, string>) || {});
-                      }
-                      if (isNew) {
-                        await saveMutation.mutateAsync({ templateId: selectedTemplate });
-                        toast.add("Template applied!", "success");
-                      } else {
-                        if (!id) {
-                          toast.add("Unable to apply template right now.", "error");
-                          return;
-                        }
-                        await api.patch(`/resumes/${id}/template`, { templateId: selectedTemplate });
-                        toast.add("Template updated!", "success");
-                        queryClient.invalidateQueries({ queryKey: ["resume", id] });
-                      }
-                      setTemplateModal(false);
-                    } catch {
-                      toast.add("Failed to update template", "error");
-                    }
-                  }}
-                  disabled={!selectedTemplate}
-                >
-                  Apply Template
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      )}
-
-      {/* Template Settings Modal - For real-time customization */}
-      <TemplateSettingsModal
-        isOpen={templateSettingsModalOpen}
-        onClose={() => setTemplateSettingsModalOpen(false)}
-        currentTheme={theme}
-        currentTemplate={selectedTemplate}
-        templates={templates}
-        onThemeChange={setTheme}
-        onTemplateChange={setSelectedTemplate}
-        onSave={async () => {
-          if (!id || isNew) return;
-          try {
-            await api.patch(`/resumes/${id}`, { 
-              templateId: selectedTemplate, 
-              theme: theme 
-            });
-            toast.add("Template settings saved!", "success");
-            queryClient.invalidateQueries({ queryKey: ["resume", id] });
-          } catch {
-            toast.add("Failed to save template settings", "error");
-          }
+      <AiToolsDialog
+        open={dialog === "ai"}
+        onOpenChange={(open) => setDialog(open ? "ai" : null)}
+        tool={aiTool}
+        onToolChange={setAiTool}
+        resumeId={resume._id}
+        content={doc.content}
+        setContent={setContent}
+        language={doc.language}
+        saveNow={draft.saveNow}
+      />
+      <ImportDialog
+        open={dialog === "import"}
+        onOpenChange={(open) => setDialog(open ? "import" : null)}
+        resumeId={resume._id}
+        hasContent={hasContent}
+        onImported={(result) => {
+          update((d) => ({ ...d, content: normalizeContent(result.content) }));
+          goTo(0);
         }}
+      />
+      <DownloadDialog
+        open={dialog === "download"}
+        onOpenChange={(open) => setDialog(open ? "download" : null)}
+        resumeId={resume._id}
+        title={doc.title}
+        language={doc.language}
+        watermark={watermark}
+        saveNow={draft.saveNow}
       />
     </div>
   );

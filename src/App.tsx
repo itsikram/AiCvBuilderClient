@@ -3,6 +3,7 @@ import { BrowserRouter } from "react-router-dom";
 import { QueryClient, QueryClientProvider, type QueryKey } from "@tanstack/react-query";
 import { GoogleOAuthProvider } from "@react-oauth/google";
 import { Toaster } from "@/components/ui/toast";
+import { ConfirmHost } from "@/components/ui/dialog";
 import { PageContentProvider } from "@/context/PageContentContext";
 import { SiteConfig } from "@/components/SiteConfig";
 import { ConsentBanner } from "@/components/ConsentBanner";
@@ -34,6 +35,7 @@ export function AppShell() {
       <AppRoutes />
       <SiteConfig />
       <Toaster />
+      <ConfirmHost />
       <ConsentBanner />
     </>
   );

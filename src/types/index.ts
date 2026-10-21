@@ -9,12 +9,17 @@ export interface ResumeContent {
     github?: string;
     website?: string;
     summary: string;
+    /** Target job title shown under the name */
+    jobTitle?: string;
     profilePhoto?: string;
     profilePhotoSize?: "small" | "medium" | "large";
     profilePhotoAlignment?: "left" | "center" | "right";
   };
+  careerObjective?: string;
+  personalDetails?: PersonalDetails;
   experience: Experience[];
   education: Education[];
+  trainings?: Training[];
   projects: Project[];
   skills: string[];
   languages: Language[];
@@ -40,14 +45,46 @@ export interface Experience {
   bullets: string[];
 }
 
+export type EducationLevel = "ssc" | "hsc" | "diploma" | "honours" | "bachelor" | "masters" | "phd" | "other";
+
 export interface Education {
   id: string;
   institution: string;
   degree: string;
+  /** Group (Science/Commerce/Humanities) for SSC/HSC, subject/major otherwise */
   field?: string;
   startDate: string;
   endDate?: string;
   gpa?: string;
+  level?: EducationLevel | string;
+  /** Education board (SSC/HSC) or university */
+  board?: string;
+  /** "5.00" for SSC/HSC GPA, "4.00" for CGPA */
+  gpaScale?: string;
+  passingYear?: string;
+}
+
+export interface Training {
+  id: string;
+  title: string;
+  institute: string;
+  duration?: string;
+  year?: string;
+  description?: string;
+}
+
+/** Personal details section of a Bangladeshi CV */
+export interface PersonalDetails {
+  fatherName?: string;
+  motherName?: string;
+  dateOfBirth?: string;
+  gender?: string;
+  nationality?: string;
+  religion?: string;
+  maritalStatus?: string;
+  nid?: string;
+  bloodGroup?: string;
+  permanentAddress?: string;
 }
 
 export interface Project {

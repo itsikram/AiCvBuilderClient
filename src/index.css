@@ -53,21 +53,40 @@ body {
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-/* Resume preview styles - margin for sections when profile photo exists */
-.has-profile-photo .resume-section:first-of-type {
-  margin-top: 1.5rem;
+/* CV pages (components/resume/ResumePreview.tsx): keep entries and headings with their content */
+.cv-entry,
+.cv-header {
+  break-inside: avoid;
+}
+.cv-heading {
+  break-after: avoid;
+}
+.cv-page {
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
 }
 
-/* Print styles for resume preview - prevent sections from splitting across pages */
+/* Printing / "Save as PDF" shows only the real-size CV copy (PrintableResume) */
+#cv-print-root {
+  display: none;
+}
 @media print {
-  .resume-section {
-    break-inside: avoid;
-    page-break-inside: avoid;
+  @page {
+    size: A4;
+    margin: 12mm 0;
   }
-  
-  .resume-preview main section {
-    break-inside: avoid;
-    page-break-inside: avoid;
+  @page :first {
+    margin-top: 0;
+  }
+  html,
+  body {
+    background: #fff !important;
+  }
+  body > *:not(#cv-print-root) {
+    display: none !important;
+  }
+  #cv-print-root {
+    display: block;
   }
 }
 
