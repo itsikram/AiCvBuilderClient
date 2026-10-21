@@ -91,10 +91,10 @@ const defaultPageValues = {
     featuresTitle: "Everything you need to get hired",
     trustSectionTitle: "Trusted by job seekers across Bangladesh",
     trustSectionDescription: "Students, freelancers, and professionals use AI CV Builder BD to create ATS-optimized resumes and land jobs at top companies.",
+    // Only publish numbers you can back up (e.g. real CV counts from Admin -> Overview)
     statsSection: JSON.stringify([
-      { value: "10K+", label: "Resumes Created" },
-      { value: "95%", label: "ATS Pass Rate" },
-      { value: "৳499", label: "Starting Price/mo" },
+      { value: "৳0", label: "To create and download a CV" },
+      { value: "30+", label: "CV templates" },
       { value: "2", label: "Languages" }
     ], null, 2),
     // Header/Footer defaults

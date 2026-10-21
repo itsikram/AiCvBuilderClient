@@ -82,8 +82,32 @@ Earn links by being useful; don't buy them.
 
 ## 7. Lighthouse scores (mobile, landing page)
 
-Recorded during Phase 7 verification; see the table below.
+Measured on 2026-10-21 with Lighthouse 12.8.2 (mobile preset, simulated slow 4G and 4x CPU
+slowdown) against the production build served locally (`vite preview`). Median of 5 runs.
 
-| Page | Performance | Accessibility | Best Practices | SEO | Notes |
+| Page | Performance | Accessibility | Best Practices | SEO | FCP | LCP | TBT | CLS |
+|---|---|---|---|---|---|---|---|---|
+| `/` | 65 | 100 | 96 | 100 | 2.4 s | 4.0 s | 0.66 s | 0 |
+| `/bn/` | 74 | 100 | 96 | 100 | 2.4 s | 4.1 s | 0.36 s | 0.003 |
+
+Before the performance pass the same page scored 64 / 96 / 96 / 100 (TBT 1.5 s, two contrast failures).
+
+Notes and caveats:
+
+- **Performance is below the 90 target.** Individual runs on the test machine ranged from 52 to 77
+  with no code change, and the first layout alone took about 200–340 ms unthrottled on that Windows
+  machine, which Lighthouse multiplies by 4. Re-measure the live site with PageSpeed Insights
+  (https://pagespeed.web.dev/), which runs on Google's servers, and record the numbers below.
+- Best Practices loses 4 points only for console errors caused by testing from `localhost` against the
+  production API (CORS). They go away on the real domain.
+- Done so far: hydration in a transition (TBT 1.5 s to about 0.5 s), one translation chunk per language
+  (main JS 177 to 155 kB gzipped), dark mode applied by CSS (no full repaint after JS loads), no
+  progress-bar animation on first load, per-language font preloads, dark-mode contrast fixes and a valid
+  web manifest.
+- Next steps if PageSpeed Insights is still below 90: render the landing page without hydrating the whole
+  app shell (islands), replace `axios` with `fetch`, and preload only the fonts above the fold.
+
+| Page | Performance | Accessibility | Best Practices | SEO | Date |
 |---|---|---|---|---|---|
-| `/` (mobile) | _pending_ | _pending_ | _pending_ | _pending_ | |
+| `/` on PageSpeed Insights (mobile) | _fill in after launch_ | | | | |
+| `/bn/` on PageSpeed Insights (mobile) | _fill in after launch_ | | | | |
