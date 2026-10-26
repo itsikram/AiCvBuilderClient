@@ -1,7 +1,10 @@
 import axios from "axios";
 
+// Live API, forced: env values are ignored so no stale .env can point the site elsewhere.
+export const API_URL = "https://ownwl9o5ma.c39.airoapp.ai/api/v1";
+
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || "/api/v1",
+  baseURL: API_URL,
   withCredentials: true,
 });
 
@@ -30,7 +33,7 @@ api.interceptors.response.use(
       original._retry = true;
       try {
         const { data } = await axios.post(
-          `${import.meta.env.VITE_API_URL || "/api/v1"}/auth/refresh`,
+          `${API_URL}/auth/refresh`,
           {},
           { withCredentials: true }
         );

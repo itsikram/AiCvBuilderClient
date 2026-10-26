@@ -69,7 +69,8 @@ const siteUrl = (
   env.CLIENT_URL ||
   "https://aicvbuilderbd.online"
 ).replace(/\/+$/, "");
-const apiUrl = (env.VITE_API_URL || "/api/v1").replace(/\/+$/, "");
+// Live API, forced (must match API_URL in src/lib/api.ts).
+const apiUrl = "https://ownwl9o5ma.c39.airoapp.ai/api/v1";
 const xmlEscape = (value) =>
   value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 
