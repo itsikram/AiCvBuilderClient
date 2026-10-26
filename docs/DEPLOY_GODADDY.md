@@ -276,7 +276,7 @@ Common problems:
 
 ### Current live setup (2026-10-21)
 
-The site in `public_html` talks to the API at `https://aicvbuilderserver-4qfy.onrender.com` (set in
+The site in `public_html` talks to the API at `https://ownwl9o5ma.c39.airoapp.ai` (set in
 `.env.production`). Checked from the live origin: CORS allows `https://aicvbuilderbd.online` (and `www`),
 `/api/v1/health`, page content and login respond, http/www redirect to https apex, unknown pages return 404.
 Moving the API to `api.aicvbuilderbd.online` later only needs the CNAME (step 1), the custom domain on Render,
