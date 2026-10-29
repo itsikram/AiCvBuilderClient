@@ -24,7 +24,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 60
     env:
-      APP_ID: pvfj8qip49
+      APP_ID: NODEJS-pvfj8qip49
       BRANCH: main
       GODADDY_PAT: ${{ secrets.GODADDY_PAT }}
     steps:
