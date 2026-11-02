@@ -348,14 +348,14 @@ export default function MenuManagerPage() {
 
   return (
     <div className="space-y-8">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold">Menu Manager</h1>
           <p className="text-muted">
             Manage header navigation, footer links, and social media connections
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <Button
             variant={selectedLanguage === "en" ? "default" : "outline"}
             onClick={() => setSelectedLanguage("en")}
@@ -650,7 +650,7 @@ export default function MenuManagerPage() {
               <div className="space-y-2">
                 <label className="text-sm font-medium">Footer Description</label>
                 <textarea
-                  className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm min-h-[80px]"
+                  className="w-full rounded-lg border border-border bg-background px-3 py-2 text-base sm:text-sm min-h-[80px]"
                   value={footerDescription}
                   onChange={(e) => setFooterDescription(e.target.value)}
                   placeholder="Enter footer description..."

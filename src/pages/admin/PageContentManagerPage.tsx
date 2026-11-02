@@ -240,7 +240,7 @@ export default function PageContentManagerPage() {
 
   return (
     <div className="space-y-8">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold">Page Content Manager</h1>
           <p className="text-muted">Manage content for home, about, contact, and pricing pages</p>
@@ -249,7 +249,7 @@ export default function PageContentManagerPage() {
 
       {/* Page and Language Selector */}
       <div className="flex flex-wrap gap-4">
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           {pages.map((page) => {
             const config = pageConfig[page];
             const Icon = config.icon;
@@ -345,7 +345,7 @@ export default function PageContentManagerPage() {
                   <label className="text-sm font-medium">{field.label}</label>
                   {field.type === "textarea" || field.type === "richtext" ? (
                     <textarea
-                      className="w-full min-h-[100px] rounded-lg border border-border bg-background px-3 py-2 text-sm"
+                      className="w-full min-h-[100px] rounded-lg border border-border bg-background px-3 py-2 text-base sm:text-sm"
                       value={editingContent[field.key] || ""}
                       onChange={(e) => handleFieldChange(field.key, e.target.value)}
                       placeholder={`Enter ${field.label.toLowerCase()}`}

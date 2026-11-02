@@ -180,7 +180,7 @@ export default function BkashPaymentsPage() {
         <CardHeader className="flex flex-row items-center justify-between gap-4">
           <CardTitle>Manual BKash Submissions</CardTitle>
           <select
-            className="h-10 rounded-lg border border-border bg-background px-3 py-2 text-sm"
+            className="h-10 rounded-lg border border-border bg-background px-3 py-2 text-base sm:text-sm"
             value={status}
             onChange={(e) => setStatus(e.target.value)}
           >
@@ -234,7 +234,7 @@ export default function BkashPaymentsPage() {
                       <td className="py-3 px-2">
                         <div className="space-y-2">
                           <textarea
-                            className="min-h-20 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
+                            className="min-h-20 w-full rounded-lg border border-border bg-background px-3 py-2 text-base sm:text-sm"
                             placeholder="Add review notes"
                             value={reviewNotes[payment._id] || payment.providerData?.reviewNotes || ""}
                             onChange={(e) =>

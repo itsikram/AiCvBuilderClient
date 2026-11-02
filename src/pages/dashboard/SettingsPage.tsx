@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { SelectField, TextField } from "@/components/editor/fields";
 import api, { getErrorMessage } from "@/lib/api";
@@ -81,7 +80,8 @@ export default function SettingsPage() {
               </div>
               <label className="inline-flex cursor-pointer items-center rounded-lg border border-border px-3 py-2 text-sm font-medium focus-within:ring-2 focus-within:ring-primary">
                 {t("settings.uploadPicture")}
-                <Input type="file" accept="image/*" className="sr-only" onChange={(e) => handleAvatarChange(e.target.files?.[0] || null)} />
+                {/* A plain input: the Input component's w-full beats sr-only and pushed the page sideways */}
+                <input type="file" accept="image/*" className="sr-only" onChange={(e) => handleAvatarChange(e.target.files?.[0] || null)} />
               </label>
             </div>
           </div>

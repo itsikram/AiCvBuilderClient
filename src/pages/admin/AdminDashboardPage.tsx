@@ -289,7 +289,7 @@ export default function AdminDashboardPage() {
             <div className="space-y-2">
               <label className="text-sm font-medium">Language</label>
               <select
-                className="flex h-10 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
+                className="flex h-10 w-full rounded-lg border border-border bg-background px-3 py-2 text-base sm:text-sm"
                 value={blogForm.language}
                 onChange={(e) =>
                   setBlogForm((prev) => ({ ...prev, language: e.target.value as "en" | "bn" }))
@@ -318,7 +318,7 @@ export default function AdminDashboardPage() {
           <div className="space-y-2">
             <label className="text-sm font-medium">Excerpt</label>
             <textarea
-              className="flex min-h-[96px] w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
+              className="flex min-h-[96px] w-full rounded-lg border border-border bg-background px-3 py-2 text-base sm:text-sm"
               value={blogForm.excerpt}
               onChange={(e) => setBlogForm((prev) => ({ ...prev, excerpt: e.target.value }))}
               placeholder="Short summary shown on the blog list"
@@ -328,7 +328,7 @@ export default function AdminDashboardPage() {
           <div className="space-y-2">
             <label className="text-sm font-medium">Content</label>
             <textarea
-              className="flex min-h-[240px] w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
+              className="flex min-h-[240px] w-full rounded-lg border border-border bg-background px-3 py-2 text-base sm:text-sm"
               value={blogForm.content}
               onChange={(e) => setBlogForm((prev) => ({ ...prev, content: e.target.value }))}
               placeholder="Paste HTML or plain text content"
@@ -443,7 +443,7 @@ export default function AdminDashboardPage() {
                       {editingUser === u._id ? (
                         <div className="flex gap-2">
                           <select
-                            className="border rounded px-2 py-1 text-sm"
+                            className="border rounded px-2 py-1 text-base sm:text-sm"
                             value={selectedPlan}
                             onChange={(e) => setSelectedPlan(e.target.value)}
                           >

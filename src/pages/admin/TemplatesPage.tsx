@@ -225,13 +225,13 @@ export default function AdminTemplatesPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold">Template Management</h1>
           <p className="text-muted">Manage resume templates available to users</p>
         </div>
         <Button variant="gradient" onClick={handleNewTemplate}>
-          <Plus className="h-4 w-4 mr-2" />
+          <Plus className="h-4 w-4" />
           Add Template
         </Button>
       </div>
@@ -263,7 +263,7 @@ export default function AdminTemplatesPage() {
               <div>
                 <label className="text-sm font-medium">Category</label>
                 <select
-                  className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
+                  className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-base sm:text-sm"
                   value={editForm.category || "ats"}
                   onChange={(e) => setEditForm({ ...editForm, category: e.target.value })}
                 >
@@ -275,7 +275,7 @@ export default function AdminTemplatesPage() {
               <div>
                 <label className="text-sm font-medium">Layout</label>
                 <select
-                  className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
+                  className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-base sm:text-sm"
                   value={editForm.layout || "single-column"}
                   onChange={(e) => setEditForm({ ...editForm, layout: e.target.value })}
                 >
@@ -382,7 +382,7 @@ export default function AdminTemplatesPage() {
                     </div>
                   ) : field.type === "select" ? (
                     <select
-                      className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
+                      className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-base sm:text-sm"
                       value={editForm.defaultTheme?.[field.key] || field.default}
                       onChange={(e) => updateDefaultTheme(field.key, e.target.value)}
                     >
@@ -422,7 +422,7 @@ export default function AdminTemplatesPage() {
       )}
 
       {/* Templates Grid */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3 [&>*]:min-w-0">
         {templates?.map((template) => (
           <Card key={template._id} className={deleteConfirmId === template._id ? "border-red-500" : ""}>
             <CardContent className="pt-6">
@@ -434,13 +434,13 @@ export default function AdminTemplatesPage() {
                 />
               ) : (
                 <div className="w-full h-32 bg-secondary rounded-lg mb-4 flex items-center justify-center">
-                  <span className="text-muted-foreground">No preview</span>
+                  <span className="text-muted">No preview</span>
                 </div>
               )}
-              <div className="flex items-start justify-between mb-2">
-                <div>
-                  <h3 className="font-semibold">{template.name}</h3>
-                  <p className="text-sm text-muted-foreground line-clamp-2">{template.description}</p>
+              <div className="flex items-start justify-between gap-2 mb-2">
+                <div className="min-w-0">
+                  <h3 className="truncate font-semibold">{template.name}</h3>
+                  <p className="text-sm text-muted line-clamp-2">{template.description}</p>
                   {template.category && (
                     <Badge variant="secondary" className="mt-1 text-xs">
                       {template.category}
@@ -463,7 +463,7 @@ export default function AdminTemplatesPage() {
                   )}
                 </div>
               </div>
-              <div className="flex gap-2 mt-4">
+              <div className="mt-4 flex flex-wrap gap-2">
                 <Button
                   size="sm"
                   variant="outline"
@@ -515,7 +515,7 @@ export default function AdminTemplatesPage() {
 
       {(!templates || templates.length === 0) && (
         <div className="text-center py-12">
-          <p className="text-muted-foreground">No templates found. Create your first template!</p>
+          <p className="text-muted">No templates found. Create your first template!</p>
         </div>
       )}
     </div>

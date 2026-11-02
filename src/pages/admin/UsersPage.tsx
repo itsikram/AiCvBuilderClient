@@ -98,7 +98,7 @@ export default function UsersPage() {
                   {usersData.users.map((u: { _id: string; name: string; email: string; subscription: { plan: string; status: string; expiresAt?: string }; createdAt: string }) => (
                     <tr key={u._id} className="border-b border-border hover:bg-secondary/50">
                       <td className="py-3 px-2 font-medium">{u.name}</td>
-                      <td className="py-3 px-2 text-muted-foreground">{u.email}</td>
+                      <td className="py-3 px-2 text-muted">{u.email}</td>
                       <td className="py-3 px-2 capitalize">
                         <span className={`px-2 py-1 rounded-full text-xs ${
                           u.subscription?.plan === "premium" 
@@ -122,14 +122,14 @@ export default function UsersPage() {
                           ? new Date(u.subscription.expiresAt).toLocaleDateString() 
                           : "N/A"}
                       </td>
-                      <td className="py-3 px-2 text-muted-foreground">
+                      <td className="py-3 px-2 text-muted">
                         {new Date(u.createdAt).toLocaleDateString()}
                       </td>
                       <td className="py-3 px-2">
                         {editingUser === u._id ? (
                           <div className="flex gap-2 items-center">
                             <select
-                              className="border rounded px-2 py-1 text-sm"
+                              className="border rounded px-2 py-1 text-base sm:text-sm"
                               value={selectedPlan}
                               onChange={(e) => setSelectedPlan(e.target.value)}
                             >

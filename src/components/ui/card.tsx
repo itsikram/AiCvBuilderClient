@@ -16,7 +16,7 @@ const Card = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElemen
 Card.displayName = "Card";
 
 const CardHeader = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) => (
-  <div className={cn("flex flex-col space-y-1.5 p-6", className)} {...props} />
+  <div className={cn("flex flex-col space-y-1.5 p-4 sm:p-6", className)} {...props} />
 );
 
 const CardTitle = ({ className, ...props }: React.HTMLAttributes<HTMLHeadingElement>) => (
@@ -27,8 +27,10 @@ const CardDescription = ({ className, ...props }: React.HTMLAttributes<HTMLParag
   <p className={cn("text-sm text-muted", className)} {...props} />
 );
 
+// Tighter padding on phones. Bottom padding has a sm: value, so a caller that changes it
+// (pb-*, py-*) must also give the sm: value; top padding (pt-*) can be overridden as is.
 const CardContent = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) => (
-  <div className={cn("p-6 pt-0", className)} {...props} />
+  <div className={cn("px-4 pb-4 pt-0 sm:px-6 sm:pb-6", className)} {...props} />
 );
 
 export { Card, CardHeader, CardTitle, CardDescription, CardContent };

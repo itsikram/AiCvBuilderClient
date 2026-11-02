@@ -52,7 +52,7 @@ export default function DashboardPage() {
 
       {!isPremium && (
         <Card className="border-primary/30 bg-gradient-to-r from-blue-50 to-violet-50 dark:from-blue-950/30 dark:to-violet-950/30">
-          <CardContent className="flex flex-wrap items-center justify-between gap-3 py-4">
+          <CardContent className="flex flex-wrap items-center justify-between gap-3 py-4 sm:pb-4">
             <p className="text-sm">{t("dashboard.upgradePrompt")}</p>
             <Button variant="gradient" size="sm" asChild>
               <Link to="/dashboard/billing">{t("dashboardNav.upgrade")}</Link>
@@ -97,7 +97,7 @@ export default function DashboardPage() {
         {quickActions.map((action) => (
           <Link key={action.to} to={action.to} className="rounded-xl focus-visible:outline-2 focus-visible:outline-primary">
             <Card className="h-full transition-shadow hover:shadow-md">
-              <CardContent className="flex flex-col items-center justify-center py-6 text-center">
+              <CardContent className="flex flex-col items-center justify-center py-6 text-center sm:pb-6">
                 <div className={`${action.color} mb-2 rounded-xl p-3 text-white`}>
                   <action.icon className="h-5 w-5" aria-hidden />
                 </div>

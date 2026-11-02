@@ -218,7 +218,7 @@ export default function PlansPage() {
 
   return (
     <div className="space-y-8">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold">Subscription Plans</h1>
           <p className="text-muted">Manage pricing packages for your platform</p>

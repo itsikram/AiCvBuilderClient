@@ -68,7 +68,7 @@ export default function ContactPage() {
                 <Label htmlFor="contact-message">{t("contact.message")}</Label>
                 <textarea
                   id="contact-message"
-                  className="min-h-[140px] w-full rounded-lg border border-border bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                  className="min-h-[140px] w-full rounded-lg border border-border bg-background px-3 py-2 text-base sm:text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                   value={form.message}
                   onChange={(e) => setForm({ ...form, message: e.target.value })}
                   required

@@ -23,7 +23,7 @@ export default function VerifyEmailPage() {
       <SEO title="Verify your AI CV Builder BD email" noIndex />
       <div className="min-h-[80vh] flex items-center justify-center px-4">
         <Card className="w-full max-w-md text-center">
-          <CardContent className="pt-8 pb-8">
+          <CardContent className="pt-8 pb-8 sm:pb-8">
             {status === "loading" && <Loader2 className="h-12 w-12 animate-spin mx-auto text-primary" />}
             {status === "success" && (
               <>
