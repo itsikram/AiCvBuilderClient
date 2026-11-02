@@ -4,12 +4,14 @@ import { Download, Loader2, Printer } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog } from "@/components/ui/dialog";
 import { useToast } from "@/components/ui/toast";
+import api from "@/lib/api";
 import { downloadResumePdf } from "@/lib/resume/pdf";
 import { printResume } from "@/lib/resume/print";
 
 interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  resumeId: string;
   title: string;
   watermark: boolean;
   /** Saves pending edits so the stored CV matches the download */
@@ -21,7 +23,7 @@ interface Props {
  * (lib/resume/pdf.ts), so it matches the preview exactly, page breaks included, and
  * Bangla is shaped correctly. Printing stays available for paper copies.
  */
-export function DownloadDialog({ open, onOpenChange, title, watermark, saveNow }: Props) {
+export function DownloadDialog({ open, onOpenChange, resumeId, title, watermark, saveNow }: Props) {
   const { t } = useTranslation();
   const toast = useToast();
   const [busy, setBusy] = useState(false);
@@ -31,6 +33,8 @@ export function DownloadDialog({ open, onOpenChange, title, watermark, saveNow }
     try {
       await saveNow().catch(() => undefined);
       await downloadResumePdf(title);
+      // Counts the download in the admin stats; the PDF is already saved either way
+      void api.post(`/resumes/${resumeId}/exported`).catch(() => undefined);
       onOpenChange(false);
     } catch (error) {
       console.error("PDF download failed", error);

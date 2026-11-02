@@ -554,6 +554,7 @@ function Editor({ resume }: { resume: Resume }) {
       <DownloadDialog
         open={dialog === "download"}
         onOpenChange={(open) => setDialog(open ? "download" : null)}
+        resumeId={resume._id}
         title={doc.title}
         watermark={watermark}
         saveNow={draft.saveNow}
