@@ -8,8 +8,13 @@ import { PageContentProvider } from "@/context/PageContentContext";
 import { SiteConfig } from "@/components/SiteConfig";
 import { ConsentBanner } from "@/components/ConsentBanner";
 import { AppRoutes } from "@/routes";
+import { usePublicConfig } from "@/lib/publicConfig";
 
-const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || "";
+/** Google Sign-In uses the client ID set in Admin -> Settings (VITE_GOOGLE_CLIENT_ID as fallback). */
+function GoogleProvider({ children }: { children: ReactNode }) {
+  const { googleClientId } = usePublicConfig();
+  return googleClientId ? <GoogleOAuthProvider clientId={googleClientId}>{children}</GoogleOAuthProvider> : <>{children}</>;
+}
 
 /** Providers shared by the browser app and the build-time prerenderer. */
 /** API responses a prerendered page was built with, so hydration matches the static HTML. */
@@ -21,12 +26,13 @@ export function AppProviders({ children, initialData }: { children: ReactNode; i
     for (const [key, data] of initialData ?? []) client.setQueryData(key, data);
     return client;
   });
-  const content = (
+  return (
     <QueryClientProvider client={queryClient}>
-      <PageContentProvider>{children}</PageContentProvider>
+      <GoogleProvider>
+        <PageContentProvider>{children}</PageContentProvider>
+      </GoogleProvider>
     </QueryClientProvider>
   );
-  return googleClientId ? <GoogleOAuthProvider clientId={googleClientId}>{content}</GoogleOAuthProvider> : content;
 }
 
 export function AppShell() {

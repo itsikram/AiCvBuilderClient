@@ -9,6 +9,7 @@ import { SEO } from "@/components/seo/SEO";
 import api, { getErrorMessage } from "@/lib/api";
 import { useAuthStore } from "@/store/authStore";
 import { useToast } from "@/components/ui/toast";
+import { usePublicConfig } from "@/lib/publicConfig";
 
 export default function LoginPage() {
   const { t } = useTranslation();
@@ -16,6 +17,7 @@ export default function LoginPage() {
   const location = useLocation();
   const { setAuth } = useAuthStore();
   const toast = useToast();
+  const { googleClientId } = usePublicConfig();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -70,7 +72,7 @@ export default function LoginPage() {
               </Button>
             </form>
 
-            {import.meta.env.VITE_GOOGLE_CLIENT_ID && (
+            {googleClientId && (
               <>
                 <p className="text-center text-sm text-muted">{t("auth.orContinueWith")}</p>
                 <GoogleLogin
