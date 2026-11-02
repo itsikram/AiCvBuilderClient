@@ -1,7 +1,9 @@
 import axios from "axios";
 
-// Live API, forced: env values are ignored so no stale .env can point the site elsewhere.
-export const API_URL = "https://ownwl9o5ma.c39.airoapp.ai/api/v1";
+// Live API, forced in builds: env values are ignored so no stale .env can point the site elsewhere.
+// The dev server honours VITE_API_URL (e.g. "/api/v1" through the Vite proxy to localhost:5000).
+export const API_URL =
+  (import.meta.env.DEV && import.meta.env.VITE_API_URL) || "https://ownwl9o5ma.c39.airoapp.ai/api/v1";
 
 const api = axios.create({
   baseURL: API_URL,
