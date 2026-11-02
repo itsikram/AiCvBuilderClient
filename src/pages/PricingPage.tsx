@@ -14,14 +14,14 @@ import { usePageContent } from "@/context/PageContentContext";
 import type { SubscriptionPlan } from "@/types";
 import { useHydrated } from "@/lib/useHydrated";
 import { useLang } from "@/lib/useLang";
-import { breadcrumbLd } from "@/lib/jsonld";
+import { breadcrumbLd, pricingLd } from "@/lib/jsonld";
 
 export default function PricingPage() {
   const { t } = useTranslation();
   const [yearly, setYearly] = useState(false);
   const { user } = useAuthStore();
   const hydrated = useHydrated();
-  const { lp } = useLang();
+  const { lang, lp } = useLang();
   const currentPlan = hydrated ? user?.subscription?.plan ?? null : null;
   const { getPageContent } = usePageContent();
   const pricingContent = getPageContent("pricing");
@@ -45,7 +45,10 @@ export default function PricingPage() {
       <SEO
         title={t("pricing.seoTitle")}
         description={t("pricing.seoDescription")}
-        jsonLd={breadcrumbLd([{ name: t("nav.home"), path: lp("/") }, { name: t("nav.pricing"), path: lp("/pricing") }])}
+        jsonLd={[
+          breadcrumbLd([{ name: t("nav.home"), path: lp("/") }, { name: t("nav.pricing"), path: lp("/pricing") }]),
+          ...(plans?.length ? [pricingLd(plans, lang)] : []),
+        ]}
       />
       <section className="py-20">
         <div className="container mx-auto px-4">

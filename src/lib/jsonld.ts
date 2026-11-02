@@ -14,6 +14,13 @@ export const organizationLd = () => ({
   logo: absoluteUrl("/icon-512.png"),
   email: SUPPORT_EMAIL,
   areaServed: { "@type": "Country", name: "Bangladesh" },
+  contactPoint: {
+    "@type": "ContactPoint",
+    contactType: "customer support",
+    email: SUPPORT_EMAIL,
+    areaServed: "BD",
+    availableLanguage: ["en", "bn"],
+  },
 });
 
 // No SearchAction: the site has no on-site search results page to point it at.
@@ -45,6 +52,40 @@ export const webApplicationLd = (lang: Lang) => ({
     priceCurrency: "BDT",
     availability: "https://schema.org/InStock",
   },
+});
+
+/** The builder with one Offer per paid/free plan price, for the pricing page. */
+export const pricingLd = (
+  plans: Array<{ name: string; description?: string; priceMonthly: number; priceYearly: number; currency?: string }>,
+  lang: Lang
+) => ({
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  name: lang === "bn" ? SITE_NAME_BN : SITE_NAME,
+  url: absoluteUrl(lang === "bn" ? "/bn/pricing" : "/pricing"),
+  applicationCategory: "BusinessApplication",
+  operatingSystem: "Any (web browser)",
+  publisher: { "@id": ORG_ID },
+  offers: plans.flatMap((plan) => {
+    const currency = plan.currency || "BDT";
+    const offer = (price: number, unit: "MON" | "ANN") => ({
+      "@type": "Offer",
+      name: plan.name,
+      ...(plan.description ? { description: plan.description } : {}),
+      price: String(price),
+      priceCurrency: currency,
+      availability: "https://schema.org/InStock",
+      url: absoluteUrl(lang === "bn" ? "/bn/pricing" : "/pricing"),
+      ...(price > 0
+        ? { priceSpecification: { "@type": "UnitPriceSpecification", price: String(price), priceCurrency: currency, billingDuration: 1, billingIncrement: 1, unitCode: unit } }
+        : {}),
+    });
+    if (!plan.priceMonthly && !plan.priceYearly) return [offer(0, "MON")];
+    return [
+      ...(plan.priceMonthly ? [offer(plan.priceMonthly, "MON")] : []),
+      ...(plan.priceYearly ? [offer(plan.priceYearly, "ANN")] : []),
+    ];
+  }),
 });
 
 export const breadcrumbLd = (items: Array<{ name: string; path: string }>) => ({

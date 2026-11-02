@@ -15,6 +15,8 @@ export interface SEOProps {
   description?: string;
   /** Absolute or root-relative image; defaults to the OG image. */
   image?: string;
+  /** Alt text for the share image; defaults to the page title. */
+  imageAlt?: string;
   type?: "website" | "article";
   noIndex?: boolean;
   /** Override the canonical path (defaults to the current path without query string). */
@@ -63,6 +65,7 @@ export function buildHead(props: SEOProps, pathname: string): HeadData {
   const description = props.description || DEFAULT_DESCRIPTION[lang];
   const canonical = absoluteUrl(props.canonicalPath ?? pathname);
   const image = absoluteUrl(props.image || "/og-image.jpg");
+  const imageAlt = props.imageAlt || title;
   const noIndex = Boolean(props.noIndex);
 
   if (import.meta.env.DEV) {
@@ -95,13 +98,26 @@ export function buildHead(props: SEOProps, pathname: string): HeadData {
     { tag: "meta", attrs: { property: "og:url", content: canonical } },
     { tag: "meta", attrs: { property: "og:type", content: props.type || "website" } },
     { tag: "meta", attrs: { property: "og:image", content: image } },
+    { tag: "meta", attrs: { property: "og:image:alt", content: imageAlt } },
     { tag: "meta", attrs: { property: "og:site_name", content: SITE_NAME } },
     { tag: "meta", attrs: { property: "og:locale", content: OG_LOCALE[lang] } },
     { tag: "meta", attrs: { name: "twitter:card", content: "summary_large_image" } },
     { tag: "meta", attrs: { name: "twitter:title", content: title } },
     { tag: "meta", attrs: { name: "twitter:description", content: description } },
-    { tag: "meta", attrs: { name: "twitter:image", content: image } }
+    { tag: "meta", attrs: { name: "twitter:image", content: image } },
+    { tag: "meta", attrs: { name: "twitter:image:alt", content: imageAlt } }
   );
+  // Dimensions are known only for the default share image (public/og-image.jpg is 1200x630)
+  if (!props.image) {
+    tags.push(
+      { tag: "meta", attrs: { property: "og:image:width", content: "1200" } },
+      { tag: "meta", attrs: { property: "og:image:height", content: "630" } },
+      { tag: "meta", attrs: { property: "og:image:type", content: "image/jpeg" } }
+    );
+  }
+  if (!noIndex && props.alternates !== false && alternatePath(stripLangPrefix(props.canonicalPath ?? pathname), lang === "en" ? "bn" : "en")) {
+    tags.push({ tag: "meta", attrs: { property: "og:locale:alternate", content: OG_LOCALE[lang === "en" ? "bn" : "en"] } });
+  }
   if (props.publishedTime) tags.push({ tag: "meta", attrs: { property: "article:published_time", content: props.publishedTime } });
   if (props.modifiedTime) tags.push({ tag: "meta", attrs: { property: "article:modified_time", content: props.modifiedTime } });
 

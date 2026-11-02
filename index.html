@@ -8,6 +8,9 @@
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <link rel="manifest" href="/site.webmanifest" />
     <meta name="theme-color" content="#2563eb" />
+    <!-- API host (API_URL in src/lib/api.ts): opened early so the first data request skips DNS/TLS setup.
+         No crossorigin attribute: requests send credentials, which use that connection pool. -->
+    <link rel="preconnect" href="https://ownwl9o5ma.c39.airoapp.ai" />
     <meta name="application-name" content="AI CV Builder BD" />
     <!--head:start-->
     <title data-prerender>AI CV Builder BD – Free CV Maker for Bangladesh</title>
