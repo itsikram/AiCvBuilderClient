@@ -18,9 +18,10 @@ Bangla/English CV builder for Bangladeshi job seekers. The API is a separate rep
   suggest skills, tailor a CV to a job post (match score, missing keywords, edits you accept one by one),
   grammar check, translate a CV between English and Bangla, cover letters, ATS check, and import an old
   CV from PDF, Word or pasted text (including LinkedIn).
-- **PDF export**: "Download PDF" prints the same markup as the preview ("Save as PDF"), so the PDF matches
-  the preview and Bangla text is shaped correctly. A server-made PDF is offered as a quick download for
-  English CVs.
+- **PDF export**: "Download PDF" builds an A4 PDF file in the browser from the same rendering as the
+  preview (`src/lib/resume/pdf.ts`), so it looks exactly like the preview, Bangla included, and its pages
+  break where the preview's "Page N ends here" lines show (`src/lib/resume/pages.ts`). The pages carry an
+  invisible text layer for English text, so it can be selected and read by ATS. Printing is still offered.
 
 ## Development
 

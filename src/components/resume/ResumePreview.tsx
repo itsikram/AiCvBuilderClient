@@ -5,6 +5,7 @@ import type { Education, ResumeContent } from "@/types";
 import { cn } from "@/lib/utils";
 import { fullSectionOrder, normalizeContent, sectionHasContent, type CvLang, type SectionId } from "@/lib/resume/model";
 import { fontStack, templateStyle, type TemplateLayout } from "./templates";
+import { PAGE_WIDTH_PX, pageSlices } from "@/lib/resume/pages";
 
 /**
  * Renders a CV as an A4 page. The same markup is used for the on-screen preview
@@ -19,7 +20,7 @@ interface Props {
   sectionOrder?: string[];
   language?: CvLang;
   className?: string;
-  /** Dashed lines where printed pages will end (approximate) */
+  /** Dashed lines where the downloaded PDF's pages end */
   showPageBreaks?: boolean;
   /** "fit" scales the page to the container width; "print" renders it at real size */
   mode?: "fit" | "print";
@@ -27,13 +28,9 @@ interface Props {
   watermark?: boolean;
 }
 
-const MM = 96 / 25.4;
-const PAGE_WIDTH = Math.round(210 * MM);
+const PAGE_WIDTH = Math.round(PAGE_WIDTH_PX);
 const PAD_X = 16; // mm
 const PAD_Y = 14; // mm
-// Printed with @page { margin: 12mm 0 } and no top margin on page 1 (index.css)
-const FIRST_PAGE_MM = 297 - 12;
-const NEXT_PAGE_MM = 297 - 24;
 
 const SIDEBAR_SECTIONS: SectionId[] = ["skills", "languages", "certifications", "interests", "courses"];
 const SPACING = { small: 8, medium: 13, large: 18 } as const;
@@ -560,26 +557,40 @@ function CvPage({ content, templateId, theme = {}, sectionOrder, language = "en"
 function FitToWidth({ children, showPageBreaks }: { children: ReactNode; showPageBreaks?: boolean }) {
   const outer = useRef<HTMLDivElement>(null);
   const inner = useRef<HTMLDivElement>(null);
-  const [size, setSize] = useState({ scale: 1, pageHeight: 0 });
+  const [size, setSize] = useState({ scale: 1, pageHeight: 0, breaks: [] as number[] });
 
   useEffect(() => {
+    let frame = 0;
     const measure = () => {
-      if (!outer.current || !inner.current) return;
-      setSize({ scale: Math.min(1, outer.current.clientWidth / PAGE_WIDTH), pageHeight: inner.current.offsetHeight });
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(() => {
+        if (!outer.current || !inner.current) return;
+        const page = inner.current.querySelector<HTMLElement>(".cv-page");
+        // Same split as the PDF download (lib/resume/pdf.ts)
+        const breaks = showPageBreaks && page ? pageSlices(page).slice(0, -1).map((s) => s.bottom) : [];
+        const next = { scale: Math.min(1, outer.current.clientWidth / PAGE_WIDTH), pageHeight: inner.current.offsetHeight, breaks };
+        setSize((prev) =>
+          prev.scale === next.scale && prev.pageHeight === next.pageHeight && prev.breaks.join() === next.breaks.join() ? prev : next
+        );
+      });
     };
     measure();
-    const observer = new ResizeObserver(measure);
-    if (outer.current) observer.observe(outer.current);
-    if (inner.current) observer.observe(inner.current);
-    return () => observer.disconnect();
-  }, []);
+    const resize = new ResizeObserver(measure);
+    if (outer.current) resize.observe(outer.current);
+    if (inner.current) resize.observe(inner.current);
+    // Edits can move a page break without changing the page height
+    const mutations = new MutationObserver(measure);
+    if (inner.current) mutations.observe(inner.current, { subtree: true, childList: true, characterData: true, attributes: true });
+    void document.fonts?.ready.then(measure);
+    return () => {
+      cancelAnimationFrame(frame);
+      resize.disconnect();
+      mutations.disconnect();
+    };
+  }, [showPageBreaks]);
 
-  const { scale, pageHeight } = size;
+  const { scale, pageHeight, breaks } = size;
   const height = pageHeight ? pageHeight * scale : undefined;
-  const breaks: number[] = [];
-  if (showPageBreaks) {
-    for (let y = FIRST_PAGE_MM * MM; y < pageHeight - 40; y += NEXT_PAGE_MM * MM) breaks.push(y);
-  }
 
   return (
     <div ref={outer} className="w-full overflow-hidden" style={{ height }}>
@@ -602,7 +613,15 @@ function useLanguageBundle(lang: CvLang) {
   const [, setLoaded] = useState(0);
   const ready = i18n.hasResourceBundle(lang, "translation");
   useEffect(() => {
-    if (!ready) void i18n.loadLanguages(lang).then(() => setLoaded((n) => n + 1));
+    if (ready) return;
+    // The preview and the print copy ask together; i18next resolves the second request
+    // before the bundle arrives, so also wait for its "loaded" event
+    const check = () => {
+      if (i18n.hasResourceBundle(lang, "translation")) setLoaded((n) => n + 1);
+    };
+    i18n.on("loaded", check);
+    void i18n.loadLanguages(lang).then(check);
+    return () => i18n.off("loaded", check);
   }, [lang, ready]);
   return ready;
 }

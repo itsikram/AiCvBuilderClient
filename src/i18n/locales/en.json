@@ -666,11 +666,10 @@
     "download": {
       "button": "Download PDF",
       "title": "Download your CV as PDF",
-      "intro": "Your browser's print window will open. Choose “Save as PDF” as the printer and A4 as the paper size.",
-      "android": "On an Android phone: tap the printer name at the top, choose “Save as PDF”, then tap the PDF button.",
-      "open": "Open print window",
-      "direct": "Quick download (simple layout, English text only)",
-      "directFailed": "Quick download failed. Please use the print window.",
+      "intro": "Your CV downloads as an A4 PDF that looks exactly like the preview, with the same page breaks.",
+      "preparing": "Preparing your PDF…",
+      "failed": "The PDF could not be made. Please try again, or use Print.",
+      "print": "Print instead",
       "watermarkNote": "PDFs on the free plan end with a small “Created with AI CV Builder BD” line. Premium removes it.",
       "ready": "Ready to apply?",
       "readyText": "Check the preview, then download your PDF."

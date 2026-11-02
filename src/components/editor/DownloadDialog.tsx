@@ -4,76 +4,64 @@ import { Download, Loader2, Printer } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog } from "@/components/ui/dialog";
 import { useToast } from "@/components/ui/toast";
-import api from "@/lib/api";
+import { downloadResumePdf } from "@/lib/resume/pdf";
 import { printResume } from "@/lib/resume/print";
-import type { CvLang } from "@/lib/resume/model";
 
 interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  resumeId: string;
   title: string;
-  language: CvLang;
   watermark: boolean;
-  /** Saves pending edits before the server builds its PDF */
+  /** Saves pending edits so the stored CV matches the download */
   saveNow: () => Promise<void>;
 }
 
 /**
- * The main export prints the on-screen CV ("Save as PDF"), so the PDF matches
- * the preview and Bangla renders correctly. The server's quick PDF stays as a
- * fallback for English CVs (its built-in fonts have no Bangla glyphs).
+ * "Download PDF" makes the file in the browser from the same rendering as the preview
+ * (lib/resume/pdf.ts), so it matches the preview exactly, page breaks included, and
+ * Bangla is shaped correctly. Printing stays available for paper copies.
  */
-export function DownloadDialog({ open, onOpenChange, resumeId, title, language, watermark, saveNow }: Props) {
+export function DownloadDialog({ open, onOpenChange, title, watermark, saveNow }: Props) {
   const { t } = useTranslation();
   const toast = useToast();
-  const [directBusy, setDirectBusy] = useState(false);
-  const isAndroid = typeof navigator !== "undefined" && /Android/i.test(navigator.userAgent);
+  const [busy, setBusy] = useState(false);
 
-  const direct = async () => {
-    setDirectBusy(true);
+  const download = async () => {
+    setBusy(true);
     try {
-      await saveNow();
-      const res = await api.get(`/resumes/${resumeId}/export-pdf`, { responseType: "blob", timeout: 60_000 });
-      const url = URL.createObjectURL(new Blob([res.data], { type: "application/pdf" }));
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `${title || "CV"}.pdf`;
-      a.click();
-      setTimeout(() => URL.revokeObjectURL(url), 10_000);
-    } catch {
-      toast.add(t("editor.download.directFailed"), "error");
+      await saveNow().catch(() => undefined);
+      await downloadResumePdf(title);
+      onOpenChange(false);
+    } catch (error) {
+      console.error("PDF download failed", error);
+      toast.add(t("editor.download.failed"), "error");
     } finally {
-      setDirectBusy(false);
+      setBusy(false);
     }
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange} title={t("editor.download.title")} size="sm">
+    <Dialog open={open} onOpenChange={(next) => !busy && onOpenChange(next)} title={t("editor.download.title")} size="sm">
       <div className="space-y-4">
         <p className="text-sm">{t("editor.download.intro")}</p>
-        {isAndroid && <p className="rounded-lg bg-secondary p-3 text-sm">{t("editor.download.android")}</p>}
-        <Button
+        <Button type="button" variant="gradient" size="lg" className="w-full" disabled={busy} onClick={() => void download()}>
+          {busy ? <Loader2 className="h-5 w-5 animate-spin" /> : <Download className="h-5 w-5" />}
+          {busy ? t("editor.download.preparing") : t("editor.download.button")}
+        </Button>
+        {watermark && <p className="text-xs text-muted">{t("editor.download.watermarkNote")}</p>}
+        <button
           type="button"
-          variant="gradient"
-          size="lg"
-          className="w-full"
+          className="inline-flex items-center gap-1.5 text-sm text-primary underline underline-offset-2 disabled:opacity-50"
+          disabled={busy}
           onClick={() => {
             onOpenChange(false);
             // Let the dialog close before the print snapshot is taken
             setTimeout(() => void printResume(title), 150);
           }}
         >
-          <Printer className="h-5 w-5" />
-          {t("editor.download.open")}
-        </Button>
-        {watermark && <p className="text-xs text-muted">{t("editor.download.watermarkNote")}</p>}
-        {language === "en" && (
-          <button type="button" className="inline-flex items-center gap-1.5 text-sm text-primary underline underline-offset-2 disabled:opacity-50" disabled={directBusy} onClick={() => void direct()}>
-            {directBusy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
-            {t("editor.download.direct")}
-          </button>
-        )}
+          <Printer className="h-4 w-4" />
+          {t("editor.download.print")}
+        </button>
       </div>
     </Dialog>
   );

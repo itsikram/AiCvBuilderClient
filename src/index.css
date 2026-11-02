@@ -101,6 +101,14 @@ body {
 #cv-print-root {
   display: none;
 }
+/* While the PDF download (lib/resume/pdf.ts) draws it, the copy is laid out off-screen */
+#cv-print-root[data-capture] {
+  display: block;
+  position: absolute;
+  top: 0;
+  left: -10000px;
+  pointer-events: none;
+}
 @media print {
   @page {
     size: A4;
