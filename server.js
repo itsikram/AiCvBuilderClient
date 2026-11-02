@@ -103,6 +103,10 @@ const server = http.createServer((req, res) => {
     return res.end();
   }
 
+  // "www.example.com" -> "example.com", like .htaccess, so search engines see one copy of the site
+  const host = req.headers.host || "";
+  if (/^www\./i.test(host)) return redirect(res, `https://${host.slice(4)}${req.url}`);
+
   const [rawPath, query] = req.url.split(/\?(.*)/s);
   let urlPath;
   try {
