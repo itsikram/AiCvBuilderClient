@@ -56,6 +56,12 @@ export const TEMPLATE_STYLES: Record<string, TemplateStyle> = {
 
 export const templateStyle = (slug?: string): TemplateStyle => TEMPLATE_STYLES[slug ?? ""] ?? TEMPLATE_STYLES["modern-ats"];
 
+const COLOR_THEME_KEYS = ["accentColor", "headingColor", "textColor"];
+
+/** A CV theme without its own colours, so a template's default colours show; fonts and sizes are kept. */
+export const themeWithoutColors = (theme: Record<string, string>) =>
+  Object.fromEntries(Object.entries(theme).filter(([k]) => !COLOR_THEME_KEYS.includes(k) && !k.startsWith("gradient")));
+
 /** Font stacks offered in the design panel; Bangla always falls back to Hind Siliguri. */
 export const FONT_OPTIONS = [
   { value: '"Inter Variable", Inter', label: "Inter" },

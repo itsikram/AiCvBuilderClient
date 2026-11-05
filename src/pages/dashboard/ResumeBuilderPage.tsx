@@ -22,7 +22,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/components/ui/toast";
 import { ResumePreview } from "@/components/resume/ResumePreview";
 import { PrintableResume } from "@/components/resume/PrintableResume";
-import { templateStyle } from "@/components/resume/templates";
+import { templateStyle, themeWithoutColors } from "@/components/resume/templates";
 import { useResumeDraft, type SaveStatus } from "@/components/editor/useResumeDraft";
 import {
   DetailsSection,
@@ -42,6 +42,7 @@ import { AiToolsDialog, type AiTool } from "@/components/editor/AiToolsDialog";
 import { ImportDialog } from "@/components/editor/ImportDialog";
 import { DownloadDialog } from "@/components/editor/DownloadDialog";
 import { EditorSection } from "@/components/editor/fields";
+import { StrengthBar } from "@/components/editor/StrengthBar";
 import api, { getErrorMessage } from "@/lib/api";
 import { useAiQuota } from "@/lib/ai";
 import { completeness, normalizeContent, sectionHasContent, SECTION_IDS, type CvLang } from "@/lib/resume/model";
@@ -49,7 +50,7 @@ import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/store/authStore";
 import type { Resume, Template } from "@/types";
 
-const STEPS = ["basics", "background", "finish"] as const;
+const STEPS = ["basics", "background", "details", "design"] as const;
 
 export default function ResumeBuilderPage() {
   const { id } = useParams<{ id: string }>();
@@ -119,19 +120,6 @@ function NewCvStart() {
           void create();
         }}
       >
-        <div>
-          <label htmlFor="new-cv-title" className="mb-1 block text-sm font-medium">
-            {t("newCv.name")}
-          </label>
-          <input
-            id="new-cv-title"
-            className="h-11 w-full rounded-lg border bg-background px-3 text-base focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-            placeholder={t("newCv.namePlaceholder")}
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            maxLength={200}
-          />
-        </div>
         <fieldset>
           <legend className="mb-2 text-sm font-medium">{t("newCv.language")}</legend>
           <div className="grid grid-cols-2 gap-2">
@@ -156,6 +144,23 @@ function NewCvStart() {
             {option("ats")}
           </fieldset>
         )}
+        <div>
+          <label htmlFor="new-cv-title" className="mb-1 block text-sm font-medium">
+            {t("newCv.name")} <span className="font-normal text-muted">({t("common.optional")})</span>
+          </label>
+          <input
+            id="new-cv-title"
+            aria-describedby="new-cv-title-hint"
+            className="h-11 w-full rounded-lg border bg-background px-3 text-base focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+            placeholder={t("newCv.namePlaceholder")}
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            maxLength={200}
+          />
+          <p id="new-cv-title-hint" className="mt-1 text-xs text-muted">
+            {t("newCv.nameHint")}
+          </p>
+        </div>
         <Button type="submit" variant="gradient" size="lg" className="w-full" disabled={busy}>
           {busy ? <Loader2 className="h-5 w-5 animate-spin" /> : <ArrowRight className="h-5 w-5" />}
           {busy ? t("newCv.creating") : t("newCv.create")}
@@ -240,19 +245,39 @@ function SaveIndicator({ status }: { status: SaveStatus }) {
   );
 }
 
+/** Phones: score plus the next thing to fill in, above the form (the full card lives with the preview) */
+function StrengthHint({ score, items, step, onJump }: { score: number; items: ReturnType<typeof completeness>["items"]; step: number; onJump: (step: number) => void }) {
+  const { t } = useTranslation();
+  // Prefer a tip for the step the user is on
+  const next = items.find((i) => !i.done && i.step === step) ?? items.find((i) => !i.done);
+  return (
+    <div className="rounded-xl border bg-card px-3 py-2.5 lg:hidden">
+      <div className="flex items-center gap-3">
+        <p className="shrink-0 text-sm font-semibold">{t("editor.strength")}</p>
+        <StrengthBar score={score} className="flex-1" />
+        <p className="shrink-0 text-sm font-bold">{score}%</p>
+      </div>
+      {next ? (
+        <button type="button" className="mt-1 text-left text-sm text-primary hover:underline" onClick={() => onJump(next.step)}>
+          {t("editor.strengthNext", { item: t(`editor.checks.${next.key}`) })}
+        </button>
+      ) : (
+        <p className="mt-1 text-xs text-muted">{t("editor.strengthDone")}</p>
+      )}
+    </div>
+  );
+}
+
 function StrengthCard({ score, items, onJump, compact }: { score: number; items: ReturnType<typeof completeness>["items"]; onJump: (step: number) => void; compact?: boolean }) {
   const { t } = useTranslation();
   const todo = items.filter((i) => !i.done);
-  const color = score >= 80 ? "bg-green-500" : score >= 50 ? "bg-amber-500" : "bg-red-500";
   return (
     <div className="rounded-xl border bg-card p-4">
       <div className="flex items-center justify-between gap-3">
         <p className="text-sm font-semibold">{t("editor.strength")}</p>
         <p className="text-sm font-bold">{score}%</p>
       </div>
-      <div className="mt-2 h-2 overflow-hidden rounded-full bg-secondary" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={score} aria-label={t("editor.strength")}>
-        <div className={cn("h-full rounded-full transition-all", color)} style={{ width: `${score}%` }} />
-      </div>
+      <StrengthBar score={score} className="mt-2" />
       {todo.length === 0 ? (
         <p className="mt-2 text-xs text-muted">{t("editor.strengthDone")}</p>
       ) : (
@@ -297,6 +322,7 @@ function Editor({ resume }: { resume: Resume }) {
   const strength = useMemo(() => completeness(doc.content), [doc.content]);
   const watermark = quota.data?.watermarkPdf ?? user?.subscription?.plan !== "premium";
   const hasContent = useMemo(() => SECTION_IDS.some((id) => id !== "languages" && id !== "personalDetails" && sectionHasContent(id, doc.content)), [doc.content]);
+  const isBlank = !hasContent && !doc.content.personalInfo.fullName.trim();
   const sectionProps = { content: doc.content, setContent, language: doc.language };
 
   const goTo = (next: number) => {
@@ -312,7 +338,7 @@ function Editor({ resume }: { resume: Resume }) {
     update((d) => ({
       ...d,
       templateId: slug,
-      theme: Object.fromEntries(Object.entries(d.theme).filter(([k]) => !["accentColor", "headingColor", "textColor"].includes(k) && !k.startsWith("gradient"))),
+      theme: themeWithoutColors(d.theme),
     }));
   };
 
@@ -394,7 +420,7 @@ function Editor({ resume }: { resume: Resume }) {
 
       {/* Steps */}
       <nav aria-label={t("editor.stepLabel", { n: step + 1, total: STEPS.length, name: t(`editor.steps.${STEPS[step]}`) })}>
-        <ol className="grid grid-cols-3 gap-2">
+        <ol className="grid grid-cols-4 gap-1.5 sm:gap-2">
           {STEPS.map((name, i) => (
             <li key={name}>
               <button
@@ -402,7 +428,7 @@ function Editor({ resume }: { resume: Resume }) {
                 onClick={() => goTo(i)}
                 aria-current={step === i ? "step" : undefined}
                 className={cn(
-                  "flex w-full items-center gap-2 rounded-xl border px-2 py-2 text-left text-xs font-medium transition sm:px-3 sm:text-sm",
+                  "flex h-full w-full flex-col items-center gap-1 rounded-xl border px-1 py-2 text-center text-[11px] font-medium leading-tight transition sm:flex-row sm:gap-2 sm:px-3 sm:text-left sm:text-sm",
                   step === i ? "border-primary bg-primary text-white shadow" : i < step ? "border-primary/40 bg-primary/5" : "bg-card hover:border-primary/40"
                 )}
               >
@@ -415,6 +441,8 @@ function Editor({ resume }: { resume: Resume }) {
           ))}
         </ol>
       </nav>
+
+      {view === "edit" && <StrengthHint score={strength.score} items={strength.items} step={step} onJump={goTo} />}
 
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,0.9fr)]">
         {/* Form */}
@@ -458,8 +486,21 @@ function Editor({ resume }: { resume: Resume }) {
               <DetailsSection {...sectionProps} />
               <ReferencesSection {...sectionProps} />
               <MoreSections {...sectionProps} />
+            </>
+          )}
+          {step === 3 && (
+            <>
+              <DesignPanel
+                templates={templates}
+                templateId={doc.templateId}
+                theme={doc.theme}
+                onTemplate={chooseTemplate}
+                onTheme={(theme) => update((d) => ({ ...d, theme }))}
+                content={doc.content}
+                sectionOrder={doc.sectionOrder}
+                language={doc.language}
+              />
               <SectionOrder order={doc.sectionOrder} onChange={(sectionOrder) => update((d) => ({ ...d, sectionOrder }))} content={doc.content} />
-              <DesignPanel templates={templates} templateId={doc.templateId} theme={doc.theme} onTemplate={chooseTemplate} onTheme={(theme) => update((d) => ({ ...d, theme }))} />
               <EditorSection title={t("ai.tools")} hint={t("ai.honest")}>
                 <div className="grid gap-2 sm:grid-cols-3">
                   {(["tailor", "grammar", "translate"] as const).map((tool) => (
@@ -505,6 +546,7 @@ function Editor({ resume }: { resume: Resume }) {
               {t("editor.showPageBreaks")}
             </label>
           </div>
+          {isBlank && <p className="rounded-lg border border-dashed p-3 text-center text-sm text-muted">{t("editor.previewEmpty")}</p>}
           <div className="lg:max-h-[calc(100vh-14rem)] lg:overflow-y-auto lg:rounded-lg">{preview}</div>
         </aside>
       </div>

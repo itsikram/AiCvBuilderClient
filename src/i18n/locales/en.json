@@ -95,7 +95,12 @@
     "referrals": "Referrals",
     "freePlan": "Free plan",
     "referralCode": "Referral code: {{code}}",
-    "viewAll": "View all"
+    "viewAll": "View all",
+    "continueTitle": "Continue where you left off",
+    "continueButton": "Continue editing",
+    "startTitle": "Make your CV in 3 easy steps",
+    "startText": "No design skills needed. Everything you type is saved automatically.",
+    "startButton": "Create my CV"
   },
   "resume": {
     "builder": "Resume Builder",
@@ -406,7 +411,8 @@
     "steps": {
       "basics": "Basics",
       "background": "Education & work",
-      "finish": "Finish"
+      "details": "More details",
+      "design": "Design & download"
     },
     "stepLabel": "Step {{n}} of {{total}}: {{name}}",
     "next": "Next: {{name}}",
@@ -425,11 +431,13 @@
     "leaveWarning": "Some changes aren't saved yet.",
     "edit": "Edit",
     "preview": "Preview",
+    "previewEmpty": "Start filling in the form and your CV appears here as you type.",
     "viewMode": "Show editor or preview",
     "showPageBreaks": "Show page breaks",
     "pageEnds": "Page {{page}} ends here",
     "strength": "CV strength",
     "strengthHint": "Complete these to make your CV stronger:",
+    "strengthNext": "Next: {{item}}",
     "strengthDone": "Great! Your CV has everything recruiters look for.",
     "checks": {
       "name": "Add your full name",
@@ -637,6 +645,7 @@
     "design": {
       "title": "Template & design",
       "template": "Template",
+      "templateHint": "Each card shows your own CV in that design. Tap one to use it: your text stays the same.",
       "premium": "Premium",
       "locked": "Upgrade to use this template",
       "categories": {
@@ -659,6 +668,7 @@
       "spacingLarge": "Roomy",
       "declaration": "Show declaration and signature (Bangladeshi templates)",
       "reset": "Reset colours",
+      "customize": "Colours, fonts and sizes",
       "gradientStart": "Header colour (start)",
       "gradientEnd": "Header colour (end)",
       "gradientDirection": "Header gradient"
@@ -793,6 +803,7 @@
     "intro": "Choose a language and a starting format. You can change both later.",
     "name": "CV title",
     "namePlaceholder": "e.g. CV for accounts jobs",
+    "nameHint": "Only you see this name. It helps you find this CV later.",
     "language": "CV language",
     "format": "Starting format",
     "bdTitle": "Bangladeshi format",
