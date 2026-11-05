@@ -100,7 +100,7 @@ export function Footer() {
               </div>
             )}
           </div>
-          {column(t("footer.guides"), GUIDES.slice(0, 5).map((guide) => ({ label: guide[lang].label, href: lp(`/${guide.slug}`) })))}
+          {column(t("footer.guides"), GUIDES.slice(0, 6).map((guide) => ({ label: guide[lang].label, href: lp(`/${guide.slug}`) })))}
           {column(t("footer.product"), productLinks)}
           {column(t("footer.company"), companyLinks)}
         </div>

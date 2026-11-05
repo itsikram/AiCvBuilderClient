@@ -78,32 +78,64 @@ interface Ctx {
   inSidebar?: boolean;
 }
 
+// Letter spacing breaks Bangla conjuncts, and Bangla has no upper case
+const caps = (lang: CvLang, spacing = "0.06em"): CSSProperties => (lang === "en" ? { letterSpacing: spacing, textTransform: "uppercase" } : {});
+
 function Heading({ ctx, children }: { ctx: Ctx; children: ReactNode }) {
-  const bd = ctx.layout === "bd";
-  const style: CSSProperties = bd
-    ? {
-        color: ctx.heading,
-        background: `${ctx.accent}1f`,
-        borderLeft: `4px solid ${ctx.accent}`,
-        padding: "2px 8px",
-        fontSize: `${ctx.headingSize}pt`,
-      }
-    : {
-        color: ctx.heading,
-        borderBottom: `1.5px solid ${ctx.accent}`,
-        paddingBottom: 2,
-        fontSize: `${ctx.headingSize}pt`,
-        // Letter spacing breaks Bangla conjuncts, and Bangla has no upper case
-        ...(ctx.lang === "en" ? { letterSpacing: "0.06em", textTransform: "uppercase" } : {}),
-      };
-  return (
-    <h2 className="cv-heading font-bold" style={{ ...style, marginBottom: 6 }}>
-      {children}
-    </h2>
-  );
+  const size = `${ctx.headingSize}pt`;
+  const rule = <span aria-hidden className="h-px flex-1" style={{ background: `${ctx.accent}99` }} />;
+  switch (ctx.layout) {
+    case "bd":
+      return (
+        <h2 className="cv-heading font-bold" style={{ color: ctx.heading, background: `${ctx.accent}1f`, borderLeft: `4px solid ${ctx.accent}`, padding: "2px 8px", fontSize: size, marginBottom: 6 }}>
+          {children}
+        </h2>
+      );
+    case "elegant":
+      return (
+        <h2 className="cv-heading flex items-center gap-3 font-semibold" style={{ color: ctx.heading, fontSize: size, marginBottom: 6, ...caps(ctx.lang, "0.14em") }}>
+          {rule}
+          <span className="text-center">{children}</span>
+          {rule}
+        </h2>
+      );
+    case "timeline":
+      return (
+        <h2 className="cv-heading flex items-center gap-2 font-bold" style={{ color: ctx.heading, borderBottom: "1px solid #e5e7eb", paddingBottom: 3, fontSize: size, marginBottom: 7, ...caps(ctx.lang) }}>
+          <span aria-hidden className="h-2.5 w-2.5 shrink-0 rounded-sm" style={{ background: ctx.accent }} />
+          {children}
+        </h2>
+      );
+    case "swiss":
+      return (
+        <h2 className="cv-heading font-bold leading-snug" style={{ color: ctx.accent, fontSize: `${ctx.headingSize * 0.9}pt`, ...caps(ctx.lang, "0.04em") }}>
+          {children}
+        </h2>
+      );
+    case "corporate":
+      return (
+        <h2 className="cv-heading font-bold" style={{ color: ctx.accent, borderBottom: `1px solid ${ctx.accent}40`, paddingBottom: 2, fontSize: size, marginBottom: 6, ...caps(ctx.lang) }}>
+          {children}
+        </h2>
+      );
+    default:
+      return (
+        <h2 className="cv-heading font-bold" style={{ color: ctx.heading, borderBottom: `1.5px solid ${ctx.accent}`, paddingBottom: 2, fontSize: size, marginBottom: 6, ...caps(ctx.lang) }}>
+          {children}
+        </h2>
+      );
+  }
 }
 
 function Section({ ctx, title, children }: { ctx: Ctx; title: string; children: ReactNode }) {
+  if (ctx.layout === "swiss") {
+    return (
+      <section className="cv-section grid grid-cols-[25%_1fr] gap-x-5" style={{ marginBottom: ctx.spacing, paddingTop: 6, borderTop: "1px solid #e5e7eb" }}>
+        <Heading ctx={ctx}>{title}</Heading>
+        <div className="min-w-0">{children}</div>
+      </section>
+    );
+  }
   return (
     <section className="cv-section" style={{ marginBottom: ctx.spacing }}>
       <Heading ctx={ctx}>{title}</Heading>
@@ -121,6 +153,30 @@ function EntryTitle({ title, sub, dates }: { title?: string; sub?: string; dates
         {sub && <span>{sub}</span>}
       </p>
       {dates && <p className="shrink-0 whitespace-nowrap text-[0.9em] opacity-75">{dates}</p>}
+    </div>
+  );
+}
+
+/** One dated entry; the timeline layout puts the dates in a left column joined by a line. */
+function Entry({ ctx, title, sub, dates, gap, children }: { ctx: Ctx; title?: string; sub?: string; dates?: string; gap: number; children?: ReactNode }) {
+  if (ctx.layout === "timeline" && !ctx.inSidebar) {
+    return (
+      <div className="cv-entry grid grid-cols-[22%_1fr] gap-x-4">
+        <p className="text-[0.9em] font-semibold" style={{ color: ctx.accent }}>
+          {dates}
+        </p>
+        <div className="relative min-w-0 border-l pl-3.5" style={{ borderColor: `${ctx.accent}55`, paddingBottom: gap + 2 }}>
+          <span aria-hidden className="absolute -left-[4px] top-[0.4em] h-[7px] w-[7px] rounded-full" style={{ background: ctx.accent }} />
+          <EntryTitle title={title} sub={sub} />
+          {children}
+        </div>
+      </div>
+    );
+  }
+  return (
+    <div className="cv-entry" style={{ marginBottom: gap }}>
+      <EntryTitle title={title} sub={sub} dates={dates} />
+      {children}
     </div>
   );
 }
@@ -177,8 +233,7 @@ function renderSection(id: SectionId, ctx: Ctx): ReactNode {
       return (
         <Section key={id} ctx={ctx} title={title}>
           {c.experience.map((e) => (
-            <div key={e.id} className="cv-entry" style={{ marginBottom: 6 }}>
-              <EntryTitle title={e.position} sub={joinParts(e.company, e.location)} dates={range(e.startDate, e.endDate, e.current, lang, t)} />
+            <Entry key={e.id} ctx={ctx} gap={6} title={e.position} sub={joinParts(e.company, e.location)} dates={range(e.startDate, e.endDate, e.current, lang, t)}>
               {e.bullets.some((b) => b.trim()) && (
                 <ul className="mt-0.5 list-disc space-y-0.5 pl-5">
                   {e.bullets.filter((b) => b.trim()).map((b, i) => (
@@ -186,7 +241,7 @@ function renderSection(id: SectionId, ctx: Ctx): ReactNode {
                   ))}
                 </ul>
               )}
-            </div>
+            </Entry>
           ))}
         </Section>
       );
@@ -206,14 +261,9 @@ function renderSection(id: SectionId, ctx: Ctx): ReactNode {
       return (
         <Section key={id} ctx={ctx} title={title}>
           {items.map((e) => (
-            <div key={e.id} className="cv-entry" style={{ marginBottom: 5 }}>
-              <EntryTitle
-                title={degreeLabel(e, t)}
-                sub={e.field}
-                dates={e.passingYear || range(e.startDate, e.endDate, false, lang, t)}
-              />
+            <Entry key={e.id} ctx={ctx} gap={5} title={degreeLabel(e, t)} sub={e.field} dates={e.passingYear || range(e.startDate, e.endDate, false, lang, t)}>
               <p className="opacity-90">{joinParts(e.institution, e.board, resultLabel(e, t))}</p>
-            </div>
+            </Entry>
           ))}
         </Section>
       );
@@ -234,10 +284,9 @@ function renderSection(id: SectionId, ctx: Ctx): ReactNode {
       return (
         <Section key={id} ctx={ctx} title={title}>
           {items.map((x) => (
-            <div key={x.id} className="cv-entry" style={{ marginBottom: 4 }}>
-              <EntryTitle title={x.title} sub={x.institute} dates={joinParts(x.duration, x.year)} />
+            <Entry key={x.id} ctx={ctx} gap={4} title={x.title} sub={x.institute} dates={joinParts(x.duration, x.year)}>
               {x.description && <p className="opacity-90">{x.description}</p>}
-            </div>
+            </Entry>
           ))}
         </Section>
       );
@@ -276,39 +325,35 @@ function renderSection(id: SectionId, ctx: Ctx): ReactNode {
       return (
         <Section key={id} ctx={ctx} title={title}>
           {c.projects.map((p) => (
-            <div key={p.id} className="cv-entry" style={{ marginBottom: 5 }}>
-              <EntryTitle title={p.name} sub={p.url} />
+            <Entry key={p.id} ctx={ctx} gap={5} title={p.name} sub={p.url}>
               {p.description && <p className="whitespace-pre-line">{p.description}</p>}
               {p.technologies.length > 0 && <p className="text-[0.9em] opacity-75">{p.technologies.join(", ")}</p>}
-            </div>
+            </Entry>
           ))}
         </Section>
       );
     case "certifications":
       return (
         <Section key={id} ctx={ctx} title={title}>
-          {c.certifications.map((x) => (
-            <div key={x.id} className="cv-entry" style={{ marginBottom: 3 }}>
-              {ctx.inSidebar ? (
-                <>
-                  <p className="font-semibold">{x.name}</p>
-                  <p className="text-[0.9em] opacity-80">{joinParts(x.issuer, formatMonth(x.date, lang))}</p>
-                </>
-              ) : (
-                <EntryTitle title={x.name} sub={x.issuer} dates={formatMonth(x.date, lang)} />
-              )}
-            </div>
-          ))}
+          {c.certifications.map((x) =>
+            ctx.inSidebar ? (
+              <div key={x.id} className="cv-entry" style={{ marginBottom: 3 }}>
+                <p className="font-semibold">{x.name}</p>
+                <p className="text-[0.9em] opacity-80">{joinParts(x.issuer, formatMonth(x.date, lang))}</p>
+              </div>
+            ) : (
+              <Entry key={x.id} ctx={ctx} gap={3} title={x.name} sub={x.issuer} dates={formatMonth(x.date, lang)} />
+            )
+          )}
         </Section>
       );
     case "awards":
       return (
         <Section key={id} ctx={ctx} title={title}>
           {c.awards.map((x) => (
-            <div key={x.id} className="cv-entry" style={{ marginBottom: 4 }}>
-              <EntryTitle title={x.title} sub={x.issuer} dates={formatMonth(x.date, lang)} />
+            <Entry key={x.id} ctx={ctx} gap={4} title={x.title} sub={x.issuer} dates={formatMonth(x.date, lang)}>
               {x.description && <p className="opacity-90">{x.description}</p>}
-            </div>
+            </Entry>
           ))}
         </Section>
       );
@@ -316,10 +361,9 @@ function renderSection(id: SectionId, ctx: Ctx): ReactNode {
       return (
         <Section key={id} ctx={ctx} title={title}>
           {c.publications.map((x) => (
-            <div key={x.id} className="cv-entry" style={{ marginBottom: 4 }}>
-              <EntryTitle title={x.title} sub={x.publisher} dates={formatMonth(x.date, lang)} />
+            <Entry key={x.id} ctx={ctx} gap={4} title={x.title} sub={x.publisher} dates={formatMonth(x.date, lang)}>
               {x.description && <p className="opacity-90">{x.description}</p>}
-            </div>
+            </Entry>
           ))}
         </Section>
       );
@@ -327,10 +371,9 @@ function renderSection(id: SectionId, ctx: Ctx): ReactNode {
       return (
         <Section key={id} ctx={ctx} title={title}>
           {c.volunteerExperience.map((x) => (
-            <div key={x.id} className="cv-entry" style={{ marginBottom: 4 }}>
-              <EntryTitle title={x.role} sub={x.organization} dates={range(x.startDate, x.endDate, x.current, lang, t)} />
+            <Entry key={x.id} ctx={ctx} gap={4} title={x.role} sub={x.organization} dates={range(x.startDate, x.endDate, x.current, lang, t)}>
               {x.description && <p className="opacity-90">{x.description}</p>}
-            </div>
+            </Entry>
           ))}
         </Section>
       );
@@ -338,9 +381,7 @@ function renderSection(id: SectionId, ctx: Ctx): ReactNode {
       return (
         <Section key={id} ctx={ctx} title={title}>
           {c.courses.map((x) => (
-            <div key={x.id} className="cv-entry" style={{ marginBottom: 3 }}>
-              <EntryTitle title={x.name} sub={x.provider} dates={ctx.inSidebar ? undefined : formatMonth(x.date, lang)} />
-            </div>
+            <Entry key={x.id} ctx={ctx} gap={3} title={x.name} sub={x.provider} dates={ctx.inSidebar ? undefined : formatMonth(x.date, lang)} />
           ))}
         </Section>
       );
@@ -348,9 +389,7 @@ function renderSection(id: SectionId, ctx: Ctx): ReactNode {
       return (
         <Section key={id} ctx={ctx} title={title}>
           {c.memberships.map((x) => (
-            <div key={x.id} className="cv-entry" style={{ marginBottom: 3 }}>
-              <EntryTitle title={x.organization} sub={x.role} dates={range(x.startDate, x.endDate, x.current, lang, t)} />
-            </div>
+            <Entry key={x.id} ctx={ctx} gap={3} title={x.organization} sub={x.role} dates={range(x.startDate, x.endDate, x.current, lang, t)} />
           ))}
         </Section>
       );
@@ -458,32 +497,77 @@ function CvPage({ content, templateId, theme = {}, sectionOrder, language = "en"
   ) : null;
 
   const bold = layout === "bold";
-  const centered = style.align === "center" && layout !== "bd" && p.profilePhotoAlignment !== "left" && p.profilePhotoAlignment !== "right";
+  const corporate = layout === "corporate";
+  const elegant = layout === "elegant";
+  const centered = style.align === "center" && layout !== "bd" && !corporate && p.profilePhotoAlignment !== "left" && p.profilePhotoAlignment !== "right";
   const contact = [p.phone, p.email, p.location].filter((x) => x?.trim());
   const links = [p.linkedin, p.github, p.portfolio, p.website].filter((x) => x?.trim());
+  const separator = elegant ? "  •  " : "  |  ";
   const headerBg = theme.gradientStart && theme.gradientEnd
     ? `linear-gradient(${theme.gradientDirection === "to-bottom" ? "180deg" : "90deg"}, ${theme.gradientStart}, ${theme.gradientEnd})`
     : accent;
+  const headerRule: Partial<Record<TemplateLayout, string>> = {
+    bd: `2px solid ${accent}`,
+    elegant: `3px double ${accent}`,
+    swiss: `2px solid ${heading}`,
+    corporate: "1px solid #e5e7eb",
+  };
 
-  const header = (
+  const name = (
+    <h1
+      className={cn("leading-tight", elegant ? "font-semibold" : layout === "swiss" ? "font-extrabold" : "font-bold")}
+      style={{ fontSize: `${Number(theme.nameFontSize) || 22}pt`, color: bold ? "#fff" : heading, ...(elegant && caps(language, "0.08em")) }}
+    >
+      {p.fullName || t("cv.yourName")}
+    </h1>
+  );
+  const jobTitle = p.jobTitle && (
+    <p className="mt-0.5 font-semibold" style={{ color: bold ? "#ffffffd9" : accent, fontSize: "1.1em", ...(elegant && caps(language, "0.1em")) }}>
+      {p.jobTitle}
+    </p>
+  );
+
+  const header = corporate ? (
+    <>
+      <div aria-hidden style={{ background: headerBg, height: "3mm", margin: `-${PAD_Y}mm -${PAD_X}mm ${PAD_Y - 3}mm` }} />
+      <header className="cv-header flex items-start gap-4" style={{ marginBottom: 14, paddingBottom: 10, borderBottom: headerRule.corporate }}>
+        {photo}
+        <div className="min-w-0 flex-1">
+          {name}
+          {jobTitle}
+        </div>
+        {contact.length + links.length > 0 && (
+          <div className="max-w-[45%] shrink-0 space-y-0.5 text-right text-[0.92em]">
+            {contact.map((x) => (
+              <p key={x}>{x}</p>
+            ))}
+            {links.map((x) => (
+              <p key={x} className="break-all" style={{ color: accent }}>
+                {x}
+              </p>
+            ))}
+          </div>
+        )}
+      </header>
+    </>
+  ) : (
     <header
       className={cn("cv-header flex gap-4", centered ? "flex-col items-center text-center" : "items-start", photo && p.profilePhotoAlignment === "left" && !centered && "flex-row-reverse justify-end")}
       style={
         bold
           ? { background: headerBg, color: "#fff", margin: `-${PAD_Y}mm -${PAD_X}mm 16px`, padding: `${PAD_Y}mm ${PAD_X}mm 18px` }
-          : { marginBottom: 14, paddingBottom: layout === "bd" ? 8 : 10, borderBottom: layout === "bd" ? `2px solid ${accent}` : undefined }
+          : {
+              marginBottom: 14,
+              paddingBottom: layout === "bd" ? 8 : 10,
+              borderBottom: headerRule[layout],
+              ...(layout === "timeline" && { borderLeft: `4px solid ${accent}`, paddingLeft: 12, paddingBottom: 2 }),
+            }
       }
     >
       {centered && photo}
       <div className="min-w-0 flex-1">
-        <h1 className="font-bold leading-tight" style={{ fontSize: `${Number(theme.nameFontSize) || 22}pt`, color: bold ? "#fff" : heading }}>
-          {p.fullName || t("cv.yourName")}
-        </h1>
-        {p.jobTitle && (
-          <p className="mt-0.5 font-semibold" style={{ color: bold ? "#ffffffd9" : accent, fontSize: "1.1em" }}>
-            {p.jobTitle}
-          </p>
-        )}
+        {name}
+        {jobTitle}
         {layout === "bd" ? (
           <div className="mt-1.5 space-y-0.5 text-[0.95em]">
             {p.location && <p>{t("cv.address")}: {p.location}</p>}
@@ -493,10 +577,10 @@ function CvPage({ content, templateId, theme = {}, sectionOrder, language = "en"
           </div>
         ) : (
           <>
-            {contact.length > 0 && <p className="mt-1 text-[0.95em]">{contact.join("  |  ")}</p>}
+            {contact.length > 0 && <p className="mt-1 text-[0.95em]">{contact.join(separator)}</p>}
             {links.length > 0 && (
               <p className="mt-0.5 break-all text-[0.9em]" style={{ color: bold ? "#ffffffd9" : accent }}>
-                {links.join("  |  ")}
+                {links.join(separator)}
               </p>
             )}
           </>
@@ -516,7 +600,7 @@ function CvPage({ content, templateId, theme = {}, sectionOrder, language = "en"
         padding: `${PAD_Y}mm ${PAD_X}mm`,
         background: theme.backgroundColor || "#ffffff",
         color: text,
-        fontFamily: fontStack(theme.fontFamily),
+        fontFamily: fontStack(theme.fontFamily || style.font),
         fontSize: `${body}pt`,
         lineHeight: language === "bn" ? 1.55 : 1.4,
         boxSizing: "border-box",

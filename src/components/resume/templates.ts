@@ -8,16 +8,22 @@
  * - bold:    dark full-width header band
  * - bd:      Bangladeshi standard format: photo top right, shaded headings,
  *            education and training as tables, personal details, declaration
+ * - elegant:   centered serif header with a double rule, headings between thin lines
+ * - timeline:  dates in a left column, entries joined by a vertical line
+ * - swiss:     section titles in a left column, content on the right
+ * - corporate: accent bar on top, name left, contact details stacked on the right
  */
-export type TemplateLayout = "classic" | "compact" | "sidebar" | "bold" | "bd";
+export type TemplateLayout = "classic" | "compact" | "sidebar" | "bold" | "bd" | "elegant" | "timeline" | "swiss" | "corporate";
 
 export interface TemplateStyle {
   layout: TemplateLayout;
   accent: string;
   align: "left" | "center";
+  /** Font used until the CV picks its own (a FONT_OPTIONS value) */
+  font?: string;
 }
 
-const t = (layout: TemplateLayout, accent: string, align: "left" | "center" = "left"): TemplateStyle => ({ layout, accent, align });
+const t = (layout: TemplateLayout, accent: string, align: "left" | "center" = "left", font?: string): TemplateStyle => ({ layout, accent, align, font });
 
 export const TEMPLATE_STYLES: Record<string, TemplateStyle> = {
   "modern-ats": t("classic", "#1d4ed8", "center"),
@@ -52,6 +58,18 @@ export const TEMPLATE_STYLES: Record<string, TemplateStyle> = {
   "nonprofit-impact": t("classic", "#064e3b"),
   "recruiter-friendly": t("sidebar", "#9a3412"),
   "sustainability-lead": t("classic", "#3f6212"),
+  "executive-elegance": t("elegant", "#1e3a5f", "center", "Georgia"),
+  "boardroom-classic": t("elegant", "#44403c", "center", "Georgia"),
+  "career-timeline": t("timeline", "#0f766e"),
+  "project-manager": t("timeline", "#1d4ed8"),
+  "management-consultant": t("timeline", "#312e81"),
+  "swiss-professional": t("swiss", "#0f172a"),
+  "research-scholar": t("swiss", "#4c1d95", "left", "Georgia"),
+  "design-lead": t("swiss", "#be185d"),
+  "corporate-blue": t("corporate", "#1d4ed8"),
+  "banking-finance": t("corporate", "#0c4a6e"),
+  "medical-professional": t("corporate", "#0e7490"),
+  "software-engineer": t("corporate", "#4f46e5"),
 };
 
 export const templateStyle = (slug?: string): TemplateStyle => TEMPLATE_STYLES[slug ?? ""] ?? TEMPLATE_STYLES["modern-ats"];

@@ -154,7 +154,7 @@ export function DesignPanel({ templates, templateId, theme, onTemplate, onTheme,
               ))}
             </Grid>
             <Grid>
-              <SelectField label={t("editor.design.font")} value={FONT_OPTIONS.find((f) => theme.fontFamily?.startsWith(f.value))?.value ?? FONT_OPTIONS[0].value} onChange={(v) => set("fontFamily", v)} options={FONT_OPTIONS} />
+              <SelectField label={t("editor.design.font")} value={FONT_OPTIONS.find((f) => (theme.fontFamily || style.font)?.startsWith(f.value))?.value ?? FONT_OPTIONS[0].value} onChange={(v) => set("fontFamily", v)} options={FONT_OPTIONS} />
               <SelectField
                 label={t("editor.design.spacing")}
                 value={theme.sectionSpacing || "medium"}
