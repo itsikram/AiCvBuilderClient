@@ -88,6 +88,14 @@ Every public page exists in English at `/path` and in Bangla at `/bn/path`, link
 | `/bn/biodata-format` | BN | বায়োডাটা ফরমেট | চাকরির বায়োডাটা, বায়োডাটা লেখার নিয়ম, বায়োডাটা ফরম | I/T | high |
 | `/cv-writing-tips` | EN | how to write a cv bangladesh | career objective for cv, cv writing tips, ats friendly cv | I | medium |
 | `/bn/cv-writing-tips` | BN | জীবন বৃত্তান্ত লেখার নিয়ম | সিভি লেখার নিয়ম, ক্যারিয়ার অবজেক্টিভ, ভালো সিভি লেখার টিপস | I | medium |
+| `/cv-format-pdf-download` | EN | cv format pdf download | cv format pdf, cv sample bd, simple cv format for job, cv format word file, cv template free download | T/I | high |
+| `/bn/cv-format-pdf-download` | BN | সিভি ফরমেট pdf | সিভি ফরমেট pdf ডাউনলোড, সিভি নমুনা, সহজ সিভি ফরমেট, মোবাইল দিয়ে সিভি বানানো | T/I | high |
+| `/bank-job-cv` | EN | cv format for bank job in bangladesh | bank job cv, mto cv, cv for bank job fresher, sample cv for bank job | I/T | medium |
+| `/bn/bank-job-cv` | BN | ব্যাংক জবের সিভি ফরমেট | ব্যাংকে চাকরির সিভি, এমটিও সিভি, ব্যাংক চাকরির জীবন বৃত্তান্ত | I/T | medium |
+| `/ats-friendly-cv` | EN | ats friendly cv | ats cv format, ats resume, ats friendly cv template, cv keywords | I/T | medium (rising) |
+| `/bn/ats-friendly-cv` | BN | ATS ফ্রেন্ডলি সিভি | ATS-বান্ধব সিভি, ATS কী, সিভির কিওয়ার্ড | I/T | lower (rising) |
+| `/abroad-job-cv` | EN | cv for abroad job from bangladesh | cv for overseas job, gulf cv format, malaysia job cv, europass cv bangladesh | I/T | medium |
+| `/bn/abroad-job-cv` | BN | বিদেশে চাকরির সিভি | বিদেশে চাকরির সিভি ফরমেট, সৌদি/দুবাই চাকরির সিভি, ইউরোপাস সিভি | I/T | medium |
 | `/cover-letter-bangladesh` | EN | cover letter bd | cover letter for job application bangladesh, cover letter format, ai cover letter | I/T | medium |
 | `/bn/cover-letter-bangladesh` | BN | কভার লেটার লেখার নিয়ম | চাকরির আবেদনপত্র, কভার লেটার ফরমেট, দরখাস্ত লেখার নিয়ম | I/T | medium |
 | `/templates` | EN | cv template bangladesh | ats cv template, professional cv template, cv template with photo | C/T | medium |
@@ -125,13 +133,43 @@ The remaining pages follow the same pattern and are implemented in `src/content/
 6. **Freshness.** Guides show `dateModified`. Review them yearly, and whenever bdjobs or government
    circular formats change.
 
+## Update 2026-11-05: second keyword round
+
+Searched again for the gaps listed in the first round ("resume format bd", "cv format for bank job in
+bangladesh", "ব্যাংক জবের সিভি ফরমেট", "cv format word file download bangladesh", "সিভি নমুনা বাংলা
+ফরমেট ডাউনলোড", "সিভি কিভাবে লিখব নমুনা pdf", "cv for abroad job from bangladesh", "bangladesh cv for
+overseas job gulf malaysia"). Same limits as before: **no volume numbers**, demand is estimated.
+
+- **Download intent ("cv format pdf", "word file", "cv sample") is the weakest SERP.** Results are mostly
+  auto-generated template farms (pythonanywhere, norml, s3 pages), Scribd uploads and old Blogspot posts.
+  Bangla results are Prothom Alo and teachers.gov.bd articles without a tool. → `/cv-format-pdf-download`
+  answers with a copyable sample plus the builder, and is honest that the builder exports PDF only and that
+  free PDFs carry a small footer line.
+- **Bank job CV**: English results are UK sites (standout-cv, myperfectcv, enhancv) that don't know MTO
+  programmes, CGPA scales or the state-owned bank combined recruitment. The Bangla query returned no
+  Bangladeshi page at all. → `/bank-job-cv`.
+- **Abroad job CV**: results are Indian/European CV vendors and one Bangladeshi agency blog. Nothing covers
+  Gulf vs Malaysia vs Europe for Bangladeshi workers, or agency-fraud safety. → `/abroad-job-cv`.
+- **ATS**: Bangladeshi 2026 guides now say "ATS-friendly" in their headlines, and the product has an ATS
+  checker, so it gets its own page (`/ats-friendly-cv`) instead of only a section in the writing tips.
+- **"resume format bd"** returns the same pages as "cv format bd" (people use CV and resume
+  interchangeably). No separate page, to avoid cannibalising `/cv-format-bangladesh`; that page's description
+  now says "CV and resume format".
+- **Spelling**: Bangla searchers type both কিভাবে and কীভাবে. Guides use the standard কীভাবে in body text,
+  and the home-page FAQ "মোবাইল দিয়ে কিভাবে সিভি বানাবো?" uses the common search spelling. Mobile is the
+  main device in Bangladesh, so the new FAQ targets "mobile diye cv" style queries on both home pages.
+
+Other changes in this round: the six highest-demand guides are listed first, so they appear in the footer
+on every page; new guides are cross-linked from related existing guides; localized guide paths are now
+derived from `GUIDE_META`, so a new guide gets its `/bn` twin and hreflang links automatically.
+
 ## After launch
 
 - Check Search Console every week for queries with impressions but CTR under 2%, and rewrite those
   titles and descriptions.
-- Add pages for rising queries found in Search Console. Candidates: "cv format for bank job",
-  "cv for garments job", "cv for nurse job bangladesh", "cv format pdf download", and "cv for abroad job
-  from bangladesh".
+- Add pages for rising queries found in Search Console. Remaining candidates: "cv for teacher job
+  bangladesh" (school, college and NTRCA), "cv for garments job", "cv for nurse job bangladesh",
+  "cv for ngo job", and "cv format for engineer".
 
 ## Sources consulted
 
@@ -145,3 +183,8 @@ The remaining pages follow the same pattern and are implemented in `src/content/
 - The Daily Star Bangla, সিভিতে যে ৫ ভুল করবেন না: https://bangla.thedailystar.net/youth/career/news-443566
 - Prothom Alo, Europass CV: https://www.prothomalo.com/lifestyle/sk9a3v8frg
 - teachers.gov.bd blog: https://www.teachers.gov.bd/index.php/blog/details/849542
+- Prothom Alo, কীভাবে সিভি তৈরি করব: https://www.prothomalo.com/education/article/1558674/
+- NextJobz, how to get a bank job in Bangladesh: https://blog.nextjobz.com.bd/?p=850
+- NextJobz, CV vs resume vs biodata in Bangladesh: https://blog.nextjobz.com.bd/?p=613
+- Eurostaffs, CV for European jobs for Bangladeshi applicants: https://eurostaffs.org/blog-details/how-to-create-a-winning-cv-for-european-jobs-in-2026-essential-tips-for-bangladeshi-applicants
+- Bikroy overseas jobs: https://bikroy.com/jobs/overseas

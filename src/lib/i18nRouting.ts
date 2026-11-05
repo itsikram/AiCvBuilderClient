@@ -2,6 +2,8 @@
 // languages are crawlable. App pages (dashboard, editor, auth, admin) are not
 // prefixed; they use the visitor's saved language instead.
 
+import { GUIDE_META } from "@/content/guides/meta";
+
 export type Lang = "en" | "bn";
 
 export const LANGS: Lang[] = ["en", "bn"];
@@ -27,13 +29,8 @@ const LOCALIZED_PREFIXES = [
   "/templates",
   "/blog",
   "/contact",
-  "/cv-format-bangladesh",
-  "/fresher-cv-format",
-  "/government-job-cv",
-  "/bdjobs-cv-format",
-  "/biodata-format",
-  "/cv-writing-tips",
-  "/cover-letter-bangladesh",
+  // Every guide exists in both languages; deriving the list keeps new guides localized
+  ...GUIDE_META.map((guide) => `/${guide.slug}`),
 ];
 
 export const isLocalizedPath = (path: string): boolean => {
