@@ -13,7 +13,7 @@ Bangla/English CV builder for Bangladeshi job seekers. The API is a separate rep
 - **CV editor** (`/dashboard/resumes/:id`): three steps (Basics, Education & work, Finish), autosave,
   a CV strength score, live A4 preview beside the form (or an Edit/Preview toggle on phones),
   Bangladeshi sections (career objective, SSC/HSC/Honours/Masters with GPA/CGPA, training,
-  personal details, references, declaration), drag-to-reorder sections and 30+ templates.
+  personal details, references, declaration), drag-to-reorder sections and 40+ templates.
 - **AI tools** (Gemini, via the API): write or improve the objective and summary, polish job duties,
   suggest skills, tailor a CV to a job post (match score, missing keywords, edits you accept one by one),
   grammar check, translate a CV between English and Bangla, cover letters, ATS check, and import an old
