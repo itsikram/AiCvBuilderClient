@@ -982,7 +982,8 @@
     "improvedAnswer": "আরও ভালো উত্তর",
     "followUp": "পরের সম্ভাব্য প্রশ্ন",
     "practiseFollowUp": "অনুশীলন করুন",
-    "followUpAdded": "নিচে যোগ হয়েছে"
+    "followUpAdded": "নিচে যোগ হয়েছে",
+    "ready": "{{count}}টি ইন্টারভিউ প্রশ্ন তৈরি হয়েছে।"
   },
   "coach": {
     "title": "এআই ক্যারিয়ার কোচ",

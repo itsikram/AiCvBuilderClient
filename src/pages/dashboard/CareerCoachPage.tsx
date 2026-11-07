@@ -7,7 +7,8 @@ import { useToast } from "@/components/ui/toast";
 import { SelectField, TextAreaField } from "@/components/editor/fields";
 import { QuotaNote } from "@/components/editor/ai";
 import api, { getErrorMessage } from "@/lib/api";
-import { pathLabel, useAiTask, useSessionState, type CvEdit } from "@/lib/ai";
+import { pathLabel, useAiTask, type CvEdit } from "@/lib/ai";
+import { useSessionState } from "@/lib/sessionState";
 import { confirmAction } from "@/lib/confirm";
 import { normalizeLanguage } from "@/lib/language";
 import { uid } from "@/lib/resume/model";
@@ -45,6 +46,9 @@ const STARTERS = ["review", "linkedin", "interview", "salary", "jobs", "abroad"]
 const HISTORY = 20;
 const MAX_MESSAGE = 4000;
 const EMPTY: CoachState = { resumeId: "", jobDescription: "", messages: [] };
+
+/** Phones and tablets: Enter adds a line (there is no Shift); the Send button sends */
+const hasPhysicalKeyboard = () => typeof window !== "undefined" && window.matchMedia?.("(hover: hover) and (pointer: fine)").matches;
 
 function EditCard({
   edit,
@@ -124,15 +128,19 @@ export default function CareerCoachPage() {
     const history = [...state.messages, message];
     setState((s) => ({ ...s, messages: history }));
     setInput("");
-    chat.mutate(
-      {
+    // mutateAsync, not mutate callbacks: the answer is stored even if the user has left the page by then
+    chat
+      .mutateAsync({
         resumeId,
         jobDescription: state.jobDescription,
         language,
-        messages: history.slice(-HISTORY).map(({ role, content }) => ({ role, content })),
-      },
-      {
-        onSuccess: (reply) =>
+        messages: history
+          .filter((m) => m.content.trim())
+          .slice(-HISTORY)
+          .map(({ role, content }) => ({ role, content })),
+      })
+      .then(
+        (reply) =>
           setState((s) => ({
             ...s,
             messages: [
@@ -140,13 +148,13 @@ export default function CareerCoachPage() {
               { id: uid(), role: "assistant", content: reply.reply, edits: reply.edits, resumeId, suggestions: reply.suggestions },
             ],
           })),
-        // The error toast comes from useAiTask; put the unanswered message back so it can be sent again
-        onError: () => {
+        // The error toast comes from useAiTask; put the unanswered message back so it can be sent again,
+        // without overwriting anything typed meanwhile
+        () => {
           setState((s) => ({ ...s, messages: s.messages.filter((m) => m.id !== message.id) }));
-          setInput(content);
-        },
-      }
-    );
+          setInput((current) => (current.trim() ? current : content));
+        }
+      );
   };
 
   const decide = (messageId: string, decisions: Record<string, Decision>) =>
@@ -165,7 +173,8 @@ export default function CareerCoachPage() {
       const results = data.data.results as Array<"applied" | "skipped">;
       decide(message.id, Object.fromEntries(edits.map((e, i) => [e.key, results[i] === "applied" ? "applied" : "stale"])));
       queryClient.invalidateQueries({ queryKey: ["resumes"] });
-      queryClient.invalidateQueries({ queryKey: ["resume", message.resumeId] });
+      // The editor never refetches a loaded CV, so drop any cached copy; it loads the updated one
+      queryClient.removeQueries({ queryKey: ["resume", message.resumeId] });
       toast.add(data.data.skipped ? t("ai.tailor.stale") : t("coach.applied"), data.data.skipped ? "error" : "success");
     } catch (error) {
       toast.add(getErrorMessage(error, t("common.error")), "error");
@@ -188,7 +197,7 @@ export default function CareerCoachPage() {
 
   // Enter sends, Shift+Enter adds a line; never while a Bangla/IME composition is open
   const onKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) {
+    if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing && hasPhysicalKeyboard()) {
       e.preventDefault();
       send(input);
     }

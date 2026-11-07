@@ -8,7 +8,9 @@ import { useToast } from "@/components/ui/toast";
 import { SelectField, TextAreaField, TextField } from "@/components/editor/fields";
 import { QuotaNote, ScoreRing } from "@/components/editor/ai";
 import api from "@/lib/api";
-import { useAiTask, useSessionState } from "@/lib/ai";
+import { useAiTask } from "@/lib/ai";
+import { useSessionState } from "@/lib/sessionState";
+import { uid } from "@/lib/resume/model";
 import { normalizeLanguage } from "@/lib/language";
 import { useAuthStore } from "@/store/authStore";
 import type { Resume } from "@/types";
@@ -30,6 +32,8 @@ interface Question {
 }
 
 interface QuestionSet {
+  /** Set by the client per generated set, so late feedback never lands on a newer set */
+  setId?: string;
   jobTitle: string;
   questions: Question[];
   prepTips: string[];
@@ -74,7 +78,7 @@ function List({ title, items, className }: { title: string; items: string[]; cla
 function FeedbackPanel({ feedback, onFollowUp, followUpAdded }: { feedback: Feedback; onFollowUp: () => void; followUpAdded: boolean }) {
   const { t } = useTranslation();
   return (
-    <div className="space-y-4 rounded-lg border border-primary/30 bg-primary/5 p-4" aria-live="polite">
+    <div className="space-y-4 rounded-lg border border-primary/30 bg-primary/5 p-4">
       <div className="flex items-center gap-4">
         <ScoreRing score={feedback.score} max={10} />
         <div>
@@ -113,6 +117,8 @@ export default function InterviewCoachPage() {
   const [state, setState] = useSessionState<InterviewState>(`interview:${userId}`, EMPTY);
   const update = (patch: Partial<InterviewState>) => setState((s) => ({ ...s, ...patch }));
   const [pendingId, setPendingId] = useState<string | null>(null);
+  // Short screen-reader announcements, instead of reading the whole question list aloud
+  const [announcement, setAnnouncement] = useState("");
   const language = normalizeLanguage(i18n.language);
 
   const { data: resumes = [] } = useQuery({
@@ -131,10 +137,14 @@ export default function InterviewCoachPage() {
       toast.add(t("interview.needJob"), "error");
       return;
     }
-    generate.mutate(
-      { resumeId, jobTitle: state.jobTitle, jobDescription: state.jobDescription, focus: state.focus, count: state.count, language },
-      { onSuccess: (set) => update({ set, answers: {}, feedback: {} }) }
-    );
+    // mutateAsync, not mutate callbacks: results are stored even if the user has left the page
+    generate
+      .mutateAsync({ resumeId, jobTitle: state.jobTitle, jobDescription: state.jobDescription, focus: state.focus, count: state.count, language })
+      .then((set) => {
+        update({ set: { ...set, setId: uid() }, answers: {}, feedback: {} });
+        setAnnouncement(t("interview.ready", { count: set.questions.length }));
+      })
+      .catch(() => undefined); // useAiTask shows the error
   };
 
   const askFeedback = (question: Question) => {
@@ -143,21 +153,23 @@ export default function InterviewCoachPage() {
       toast.add(t("interview.answerTooShort"), "error");
       return;
     }
+    const setId = state.set?.setId;
     setPendingId(question.id);
-    evaluate.mutate(
-      {
+    evaluate
+      .mutateAsync({
         resumeId,
         jobTitle: state.set?.jobTitle || state.jobTitle,
         jobDescription: state.jobDescription,
         question: question.question,
         answer,
         language,
-      },
-      {
-        onSuccess: (feedback) => setState((s) => ({ ...s, feedback: { ...s.feedback, [question.id]: feedback } })),
-        onSettled: () => setPendingId(null),
-      }
-    );
+      })
+      .then((feedback) => {
+        setState((s) => (s.set?.setId === setId ? { ...s, feedback: { ...s.feedback, [question.id]: feedback } } : s));
+        setAnnouncement(t("interview.score", { score: feedback.score }));
+      })
+      .catch(() => undefined)
+      .finally(() => setPendingId(null));
   };
 
   /** Adds the interviewer's likely follow-up right after the question, to practise next. */
@@ -232,7 +244,7 @@ export default function InterviewCoachPage() {
             />
           </div>
           <div className="flex flex-wrap items-center gap-3">
-            <Button variant="gradient" onClick={run} disabled={generate.isPending}>
+            <Button variant="gradient" onClick={run} disabled={generate.isPending || evaluate.isPending}>
               {generate.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
               {generate.isPending ? t("interview.generating") : set ? t("interview.regenerate") : t("interview.generate")}
             </Button>
@@ -241,13 +253,16 @@ export default function InterviewCoachPage() {
           <p className="text-xs text-muted">{t("ai.honest")}</p>
         </section>
 
-        <section className="space-y-4" aria-labelledby="interview-questions" aria-live="polite" aria-busy={generate.isPending}>
+        <section className="space-y-4" aria-labelledby="interview-questions" aria-busy={generate.isPending}>
+          <p className="sr-only" role="status">
+            {announcement}
+          </p>
           <div className="flex items-center justify-between gap-2">
             <h2 id="interview-questions" className="font-semibold">
               {set?.jobTitle ? t("interview.questionsFor", { jobTitle: set.jobTitle }) : t("interview.questions")}
             </h2>
             {set && (
-              <Button type="button" size="sm" variant="ghost" onClick={() => update({ set: null, answers: {}, feedback: {} })}>
+              <Button type="button" size="sm" variant="ghost" disabled={evaluate.isPending} onClick={() => update({ set: null, answers: {}, feedback: {} })}>
                 <RotateCcw className="h-4 w-4" /> {t("interview.clear")}
               </Button>
             )}

@@ -1,4 +1,3 @@
-import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { TFunction } from "i18next";
 import api, { getErrorMessage } from "@/lib/api";
@@ -83,28 +82,4 @@ export function pathLabel(path: string, content: ResumeContent | undefined, t: T
   const item = getAtPath(content, `${section}.${index}`) as Record<string, string> | undefined;
   const name = item?.position || item?.degree || item?.title || item?.name || item?.role || "";
   return [t(`cv.sections.${SECTION_OF[section] ?? section}`, { defaultValue: section }), name].filter(Boolean).join(" · ");
-}
-
-/**
- * useState that survives navigating away within the tab (sessionStorage), so AI
- * results the user paid quota for aren't lost. Falls back to memory only when
- * storage is unavailable.
- */
-export function useSessionState<T>(key: string, initial: T) {
-  const [value, setValue] = useState<T>(() => {
-    try {
-      const raw = sessionStorage.getItem(key);
-      return raw ? (JSON.parse(raw) as T) : initial;
-    } catch {
-      return initial;
-    }
-  });
-  useEffect(() => {
-    try {
-      sessionStorage.setItem(key, JSON.stringify(value));
-    } catch {
-      /* storage full or blocked: keep the in-memory value */
-    }
-  }, [key, value]);
-  return [value, setValue] as const;
 }

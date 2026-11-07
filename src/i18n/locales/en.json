@@ -982,7 +982,8 @@
     "improvedAnswer": "A stronger answer",
     "followUp": "Likely follow-up",
     "practiseFollowUp": "Practise it",
-    "followUpAdded": "Added below"
+    "followUpAdded": "Added below",
+    "ready": "{{count}} interview questions are ready."
   },
   "coach": {
     "title": "AI career coach",

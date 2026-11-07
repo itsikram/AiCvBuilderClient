@@ -181,6 +181,9 @@ function EditorLoader({ id }: { id: string }) {
     queryFn: async () => (await api.get(`/resumes/${id}`)).data.data as Resume,
     // The editor owns the state once loaded; refetching would not be applied anyway
     staleTime: Infinity,
+    // ...so never reuse a copy from an earlier visit: saves made since (by the editor or the
+    // AI coach) aren't in it, and the next autosave would overwrite them
+    gcTime: 0,
     refetchOnWindowFocus: false,
     retry: (count, error) => !(axios.isAxiosError(error) && error.response?.status === 404) && count < 2,
   });
