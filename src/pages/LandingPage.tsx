@@ -19,6 +19,8 @@ import { usePageContent } from "@/context/PageContentContext";
 import { GUIDES } from "@/content/guides";
 import { useLang } from "@/lib/useLang";
 import { faqLd, organizationLd, webApplicationLd, websiteLd } from "@/lib/jsonld";
+import heroImage from "@/assets/hero-cv.webp";
+import heroImageSm from "@/assets/hero-cv-sm.webp";
 
 const featureIcons = [Sparkles, Target, Mail, FileText, Download, Languages];
 const featureKeys = ["aiWriting", "tailor", "coverLetter", "templates", "pdf", "bilingual"] as const;
@@ -91,24 +93,18 @@ export default function LandingPage() {
             </ul>
           </div>
 
-          {/* Lightweight CSS mock of a CV: no image download on the critical path */}
-          <div className="mx-auto hidden w-full max-w-sm rounded-2xl border border-border bg-white p-6 shadow-xl dark:bg-slate-900 sm:block" aria-hidden="true">
-            <div className="flex items-center gap-4">
-              <div className="h-14 w-14 rounded-full bg-gradient-to-br from-blue-500 to-violet-500" />
-              <div className="flex-1 space-y-2">
-                <div className="h-3.5 w-2/3 rounded bg-slate-800 dark:bg-slate-200" />
-                <div className="h-2.5 w-1/2 rounded bg-slate-300 dark:bg-slate-600" />
-              </div>
-            </div>
-            {["w-1/3", "w-1/4", "w-2/5"].map((width) => (
-              <div key={width} className="mt-6 space-y-2">
-                <div className={`h-2.5 ${width} rounded bg-blue-600`} />
-                <div className="h-2 w-full rounded bg-slate-200 dark:bg-slate-700" />
-                <div className="h-2 w-11/12 rounded bg-slate-200 dark:bg-slate-700" />
-                <div className="h-2 w-4/5 rounded bg-slate-200 dark:bg-slate-700" />
-              </div>
-            ))}
-          </div>
+          {/* Above the fold: load eagerly with high priority; explicit size prevents layout shift */}
+          <img
+            src={heroImage}
+            srcSet={`${heroImageSm} 640w, ${heroImage} 1272w`}
+            sizes="(min-width: 1024px) 560px, (min-width: 640px) 576px, 100vw"
+            width={1272}
+            height={941}
+            alt=""
+            fetchPriority="high"
+            decoding="async"
+            className="mx-auto h-auto w-full max-w-xl rounded-3xl shadow-xl shadow-violet-200/40 dark:shadow-black/40"
+          />
         </div>
 
         {stats.length > 0 && (
