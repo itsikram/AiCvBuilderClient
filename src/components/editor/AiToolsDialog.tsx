@@ -1,16 +1,15 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import type { TFunction } from "i18next";
 import { Link } from "react-router-dom";
 import { Check, Languages, Loader2, SpellCheck, Target, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog } from "@/components/ui/dialog";
 import { useToast } from "@/components/ui/toast";
-import { useAiTask } from "@/lib/ai";
+import { pathLabel, useAiTask, type CvEdit } from "@/lib/ai";
 import { cn } from "@/lib/utils";
 import { contentForAi, getAtPath, setAtPath, type CvLang } from "@/lib/resume/model";
 import type { Resume, ResumeContent } from "@/types";
-import { QuotaNote } from "./ai";
+import { QuotaNote, ScoreRing } from "./ai";
 
 export type AiTool = "tailor" | "grammar" | "translate";
 
@@ -27,14 +26,7 @@ interface Props {
   saveNow: () => Promise<void>;
 }
 
-interface TailorEdit {
-  key: string;
-  type: "rewrite" | "add_skill";
-  path: string;
-  before: string;
-  after: string;
-  reason: string;
-}
+type TailorEdit = CvEdit;
 
 interface TailorResult {
   matchScore: number;
@@ -49,37 +41,6 @@ interface GrammarIssue {
   original: string;
   corrected: string;
   explanation: string;
-}
-
-const SECTION_OF: Record<string, string> = {
-  trainings: "training",
-  volunteerExperience: "volunteer",
-  customSections: "custom",
-};
-
-/** "experience.0.bullets.2" -> "Work Experience · Accounts Intern" */
-function pathLabel(path: string, content: ResumeContent, t: TFunction) {
-  if (path === "careerObjective") return t("cv.sections.objective");
-  if (path === "personalInfo.summary") return t("cv.sections.summary");
-  if (path.startsWith("personalInfo.")) return t(`editor.personal.${path.split(".")[1]}`);
-  if (path === "skills") return t("cv.sections.skills");
-  const [section, index] = path.split(".");
-  const item = getAtPath(content, `${section}.${index}`) as Record<string, string> | undefined;
-  const name = item?.position || item?.degree || item?.title || item?.name || item?.role || "";
-  return [t(`cv.sections.${SECTION_OF[section] ?? section}`, { defaultValue: section }), name].filter(Boolean).join(" · ");
-}
-
-function ScoreRing({ score }: { score: number }) {
-  const color = score >= 75 ? "#16a34a" : score >= 50 ? "#d97706" : "#dc2626";
-  return (
-    <div className="relative h-20 w-20 shrink-0" role="img" aria-label={`${score}/100`}>
-      <svg viewBox="0 0 36 36" className="h-20 w-20 -rotate-90">
-        <circle cx="18" cy="18" r="15.9" fill="none" stroke="currentColor" className="text-secondary" strokeWidth="3.5" />
-        <circle cx="18" cy="18" r="15.9" fill="none" stroke={color} strokeWidth="3.5" strokeDasharray={`${score} 100`} strokeLinecap="round" />
-      </svg>
-      <span className="absolute inset-0 flex items-center justify-center text-xl font-bold">{score}</span>
-    </div>
-  );
 }
 
 function Chips({ items, tone }: { items: string[]; tone: "good" | "warn" }) {

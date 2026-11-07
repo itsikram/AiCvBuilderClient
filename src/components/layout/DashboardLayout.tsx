@@ -1,5 +1,5 @@
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
-import { ChevronRight, CreditCard, FileText, Languages, LayoutDashboard, LogOut, Mail, Menu, Settings, Shield, Sparkles, Target, X } from "lucide-react";
+import { Bot, ChevronRight, CreditCard, FileText, Languages, LayoutDashboard, LogOut, Mail, Menu, MessagesSquare, Settings, Shield, Sparkles, Target, X } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useAuthStore } from "@/store/authStore";
@@ -15,6 +15,8 @@ const navItems = [
   { to: "/dashboard/templates", icon: Sparkles, key: "templates" },
   { to: "/dashboard/ats", icon: Target, key: "ats" },
   { to: "/dashboard/cover-letters", icon: Mail, key: "coverLetters" },
+  { to: "/dashboard/coach", icon: Bot, key: "coach" },
+  { to: "/dashboard/interview", icon: MessagesSquare, key: "interview" },
   { to: "/dashboard/billing", icon: CreditCard, key: "billing" },
   { to: "/dashboard/settings", icon: Settings, key: "settings" },
 ] as const;

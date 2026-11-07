@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { clearSessionState } from "@/lib/sessionState";
 
 export interface User {
   id: string;
@@ -48,6 +49,8 @@ export const useAuthStore = create<AuthState>()(
         })),
       logout: () => {
         localStorage.removeItem("accessToken");
+        // AI coach chats and interview practice are kept for the tab only; clear them on a shared computer
+        clearSessionState();
         set({ user: null, accessToken: null, isAuthenticated: false });
       },
     }),

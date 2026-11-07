@@ -46,6 +46,8 @@ const ResumesPage = lazy(() => import("@/pages/dashboard/ResumesPage"));
 const ResumeBuilderPage = lazy(() => import("@/pages/dashboard/ResumeBuilderPage"));
 const ATSCheckerPage = lazy(() => import("@/pages/dashboard/ATSCheckerPage"));
 const CoverLetterPage = lazy(() => import("@/pages/dashboard/CoverLetterPage"));
+const CareerCoachPage = lazy(() => import("@/pages/dashboard/CareerCoachPage"));
+const InterviewCoachPage = lazy(() => import("@/pages/dashboard/InterviewCoachPage"));
 const BillingPage = lazy(() => import("@/pages/dashboard/BillingPage"));
 const SettingsPage = lazy(() => import("@/pages/dashboard/SettingsPage"));
 const OverviewPage = lazy(() => import("@/pages/admin/OverviewPage"));
@@ -145,6 +147,8 @@ export function AppRoutes() {
           <Route path="templates" element={page(<TemplatesPage />)} />
           <Route path="ats" element={page(<ATSCheckerPage />)} />
           <Route path="cover-letters" element={page(<CoverLetterPage />)} />
+          <Route path="coach" element={page(<CareerCoachPage />)} />
+          <Route path="interview" element={page(<InterviewCoachPage />)} />
           <Route path="billing" element={page(<BillingPage />)} />
           <Route path="settings" element={page(<SettingsPage />)} />
         </Route>

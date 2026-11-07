@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
-import { Plus, FileText, Sparkles, Target, Mail, TrendingUp } from "lucide-react";
+import { Plus, FileText, Sparkles, Target, Mail, TrendingUp, Bot, MessagesSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -30,6 +30,8 @@ export default function DashboardPage() {
     { to: "/dashboard/resumes/new", icon: Plus, label: t("dashboard.createResume"), color: "bg-blue-600" },
     { to: "/dashboard/ats", icon: Target, label: t("dashboardNav.ats"), color: "bg-violet-600" },
     { to: "/dashboard/cover-letters", icon: Mail, label: t("dashboardNav.coverLetters"), color: "bg-green-700" },
+    { to: "/dashboard/coach", icon: Bot, label: t("dashboardNav.coach"), color: "bg-sky-700" },
+    { to: "/dashboard/interview", icon: MessagesSquare, label: t("dashboardNav.interview"), color: "bg-rose-600" },
     { to: "/dashboard/templates", icon: Sparkles, label: t("dashboardNav.templates"), color: "bg-orange-600" },
   ];
 
@@ -93,7 +95,7 @@ export default function DashboardPage() {
         </Card>
       </div>
 
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
         {quickActions.map((action) => (
           <Link key={action.to} to={action.to} className="rounded-xl focus-visible:outline-2 focus-visible:outline-primary">
             <Card className="h-full transition-shadow hover:shadow-md">
