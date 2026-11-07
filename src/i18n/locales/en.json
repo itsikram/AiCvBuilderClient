@@ -41,19 +41,19 @@
     "bilingualDesc": "Full bilingual support for Bangladesh market"
   },
   "pricing": {
-    "title": "Simple, Affordable Pricing",
-    "subtitle": "Start free, upgrade when you're ready",
+    "title": "Free CV maker plans and pricing",
+    "subtitle": "Start free, try Premium free, and upgrade only when you are ready",
     "free": "Free",
     "premium": "Premium",
     "monthly": "Monthly",
     "yearly": "Yearly",
     "perMonth": "/month",
     "perYear": "/year",
-    "getStarted": "Get Started",
+    "getStarted": "Start free",
     "upgrade": "Upgrade Now",
-    "seoTitle": "Pricing – Free CV Maker with Premium Upgrade",
-    "seoDescription": "Make and download your CV free. Premium unlocks more templates, more AI help and watermark-free PDFs. Pay with bKash, Nagad or card.",
-    "badge": "Start free, upgrade only if you need more",
+    "seoTitle": "Pricing – Free CV Maker Plan & Free Premium Trial",
+    "seoDescription": "Make and download your CV free. Try Premium free with no payment details: unlimited CVs, all templates, watermark-free PDFs. Pay later via bKash or card.",
+    "badge": "Free plan · Free Premium trial · No card needed",
     "footer": "Pay with bKash, Nagad, SSLCommerz or any Bangladeshi card",
     "yearlyToggle": "Show yearly prices",
     "save": "Save 17%",
@@ -130,16 +130,16 @@
     "new": "New"
   },
   "landing": {
-    "seoTitle": "Free CV Maker BD – AI CV Builder for Bangladesh Jobs",
-    "seoDescription": "Make an ATS-friendly CV in Bangla or English in minutes. BD CV formats, AI writing help and free PDF download. No design skills needed.",
-    "badge": "Bangla + English · AI writing help",
+    "seoTitle": "Free CV Maker BD – AI CV & Resume Builder for Bangladesh",
+    "seoDescription": "Make a free CV in Bangla or English: BD formats, ATS templates, AI writing help and free PDF download. Works on mobile, no app or card needed.",
+    "badge": "Free · Bangla + English · AI writing help",
     "heroTitle": "Free CV Maker for Jobs in Bangladesh",
-    "heroSubtitle": "Build a professional, ATS-friendly CV in minutes. Bangladeshi formats with SSC/HSC and personal details, AI help for your objective and experience, and a clean PDF download.",
+    "heroSubtitle": "Build a professional, ATS-friendly CV in minutes. Bangladeshi formats with SSC/HSC and personal details, AI help for your objective and experience, and a free PDF download.",
     "heroCta": "Create my CV free",
     "heroCtaSecondary": "See CV templates",
     "heroTrust": [
-      "No design skills needed",
-      "Works on mobile",
+      "Free plan, no time limit",
+      "No app or card needed",
       "Bangla & English"
     ],
     "howTitle": "Create your CV in 3 steps",
@@ -198,7 +198,15 @@
     "faqs": [
       {
         "q": "Is AI CV Builder BD really free?",
-        "a": "Yes. You can create a CV, use the free templates and download a PDF for free. Premium adds more templates, more AI requests and removes the watermark."
+        "a": "Yes. The Free plan has no time limit: create a CV, use the free templates and download it as a PDF without paying, and no card or bKash payment is needed. Premium adds unlimited CVs, every template, watermark-free PDFs and more AI help, and you can try it free first."
+      },
+      {
+        "q": "What is the best free CV maker in Bangladesh?",
+        "a": "Look for one that knows the Bangladeshi format (SSC/HSC, GPA/CGPA, personal details), works in Bangla and English, lets you download a PDF free, makes ATS-readable CVs and works on your phone. AI CV Builder BD was built for exactly that, and you can start free."
+      },
+      {
+        "q": "Is there a free trial of Premium?",
+        "a": "Yes. New accounts can try Premium free for a few days without any payment details. When the trial ends you stay on the Free plan unless you choose to upgrade."
       },
       {
         "q": "Can I make my CV in Bangla?",
@@ -219,6 +227,10 @@
       {
         "q": "Does the AI make things up?",
         "a": "No. The AI only rewrites what you give it and never adds jobs, degrees or numbers you didn't provide. You review and approve each suggestion."
+      },
+      {
+        "q": "Is there a CV maker app I need to install?",
+        "a": "No. AI CV Builder BD runs in your phone browser like an app, so there is nothing to download. To open it in one tap, add it to your home screen from the browser menu."
       }
     ],
     "finalTitle": "Your next job starts with a better CV",
@@ -317,9 +329,9 @@
     "failed": "Couldn't send your message. Please email us at {{email}}."
   },
   "templatesPage": {
-    "seoTitle": "CV Templates for Bangladesh – ATS & BD Formats",
+    "seoTitle": "Free CV Templates for Bangladesh – ATS & BD Formats",
     "seoDescription": "Free CV templates for jobs in Bangladesh: ATS-friendly, Bangladeshi and government formats, with or without a photo. Fill in and download a PDF.",
-    "title": "CV templates for Bangladesh",
+    "title": "Free CV templates for Bangladesh",
     "intro": "Pick an ATS-friendly, Bangladeshi or international design. You can switch templates at any time without retyping anything.",
     "upgradeTitle": "Unlock premium template designs",
     "upgradeText": "Upgrade to Premium to access exclusive layouts and more AI requests.",
@@ -1023,5 +1035,25 @@
       "skipped": "Skipped",
       "stale": "Not applied: this part of the CV has changed"
     }
+  },
+  "trial": {
+    "badge": "{{days}}-day free trial",
+    "start": "Start {{days}}-day free trial",
+    "starting": "Starting your trial...",
+    "noPayment": "No payment details needed. When it ends you go back to the Free plan, unless you upgrade.",
+    "cardTitle": "Try Premium free for {{days}} days",
+    "cardText": "Every Premium feature: unlimited CVs, all templates, PDFs without the watermark, the ATS checker, AI cover letters and 100 AI requests a day.",
+    "started": "Your {{days}}-day Premium trial has started. Enjoy!",
+    "active": "Premium (free trial)",
+    "daysLeft_one": "{{n}} day left",
+    "daysLeft_other": "{{n}} days left",
+    "endsOn": "Your free trial ends on {{date}}. Upgrade before then to keep Premium.",
+    "keepTitle": "Keep Premium after your trial",
+    "used": "You have already used your free trial.",
+    "unverified": "Verify your email address to start your free trial.",
+    "registerNote": "Your {{days}}-day free Premium trial starts as soon as you sign up. No payment needed.",
+    "dashboardOffer": "Try Premium free for {{days}} days: unlimited CVs, every template and more AI help.",
+    "dashboardActive": "You are on a free Premium trial ({{left}}).",
+    "failed": "Your trial couldn’t be started."
   }
 }

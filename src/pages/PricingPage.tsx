@@ -15,14 +15,18 @@ import type { SubscriptionPlan } from "@/types";
 import { useHydrated } from "@/lib/useHydrated";
 import { useLang } from "@/lib/useLang";
 import { breadcrumbLd, pricingLd } from "@/lib/jsonld";
+import { localNumber, useTrial } from "@/lib/trial";
 
 export default function PricingPage() {
   const { t } = useTranslation();
   const [yearly, setYearly] = useState(false);
-  const { user } = useAuthStore();
+  const { user, isAuthenticated } = useAuthStore();
   const hydrated = useHydrated();
   const { lang, lp } = useLang();
   const currentPlan = hydrated ? user?.subscription?.plan ?? null : null;
+  // Prerendered HTML is the signed-out version, which offers the trial
+  const signedIn = hydrated && isAuthenticated;
+  const trial = useTrial(signedIn);
   const { getPageContent } = usePageContent();
   const pricingContent = getPageContent("pricing");
 
@@ -82,6 +86,10 @@ export default function PricingPage() {
           <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
             {plans?.map((plan) => {
               const isCurrentPlan = currentPlan === plan.slug;
+              const trialDays = plan.slug === "premium" ? plan.trialDays ?? 0 : 0;
+              const days = localNumber(trialDays, lang);
+              // Signed-out visitors can always get it (one per new account); signed-in users only if unused
+              const offerTrial = trialDays > 0 && !isCurrentPlan && (!signedIn || trial.data?.available === true);
               return (
                 <Card
                   key={plan.slug}
@@ -97,6 +105,11 @@ export default function PricingPage() {
                   {isCurrentPlan && (
                     <div className="absolute right-4 top-4">
                       <Badge variant="premium">{t("pricing.currentPlan")}</Badge>
+                    </div>
+                  )}
+                  {!isCurrentPlan && trialDays > 0 && (
+                    <div className="absolute right-4 top-4">
+                      <Badge variant="success">{t("trial.badge", { days })}</Badge>
                     </div>
                   )}
                   <CardHeader>
@@ -122,6 +135,13 @@ export default function PricingPage() {
                       <Button variant="secondary" className="w-full" disabled>
                         {t("pricing.currentPlan")}
                       </Button>
+                    ) : offerTrial ? (
+                      <>
+                        <Button variant="gradient" className="w-full" asChild>
+                          <Link to={signedIn ? "/dashboard/billing?trial=1" : "/register?trial=1"}>{t("trial.start", { days })}</Link>
+                        </Button>
+                        <p className="mt-2 text-center text-xs text-muted">{t("trial.noPayment")}</p>
+                      </>
                     ) : (
                       <Button
                         variant={plan.slug === "premium" ? "gradient" : "outline"}

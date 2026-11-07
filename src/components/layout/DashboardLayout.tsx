@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { SEO } from "@/components/seo/SEO";
 import { setLanguage } from "@/i18n";
 import { cn } from "@/lib/utils";
+import { useRefreshUser } from "@/lib/trial";
 
 const navItems = [
   { to: "/dashboard", icon: LayoutDashboard, key: "dashboard" },
@@ -27,8 +28,11 @@ export function DashboardLayout() {
   const navigate = useNavigate();
   const { user, logout } = useAuthStore();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  // The plan saved at sign-in can be stale (a trial ended, a payment was approved)
+  useRefreshUser();
 
   const isPremium = user?.subscription?.plan === "premium";
+  const onTrial = isPremium && user?.subscription?.status === "trial";
   const otherLang = i18n.language === "bn" ? "en" : "bn";
   const isActive = (to: string) => (to === "/dashboard" ? location.pathname === to : location.pathname === to || location.pathname.startsWith(`${to}/`));
 
@@ -57,7 +61,7 @@ export function DashboardLayout() {
               <p className="text-xs uppercase tracking-wider text-muted">{t("dashboardNav.workspace")}</p>
               <p className="mt-1 truncate text-sm font-semibold">{user?.name}</p>
               <Badge className="mt-2" variant={isPremium ? "premium" : "secondary"}>
-                {isPremium ? t("dashboardNav.premium") : t("dashboardNav.free")}
+                {onTrial ? t("trial.active") : isPremium ? t("dashboardNav.premium") : t("dashboardNav.free")}
               </Badge>
             </div>
           </div>

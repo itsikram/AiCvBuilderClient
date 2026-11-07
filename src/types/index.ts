@@ -213,6 +213,8 @@ export interface SubscriptionPlan {
     coverLetters: boolean;
     aiOptimization: boolean;
   };
+  /** Days of free trial (the Premium plan's is offered to users); 0 or missing: none */
+  trialDays?: number;
 }
 
 export interface BlogPost {

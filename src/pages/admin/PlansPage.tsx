@@ -31,6 +31,8 @@ interface SubscriptionPlan {
   };
   isActive: boolean;
   sortOrder: number;
+  /** Days of free trial; only the Premium plan's is offered */
+  trialDays: number;
 }
 
 interface PlanFormData {
@@ -52,6 +54,8 @@ interface PlanFormData {
   };
   isActive: boolean;
   sortOrder: number;
+  /** Days of free trial; only the Premium plan's is offered */
+  trialDays: number;
 }
 
 const defaultLimits = {
@@ -75,6 +79,7 @@ const defaultPlan: PlanFormData = {
   limits: { ...defaultLimits },
   isActive: true,
   sortOrder: 0,
+  trialDays: 0,
 };
 
 export default function PlansPage() {
@@ -152,6 +157,7 @@ export default function PlansPage() {
       limits: { ...plan.limits },
       isActive: plan.isActive,
       sortOrder: plan.sortOrder,
+      trialDays: plan.trialDays ?? 0,
     });
     setIsCreating(false);
   };
@@ -297,7 +303,7 @@ export default function PlansPage() {
               </div>
 
               {/* Pricing */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
                 <div className="space-y-2">
                   <Label htmlFor="priceMonthly">Monthly Price (৳)</Label>
                   <Input
@@ -327,6 +333,22 @@ export default function PlansPage() {
                     value={formData.sortOrder}
                     onChange={(e) => handleFieldChange("sortOrder", Number(e.target.value))}
                   />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="trialDays">Free trial (days)</Label>
+                  <Input
+                    id="trialDays"
+                    type="number"
+                    min="0"
+                    max="90"
+                    value={formData.trialDays}
+                    onChange={(e) => handleFieldChange("trialDays", Number(e.target.value))}
+                  />
+                  <p className="text-xs text-muted">
+                    {formData.slug === "premium"
+                      ? "0 turns the trial off. One trial per account, no payment needed."
+                      : "Only the Premium plan's trial is offered to users."}
+                  </p>
                 </div>
               </div>
 
@@ -544,6 +566,9 @@ export default function PlansPage() {
                     </p>
                   </div>
                 </div>
+                {(plan.trialDays ?? 0) > 0 && (
+                  <Badge variant="success">{plan.trialDays}-day free trial</Badge>
+                )}
 
                 <div className="space-y-2">
                   <p className="text-sm font-medium">Features:</p>

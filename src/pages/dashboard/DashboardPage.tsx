@@ -12,11 +12,17 @@ import { completeness, normalizeContent } from "@/lib/resume/model";
 import { useAuthStore } from "@/store/authStore";
 import type { Resume } from "@/types";
 import { formatDate } from "@/lib/utils";
+import { daysLeft, localNumber, useStartTrial, useTrial } from "@/lib/trial";
+import { getErrorMessage } from "@/lib/api";
+import { useToast } from "@/components/ui/toast";
 
 export default function DashboardPage() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { user } = useAuthStore();
   const quota = useAiQuota();
+  const toast = useToast();
+  const trial = useTrial();
+  const startTrial = useStartTrial();
 
   const { data: resumes, isLoading } = useQuery({
     queryKey: ["resumes"],
@@ -24,7 +30,10 @@ export default function DashboardPage() {
   });
 
   const isPremium = user?.subscription?.plan === "premium";
+  const onTrial = isPremium && user?.subscription?.status === "trial";
   const left = requestsLeft(quota.data);
+  const trialDays = localNumber(trial.data?.days ?? 0, i18n.language);
+  const trialLeft = daysLeft(user?.subscription?.expiresAt);
 
   const quickActions = [
     { to: "/dashboard/resumes/new", icon: Plus, label: t("dashboard.createResume"), color: "bg-blue-600" },
@@ -52,13 +61,35 @@ export default function DashboardPage() {
         </Button>
       </div>
 
-      {!isPremium && (
+      {(!isPremium || onTrial) && (
         <Card className="border-primary/30 bg-gradient-to-r from-blue-50 to-violet-50 dark:from-blue-950/30 dark:to-violet-950/30">
           <CardContent className="flex flex-wrap items-center justify-between gap-3 py-4 sm:pb-4">
-            <p className="text-sm">{t("dashboard.upgradePrompt")}</p>
-            <Button variant="gradient" size="sm" asChild>
-              <Link to="/dashboard/billing">{t("dashboardNav.upgrade")}</Link>
-            </Button>
+            <p className="text-sm">
+              {onTrial
+                ? t("trial.dashboardActive", { left: t("trial.daysLeft", { count: trialLeft, n: localNumber(trialLeft, i18n.language) }) })
+                : trial.data?.available
+                  ? t("trial.dashboardOffer", { days: trialDays })
+                  : t("dashboard.upgradePrompt")}
+            </p>
+            {!onTrial && trial.data?.available ? (
+              <Button
+                variant="gradient"
+                size="sm"
+                disabled={startTrial.isPending}
+                onClick={() =>
+                  startTrial.mutate(undefined, {
+                    onSuccess: () => toast.add(t("trial.started", { days: trialDays }), "success"),
+                    onError: (error) => toast.add(getErrorMessage(error, t("trial.failed")), "error"),
+                  })
+                }
+              >
+                {startTrial.isPending ? t("trial.starting") : t("trial.start", { days: trialDays })}
+              </Button>
+            ) : (
+              <Button variant="gradient" size="sm" asChild>
+                <Link to="/dashboard/billing">{t("dashboardNav.upgrade")}</Link>
+              </Button>
+            )}
           </CardContent>
         </Card>
       )}

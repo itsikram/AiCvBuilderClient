@@ -8,7 +8,7 @@ Items marked **(you)** need your Google/Microsoft account; nothing here can be a
 - [ ] `https://aicvbuilderbd.online/` loads, and `http://`, `http://www.` and `https://www.` each 301 to it.
       Test with `curl -I http://www.aicvbuilderbd.online/`; the response must be `301` with a `Location:` header pointing at the https apex.
 - [ ] `https://aicvbuilderbd.online/robots.txt` lists the sitemap and blocks `/api/`, `/dashboard`, `/admin` and `/r/`.
-- [ ] `https://aicvbuilderbd.online/sitemap.xml` lists 34 page URLs (17 English + 17 Bangla) plus published blog posts.
+- [ ] `https://aicvbuilderbd.online/sitemap.xml` lists 36 page URLs (18 English + 18 Bangla) plus published blog posts.
 - [ ] A random URL such as `/this-does-not-exist` returns **HTTP 404**, not 200.
 - [ ] View the source of `/bn/cv-format-bangladesh`: it should have Bangla text inside `<div id="root">`, `<html lang="bn-BD">`,
       a canonical link, and three `hreflang` links (en-BD, bn-BD, x-default).
@@ -24,10 +24,10 @@ Items marked **(you)** need your Google/Microsoft account; nothing here can be a
 3. In GoDaddy, go to **My Products → Domains → aicvbuilderbd.online → DNS → Add New Record**, then set:
    - Type `TXT`, Name `@`, Value the string you copied, TTL `1 hour`.
 4. Wait 5–60 minutes, then click **Verify**. A domain property covers http/https and www/apex together.
-5. **Sitemaps → Add a new sitemap**: enter `sitemap.xml` and submit. Within a few days the status should read "Success" with 34+ URLs discovered.
+5. **Sitemaps → Add a new sitemap**: enter `sitemap.xml` and submit. Within a few days the status should read "Success" with 36+ URLs discovered.
 6. **URL Inspection**: inspect `https://aicvbuilderbd.online/` and `https://aicvbuilderbd.online/bn`, then click **Request indexing** for each.
    Repeat for the most important guides (cv-format-bangladesh, cv-format-pdf-download, fresher-cv-format and their `/bn` twins),
-   then the 2026-11 additions: bank-job-cv, abroad-job-cv and ats-friendly-cv.
+   then the 2026-11 additions: bank-job-cv, abroad-job-cv and ats-friendly-cv, and best-free-cv-maker (plus `/bn/best-free-cv-maker`).
 7. **Settings → International targeting** is retired. Language targeting comes from the hreflang tags, which are already in place.
 8. After 2–4 weeks, check **Pages** (indexing errors), **Core Web Vitals** and **Performance → Queries**, filtered to country = Bangladesh.
 

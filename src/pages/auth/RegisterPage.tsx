@@ -1,6 +1,8 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
+import { Gift } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { TextField } from "@/components/editor/fields";
@@ -9,10 +11,23 @@ import { SEO } from "@/components/seo/SEO";
 import api, { getErrorMessage } from "@/lib/api";
 import { useAuthStore } from "@/store/authStore";
 import { useToast } from "@/components/ui/toast";
+import { localNumber, useStartTrial } from "@/lib/trial";
+import type { SubscriptionPlan } from "@/types";
 
 export default function RegisterPage() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
+  const [params] = useSearchParams();
+  const startTrial = useStartTrial();
+  // "Start free trial" on the pricing page links here with ?trial=1
+  const wantsTrial = params.get("trial") === "1";
+  const { data: plans } = useQuery({
+    queryKey: ["plans"],
+    queryFn: async () => (await api.get("/payments/plans")).data.data as SubscriptionPlan[],
+    enabled: wantsTrial,
+  });
+  const trialDays = wantsTrial ? plans?.find((plan) => plan.slug === "premium")?.trialDays ?? 0 : 0;
+  const days = localNumber(trialDays, i18n.language);
   const { setAuth } = useAuthStore();
   const toast = useToast();
   const [form, setForm] = useState({ name: "", email: "", password: "", referralCode: "" });
@@ -37,7 +52,18 @@ export default function RegisterPage() {
 
       const { data } = await api.post("/auth/register", formData);
       setAuth(data.data.user, data.data.accessToken);
-      toast.add(t("auth.created"), "success");
+      if (trialDays > 0) {
+        // The account exists either way; a refused trial (e.g. email not verified yet) is only a notice
+        try {
+          await startTrial.mutateAsync();
+          toast.add(t("trial.started", { days }), "success");
+        } catch (trialError) {
+          toast.add(t("auth.created"), "success");
+          toast.add(getErrorMessage(trialError, t("trial.failed")), "info");
+        }
+      } else {
+        toast.add(t("auth.created"), "success");
+      }
       navigate("/dashboard");
     } catch (err: unknown) {
       toast.add(getErrorMessage(err, t("auth.registerFailed")), "error");
@@ -69,6 +95,12 @@ export default function RegisterPage() {
             <CardDescription>{t("auth.registerSubtitle")}</CardDescription>
           </CardHeader>
           <CardContent>
+            {trialDays > 0 && (
+              <p className="mb-4 flex items-start gap-2 rounded-lg border border-green-200 bg-green-50 p-3 text-sm text-green-800 dark:border-green-900 dark:bg-green-950/30 dark:text-green-200">
+                <Gift className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
+                {t("trial.registerNote", { days })}
+              </p>
+            )}
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <p className="text-sm font-medium">{t("auth.photo")}</p>

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
-import { CreditCard, Smartphone, Send } from "lucide-react";
+import { CreditCard, Smartphone, Send, Gift } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { TextField } from "@/components/editor/fields";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,6 +11,7 @@ import { useAuthStore } from "@/store/authStore";
 import { useToast } from "@/components/ui/toast";
 import { formatCurrency } from "@/lib/utils";
 import type { SubscriptionPlan } from "@/types";
+import { daysLeft, localNumber, useStartTrial, useTrial } from "@/lib/trial";
 
 interface BkashConfig {
   number: string;
@@ -18,9 +19,11 @@ interface BkashConfig {
 }
 
 export default function BillingPage() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { user } = useAuthStore();
   const toast = useToast();
+  const trial = useTrial();
+  const startTrial = useStartTrial();
   const [yearly, setYearly] = useState(false);
   const [couponCode, setCouponCode] = useState("");
   const [provider, setProvider] = useState<"sslcommerz" | "bkash" | "nagad">("sslcommerz");
@@ -87,6 +90,16 @@ export default function BillingPage() {
   });
 
   const isPremium = user?.subscription?.plan === "premium";
+  const onTrial = isPremium && user?.subscription?.status === "trial";
+  const num = (value: number) => localNumber(value, i18n.language);
+  const left = daysLeft(user?.subscription?.expiresAt);
+  const trialDays = num(trial.data?.days ?? 0);
+
+  const beginTrial = () =>
+    startTrial.mutate(undefined, {
+      onSuccess: () => toast.add(t("trial.started", { days: trialDays }), "success"),
+      onError: (error) => toast.add(getErrorMessage(error, t("trial.failed")), "error"),
+    });
 
   return (
     <div className="max-w-2xl space-y-6">
@@ -97,7 +110,10 @@ export default function BillingPage() {
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <p className="text-sm text-muted">{t("billing.currentPlan")}</p>
-              <p className="text-xl font-bold">{isPremium ? t("dashboardNav.premium") : t("dashboardNav.free")}</p>
+              <p className="text-xl font-bold">
+                {onTrial ? t("trial.active") : isPremium ? t("dashboardNav.premium") : t("dashboardNav.free")}
+              </p>
+              {onTrial && <p className="text-sm font-medium text-primary">{t("trial.daysLeft", { count: left, n: num(left) })}</p>}
             </div>
             <Badge variant={isPremium ? "premium" : "secondary"}>
               {t(`billing.status.${user?.subscription?.status || "active"}`, { defaultValue: user?.subscription?.status || "active" })}
@@ -105,16 +121,39 @@ export default function BillingPage() {
           </div>
           {user?.subscription?.expiresAt && (
             <p className="text-sm text-muted mt-2">
-              {t("billing.expires", { date: new Date(user.subscription.expiresAt).toLocaleDateString() })}
+              {onTrial
+                ? t("trial.endsOn", { date: new Date(user.subscription.expiresAt).toLocaleDateString(i18n.language === "bn" ? "bn-BD" : undefined) })
+                : t("billing.expires", { date: new Date(user.subscription.expiresAt).toLocaleDateString() })}
             </p>
           )}
         </CardContent>
       </Card>
 
-      {!isPremium && premiumPlan && (
+      {!isPremium && trial.data?.available && (
+        <Card className="border-green-300 bg-green-50/60 dark:border-green-900 dark:bg-green-950/20">
+          <CardContent className="space-y-3 pt-6">
+            <div className="flex items-start gap-3">
+              <Gift className="mt-0.5 h-6 w-6 shrink-0 text-green-700 dark:text-green-400" aria-hidden />
+              <div>
+                <h2 className="text-lg font-semibold">{t("trial.cardTitle", { days: trialDays })}</h2>
+                <p className="mt-1 text-sm text-muted">{t("trial.cardText")}</p>
+              </div>
+            </div>
+            <Button variant="gradient" className="w-full sm:w-auto" onClick={beginTrial} disabled={startTrial.isPending}>
+              {startTrial.isPending ? t("trial.starting") : t("trial.start", { days: trialDays })}
+            </Button>
+            <p className="text-xs text-muted">{t("trial.noPayment")}</p>
+          </CardContent>
+        </Card>
+      )}
+      {!isPremium && trial.data?.reason === "unverified" && (trial.data.days ?? 0) > 0 && (
+        <p className="rounded-lg border border-border p-3 text-sm text-muted">{t("trial.unverified")}</p>
+      )}
+
+      {(!isPremium || onTrial) && premiumPlan && (
         <Card className="border-primary">
           <CardHeader>
-            <CardTitle>{t("billing.upgradeTitle")}</CardTitle>
+            <CardTitle>{onTrial ? t("trial.keepTitle") : t("billing.upgradeTitle")}</CardTitle>
             <p className="text-3xl font-bold">
               {formatCurrency(yearly ? premiumPlan.priceYearly : premiumPlan.priceMonthly)}
               <span className="text-sm font-normal text-muted">

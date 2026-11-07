@@ -163,6 +163,40 @@ Other changes in this round: the six highest-demand guides are listed first, so 
 on every page; new guides are cross-linked from related existing guides; localized guide paths are now
 derived from `GUIDE_META`, so a new guide gets its `/bn` twin and hreflang links automatically.
 
+## Update 2026-11-08: third round, "free" and "best" modifiers
+
+Searched "best free cv maker bangladesh online", "free resume builder bangladesh no watermark pdf download",
+"ফ্রি সিভি মেকার অনলাইন বাংলা সিভি তৈরি", "best cv maker app for job in bangladesh 2026", "free cv template bangladesh
+download word pdf with photo" and "resume builder free trial premium no credit card". Same limits as before: **no volume
+numbers**, demand is estimated.
+
+- **"Best free CV maker Bangladesh" has no Bangladeshi builder ranking.** Results are global builders (Canva, Novoresume,
+  MyPerfectResume, ResumeLab, Freesumes, CapCut, Fotor), Shomvob's downloadable templates and a skill.jobs guide. Pages
+  answering the question honestly for Bangladesh can compete. → new guide `/best-free-cv-maker` (EN + BN), a checklist
+  of what to look for, the kinds of free tools and their trade-offs (no named competitor claims, which go stale), and a
+  plain statement of what our Free plan does and doesn't include.
+- **Searchers qualify "free" with "no watermark", "PDF download", "no sign up" and "no credit card".** Several results
+  warn about builders that are free to fill in but charge to download. Our Free plan downloads PDFs without payment but
+  with a small watermark line, so copy says "free PDF download", never "no watermark" for Free. "No card needed" is true
+  for the Free plan and the new **free Premium trial** (no payment details), so it goes in the home and pricing copy.
+- **"CV maker app" results are app-store listings** (BanglaCV, other BD CV apps). We are a web app, so we answer the intent
+  instead: FAQs on the home page and the new guide say no install is needed and how to add the site to the home screen.
+- **Bangla "ফ্রি সিভি মেকার" results are mostly English tools.** Bangla pages keep the advantage; the Bangla home title now
+  leads with "ফ্রি সিভি মেকার বিডি".
+
+| Page | Lang | Primary keyword | Secondary keywords | Intent |
+|---|---|---|---|---|
+| `/` | EN | free cv maker bd | free resume builder bangladesh, online cv maker free, cv builder, free cv download pdf | T |
+| `/bn` | BN | ফ্রি সিভি মেকার | ফ্রি সিভি তৈরি, অনলাইনে সিভি তৈরি, সিভি বানানোর অ্যাপ | T |
+| `/best-free-cv-maker` | EN | best free cv maker bangladesh | best cv maker app, free resume builder no watermark, completely free cv maker | C |
+| `/bn/best-free-cv-maker` | BN | সেরা ফ্রি সিভি মেকার | ফ্রি সিভি মেকার অ্যাপ, বাংলা সিভি ফ্রি | C |
+| `/pricing` | EN/BN | free cv maker plan | free trial, premium free trial, no card | C |
+| `/templates` | EN/BN | free cv templates bangladesh | ফ্রি সিভি টেমপ্লেট, ats cv template free | C/T |
+
+Copy changes in this round: home title/description/hero and four FAQs (really free, best free CV maker, free trial,
+app), pricing title/description/badge for the free trial, "Free CV templates" title on the templates page, and the new
+guide listed third so it appears in every page footer.
+
 ## After launch
 
 - Check Search Console every week for queries with impressions but CTR under 2%, and rewrite those

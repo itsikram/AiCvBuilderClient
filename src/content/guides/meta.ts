@@ -7,6 +7,7 @@ export const GUIDE_META: GuideMeta[] = [
     "updated": "2026-10-19",
     "ctaHref": "/register",
     "related": [
+      "best-free-cv-maker",
       "fresher-cv-format",
       "cv-format-pdf-download",
       "government-job-cv",
@@ -30,6 +31,7 @@ export const GUIDE_META: GuideMeta[] = [
     "updated": "2026-11-05",
     "ctaHref": "/register",
     "related": [
+      "best-free-cv-maker",
       "cv-format-bangladesh",
       "fresher-cv-format",
       "ats-friendly-cv"
@@ -45,6 +47,29 @@ export const GUIDE_META: GuideMeta[] = [
       "description": "চাকরির জন্য সিভি ফরমেট pdf: কপি করার মতো সিভি নমুনা, Word নাকি PDF, আর ফ্রি টেমপ্লেটে তথ্য দিয়ে মোবাইলেই সিভি পিডিএফ ডাউনলোডের নিয়ম।",
       "h1": "সিভি ফরমেট pdf: চাকরির জন্য ফ্রি সিভি নমুনা",
       "label": "সিভি ফরমেট pdf"
+    }
+  },
+  {
+    "slug": "best-free-cv-maker",
+    "updated": "2026-11-08",
+    "ctaHref": "/register",
+    "related": [
+      "cv-format-bangladesh",
+      "cv-format-pdf-download",
+      "ats-friendly-cv",
+      "fresher-cv-format"
+    ],
+    "en": {
+      "title": "Best Free CV Maker in Bangladesh (2026): How to Choose",
+      "description": "What makes the best free CV maker for jobs in Bangladesh: BD format, Bangla, free PDF download, ATS and mobile. A checklist, honest pros and cons and FAQs.",
+      "h1": "Best Free CV Maker for Bangladesh: How to Choose",
+      "label": "Best free CV maker"
+    },
+    "bn": {
+      "title": "সেরা ফ্রি সিভি মেকার ২০২৬ – কীভাবে বেছে নেবেন",
+      "description": "বাংলাদেশে চাকরির জন্য সেরা ফ্রি সিভি মেকার কীভাবে চিনবেন: বাংলাদেশি ফরমেট, বাংলা ভাষা, ফ্রি পিডিএফ, ATS ও মোবাইল। চেকলিস্ট, সুবিধা-অসুবিধা ও প্রশ্নোত্তর।",
+      "h1": "সেরা ফ্রি সিভি মেকার: কীভাবে বেছে নেবেন",
+      "label": "সেরা ফ্রি সিভি মেকার"
     }
   },
   {
