@@ -50,6 +50,13 @@ const CareerCoachPage = lazy(() => import("@/pages/dashboard/CareerCoachPage"));
 const InterviewCoachPage = lazy(() => import("@/pages/dashboard/InterviewCoachPage"));
 const BillingPage = lazy(() => import("@/pages/dashboard/BillingPage"));
 const SettingsPage = lazy(() => import("@/pages/dashboard/SettingsPage"));
+const ShopPage = lazy(() => import("@/pages/dashboard/ShopPage"));
+const OrdersPage = lazy(() => import("@/pages/dashboard/OrdersPage"));
+const ScreeningPage = lazy(() => import("@/pages/dashboard/ScreeningPage"));
+const AdminOrdersPage = lazy(() => import("@/pages/admin/OrdersPage"));
+const AdminProductsPage = lazy(() => import("@/pages/admin/ProductsPage"));
+const AdminAccessCodesPage = lazy(() => import("@/pages/admin/AccessCodesPage"));
+const AdminJobCircularsPage = lazy(() => import("@/pages/admin/JobCircularsPage"));
 const OverviewPage = lazy(() => import("@/pages/admin/OverviewPage"));
 const UsersPage = lazy(() => import("@/pages/admin/UsersPage"));
 const ActivityPage = lazy(() => import("@/pages/admin/ActivityPage"));
@@ -152,12 +159,19 @@ export function AppRoutes() {
           <Route path="interview" element={page(<InterviewCoachPage />)} />
           <Route path="billing" element={page(<BillingPage />)} />
           <Route path="settings" element={page(<SettingsPage />)} />
+          <Route path="shop" element={page(<ShopPage />)} />
+          <Route path="orders" element={page(<OrdersPage />)} />
+          <Route path="screening" element={page(<ScreeningPage />)} />
         </Route>
 
         <Route path="admin" element={page(<ProtectedRoute adminOnly><AdminLayout /></ProtectedRoute>)}>
           <Route index element={page(<OverviewPage />)} />
           <Route path="users" element={page(<UsersPage />)} />
           <Route path="activity" element={page(<ActivityPage />)} />
+          <Route path="orders" element={page(<AdminOrdersPage />)} />
+          <Route path="products" element={page(<AdminProductsPage />)} />
+          <Route path="access-codes" element={page(<AdminAccessCodesPage />)} />
+          <Route path="jobs" element={page(<AdminJobCircularsPage />)} />
           <Route path="bkash-payments" element={page(<BkashPaymentsPage />)} />
           <Route path="plans" element={page(<PlansPage />)} />
           <Route path="content-manager" element={page(<PageContentManagerPage />)} />

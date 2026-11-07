@@ -12,6 +12,7 @@ import api, { getErrorMessage } from "@/lib/api";
 import { useAuthStore } from "@/store/authStore";
 import { useToast } from "@/components/ui/toast";
 import { localNumber, useStartTrial } from "@/lib/trial";
+import { trackEvent } from "@/lib/analytics";
 import type { SubscriptionPlan } from "@/types";
 
 export default function RegisterPage() {
@@ -30,7 +31,8 @@ export default function RegisterPage() {
   const days = localNumber(trialDays, i18n.language);
   const { setAuth } = useAuthStore();
   const toast = useToast();
-  const [form, setForm] = useState({ name: "", email: "", password: "", referralCode: "" });
+  // Invite links are /register?ref=CODE
+  const [form, setForm] = useState(() => ({ name: "", email: "", password: "", referralCode: (params.get("ref") ?? "").toUpperCase().slice(0, 32) }));
   const [loading, setLoading] = useState(false);
   const [profilePicture, setProfilePicture] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -52,6 +54,7 @@ export default function RegisterPage() {
 
       const { data } = await api.post("/auth/register", formData);
       setAuth(data.data.user, data.data.accessToken);
+      trackEvent("sign_up", { method: "email", referred: Boolean(form.referralCode), trial: trialDays > 0 });
       if (trialDays > 0) {
         // The account exists either way; a refused trial (e.g. email not verified yet) is only a notice
         try {

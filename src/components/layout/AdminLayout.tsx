@@ -4,6 +4,10 @@ import { useQuery } from "@tanstack/react-query";
 import {
   Activity,
   ArrowLeft,
+  Briefcase,
+  KeyRound,
+  Package,
+  ShoppingBag,
   CreditCard,
   DollarSign,
   Edit3,
@@ -33,6 +37,8 @@ interface NavItem {
   icon: ComponentType<{ className?: string }>;
   /** Shows the number of bKash payments waiting for review */
   pendingPayments?: boolean;
+  /** Shows the number of paid service orders waiting to be delivered */
+  waitingOrders?: boolean;
 }
 
 const navGroups: Array<{ title: string; items: NavItem[] }> = [
@@ -47,12 +53,21 @@ const navGroups: Array<{ title: string; items: NavItem[] }> = [
     ],
   },
   {
+    title: "Sales",
+    items: [
+      { to: "/admin/orders", label: "Orders", icon: Package, waitingOrders: true },
+      { to: "/admin/products", label: "Products", icon: ShoppingBag },
+      { to: "/admin/access-codes", label: "Access codes", icon: KeyRound },
+    ],
+  },
+  {
     title: "Content",
     items: [
       { to: "/admin/templates", label: "Templates", icon: Palette },
       { to: "/admin/content-manager", label: "Page content", icon: Edit3 },
       { to: "/admin/menu-manager", label: "Menu manager", icon: LinkIcon },
       { to: "/admin/blog", label: "Blog", icon: FileText },
+      { to: "/admin/jobs", label: "Job circulars", icon: Briefcase },
     ],
   },
   { title: "System", items: [{ to: "/admin/settings", label: "Settings", icon: Settings }] },
@@ -97,6 +112,12 @@ export function AdminLayout() {
     refetchInterval: 60_000,
   });
   const pendingCount = pending.data?.payments.length ?? 0;
+  const orders = useQuery({
+    queryKey: ["admin-orders", "waiting"],
+    queryFn: async () => (await api.get("/admin/orders")).data.data as { waiting: number },
+    refetchInterval: 60_000,
+  });
+  const waitingCount = orders.data?.waiting ?? 0;
 
   const current = allItems.find((item) => isActive(location.pathname, item.to));
 
@@ -187,7 +208,7 @@ export function AdminLayout() {
                 <ul className="space-y-1">
                   {group.items.map((item) => {
                     const active = isActive(location.pathname, item.to);
-                    const badge = item.pendingPayments && pendingCount > 0 ? pendingCount : 0;
+                    const badge = item.pendingPayments ? pendingCount : item.waitingOrders ? waitingCount : 0;
                     return (
                       <li key={item.to}>
                         <Link

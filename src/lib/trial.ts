@@ -67,6 +67,14 @@ export const useRefreshUser = () => {
   });
   useEffect(() => {
     if (!data) return;
-    setUser({ subscription: data.subscription, role: data.role, isEmailVerified: data.isEmailVerified, usage: data.usage });
+    setUser({
+      subscription: data.subscription,
+      role: data.role,
+      isEmailVerified: data.isEmailVerified,
+      usage: data.usage,
+      credits: data.credits,
+      referral: data.referral,
+      referralCode: data.referralCode,
+    });
   }, [data, setUser]);
 };

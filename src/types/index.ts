@@ -215,6 +215,63 @@ export interface SubscriptionPlan {
   };
   /** Days of free trial (the Premium plan's is offered to users); 0 or missing: none */
   trialDays?: number;
+  /** Price of a 7-day pass; 0 or missing: no 7-day option */
+  priceWeekly?: number;
+}
+
+/** Something sold once (Admin -> Products): credit packs or a service done by a person. */
+export interface Product {
+  _id: string;
+  slug: string;
+  name: string;
+  description: string;
+  kind: "pdf_credits" | "ai_credits" | "screening_credits" | "service";
+  price: number;
+  currency: string;
+  quantity: number;
+  validDays: number;
+  deliveryDays: number;
+  isActive: boolean;
+  sortOrder: number;
+}
+
+export interface Order {
+  _id: string;
+  status: "awaiting_payment" | "paid" | "in_progress" | "delivered" | "cancelled";
+  amount: number;
+  currency: string;
+  notes?: string | null;
+  resumeId?: string | null;
+  deliveryMessage?: string | null;
+  deliveredAt?: string | null;
+  createdAt: string;
+  product: Product;
+  user?: { _id: string; name: string; email?: string } | null;
+}
+
+export interface JobCircular {
+  _id: string;
+  slug: string;
+  title: string;
+  organization: string;
+  category: "government" | "bank" | "private" | "ngo" | "international" | "other";
+  language: "en" | "bn";
+  summary: string;
+  vacancies?: number | null;
+  location?: string | null;
+  salary?: string | null;
+  education?: string | null;
+  applyStart?: string | null;
+  deadline?: string | null;
+  applyUrl?: string | null;
+  sourceUrl?: string | null;
+  photoSpec?: string | null;
+  isPublished: boolean;
+  publishedAt?: string | null;
+  createdAt: string;
+  updatedAt: string;
+  /** Still accepting applications */
+  isOpen: boolean;
 }
 
 export interface BlogPost {

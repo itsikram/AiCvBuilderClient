@@ -15,6 +15,8 @@ import { formatDate } from "@/lib/utils";
 import { daysLeft, localNumber, useStartTrial, useTrial } from "@/lib/trial";
 import { getErrorMessage } from "@/lib/api";
 import { useToast } from "@/components/ui/toast";
+import { InviteCard } from "@/components/InviteCard";
+import { trackEvent } from "@/lib/analytics";
 
 export default function DashboardPage() {
   const { t, i18n } = useTranslation();
@@ -78,7 +80,10 @@ export default function DashboardPage() {
                 disabled={startTrial.isPending}
                 onClick={() =>
                   startTrial.mutate(undefined, {
-                    onSuccess: () => toast.add(t("trial.started", { days: trialDays }), "success"),
+                    onSuccess: () => {
+                      trackEvent("trial_start");
+                      toast.add(t("trial.started", { days: trialDays }), "success");
+                    },
                     onError: (error) => toast.add(getErrorMessage(error, t("trial.failed")), "error"),
                   })
                 }
@@ -93,6 +98,8 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
       )}
+
+      <InviteCard />
 
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         <Card>

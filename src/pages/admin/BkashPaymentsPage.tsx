@@ -19,7 +19,9 @@ interface BkashPayment {
   _id: string;
   userId: { _id: string; name: string; email: string };
   planSlug: string;
-  billingCycle: "monthly" | "yearly";
+  /** Null for a product purchase (then productSlug is set) */
+  billingCycle: "weekly" | "monthly" | "yearly" | null;
+  productSlug?: string | null;
   amount: number;
   status: "pending" | "completed" | "failed" | "cancelled" | "refunded";
   transactionId: string;
@@ -193,13 +195,14 @@ export default function BkashPaymentsPage() {
         </CardHeader>
         <CardContent>
           {paymentsLoading ? (
-            <SkeletonTable rows={6} cols={6} />
+            <SkeletonTable rows={6} cols={7} />
           ) : paymentsData?.payments.length ? (
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-border">
                     <th className="text-left py-3 px-2">User</th>
+                    <th className="text-left py-3 px-2">For</th>
                     <th className="text-left py-3 px-2">Amount</th>
                     <th className="text-left py-3 px-2">Sent To</th>
                     <th className="text-left py-3 px-2">Transaction ID</th>
@@ -214,6 +217,11 @@ export default function BkashPaymentsPage() {
                       <td className="py-3 px-2">
                         <div className="font-medium">{payment.userId.name}</div>
                         <div className="text-muted text-xs">{payment.userId.email}</div>
+                      </td>
+                      <td className="py-3 px-2">
+                        {payment.productSlug
+                          ? payment.productSlug
+                          : `Premium ${{ weekly: "7-day", monthly: "30-day", yearly: "1-year" }[payment.billingCycle ?? "monthly"]} pass`}
                       </td>
                       <td className="py-3 px-2">{formatCurrency(payment.amount)}</td>
                       <td className="py-3 px-2">{payment.providerData?.submittedBkashNumber || "—"}</td>

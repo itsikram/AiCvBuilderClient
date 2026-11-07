@@ -688,7 +688,13 @@
       "print": "Print instead",
       "watermarkNote": "PDFs on the free plan end with a small “Created with AI CV Builder BD” line. Premium removes it.",
       "ready": "Ready to apply?",
-      "readyText": "Check the preview, then download your PDF."
+      "readyText": "Check the preview, then download your PDF.",
+      "useCredit_one": "Download without watermark (uses your 1 credit)",
+      "useCredit_other": "Download without watermark (uses 1 of {{count}} credits)",
+      "clean": "Download without watermark",
+      "withWatermark": "Download with watermark",
+      "buyCredit": "Remove it for one PDF (৳39) or get Premium.",
+      "creditFailed": "Couldn’t use your PDF credit."
     },
     "share": {
       "button": "Share",
@@ -868,7 +874,10 @@
     "seoTitle": "Dashboard – AI CV Builder BD",
     "seoDescription": "Your private AI CV Builder BD workspace for CVs, cover letters and billing.",
     "coach": "AI career coach",
-    "interview": "Interview coach"
+    "interview": "Interview coach",
+    "shop": "Extras",
+    "orders": "My orders",
+    "screening": "CV screening"
   },
   "settings": {
     "profile": "Profile",
@@ -939,7 +948,24 @@
     "initiated": "Payment started",
     "failed": "Payment couldn't be started. Please try again.",
     "bkashSubmitted": "Payment submitted. We'll activate Premium after review.",
-    "bkashFailed": "Couldn't submit your bKash payment."
+    "bkashFailed": "Couldn't submit your bKash payment.",
+    "endsOn": "Premium ends on {{date}}. Buy another pass any time: its days are added after this date.",
+    "extendTitle": "Add more Premium days",
+    "passTitle": "Choose a pass",
+    "passNote": "Passes don’t renew by themselves, so you’re never charged again without asking. A new pass adds its days after your current end date.",
+    "pass": {
+      "weekly": "7 days",
+      "monthly": "30 days",
+      "yearly": "1 year"
+    },
+    "redeemTitle": "Have a code from your university or coaching centre?",
+    "redeemText": "Enter it to get Premium days from them.",
+    "redeemPlaceholder": "e.g. DU-7K3Q9X",
+    "redeem": "Redeem",
+    "redeemFailed": "That code didn’t work.",
+    "extrasTitle": "Need just one thing?",
+    "extrasText": "Buy one watermark-free PDF, an AI pack for viva practice, or expert help, without Premium.",
+    "extrasLink": "See extras"
   },
   "interview": {
     "title": "AI interview coach",
@@ -1055,5 +1081,71 @@
     "dashboardOffer": "Try Premium free for {{days}} days: unlimited CVs, every template and more AI help.",
     "dashboardActive": "You are on a free Premium trial ({{left}}).",
     "failed": "Your trial couldn’t be started."
+  },
+  "shop": {
+    "title": "Extras",
+    "subtitle": "Pay once for exactly what you need. No Premium needed.",
+    "myOrders": "My orders",
+    "yourCredits": "You have {{pdf}} watermark-free PDF(s), {{ai}} extra AI requests and {{screening}} CV screening(s).",
+    "creditsTitle": "Use without Premium",
+    "servicesTitle": "Expert help",
+    "employersTitle": "For employers",
+    "employersText": "Hiring? Score candidate CVs against your job description with AI.",
+    "openScreening": "Open CV screening",
+    "delivery": "Delivered within {{n}} day(s)",
+    "validFor": "Use within {{n}} days",
+    "noExpiry": "Never expires",
+    "buy": "Buy",
+    "notesLabel": "What do you need?",
+    "notesPlaceholder": "e.g. I’m applying for a bank MTO job. Please check my objective and experience.",
+    "resumeLabel": "Which CV is it about?",
+    "noResume": "No CV (I’ll describe it above)"
+  },
+  "orders": {
+    "title": "My orders",
+    "subtitle": "Extras you bought and their delivery.",
+    "shop": "Buy extras",
+    "empty": "No orders yet.",
+    "awaitingHelp": "We’re checking your bKash payment. This usually takes a few hours.",
+    "delivery": "Our reply",
+    "status": {
+      "awaiting_payment": "Checking payment",
+      "paid": "Paid",
+      "in_progress": "In progress",
+      "delivered": "Delivered",
+      "cancelled": "Cancelled"
+    }
+  },
+  "invite": {
+    "title": "Invite friends, get {{days}} days of Premium",
+    "text": "Every {{every}} friends who sign up with your link and make a CV earn you {{days}} days of Premium.",
+    "linkLabel": "Your invite link",
+    "copy": "Copy",
+    "copied": "Copied",
+    "shareText": "I’m making my CV with this free CV maker for Bangladesh (Bangla & English, free PDF). Try it: {{link}}",
+    "progress": "{{signups}} signed up, {{qualified}} made a CV. {{left}} more for your next reward."
+  },
+  "screening": {
+    "title": "CV screening",
+    "intro": "For employers: paste a job description, upload candidate CVs, and get them ranked by how well they match.",
+    "credits": "{{n}} screening credit(s) left",
+    "buy": "Buy screening credits",
+    "fairness": "AI scores are a starting point, not a decision: read the CVs you shortlist. The AI is told to ignore name, gender, age, religion and other details unrelated to the job. We keep only the scores and notes, not the CVs, and delete each screening after {{days}} days.",
+    "back": "All screenings",
+    "upload": "Upload CVs (PDF or Word)",
+    "uploading": "Scoring {{done}} of {{total}}…",
+    "uploadHelp": "You can choose several files at once. Each CV uses one credit.",
+    "noCredits": "You have no credits left. Buy a screening pack first.",
+    "noCandidates": "No CVs scored yet.",
+    "strengths": "Matches",
+    "gaps": "Not shown",
+    "newTitle": "New screening",
+    "jobTitle": "Job title, e.g. Accounts Executive",
+    "jdPlaceholder": "Paste the full job description or circular",
+    "create": "Create screening",
+    "summary": "{{n}} CV(s) scored · deleted on {{date}}",
+    "open": "Open",
+    "deleteTitle": "Delete this screening?",
+    "deleteText": "Its scores are deleted for good."
   }
 }

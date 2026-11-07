@@ -298,7 +298,10 @@ function Editor({ resume }: { resume: Resume }) {
   });
 
   const strength = useMemo(() => completeness(doc.content), [doc.content]);
-  const watermark = quota.data?.watermarkPdf ?? user?.subscription?.plan !== "premium";
+  // A PDF credit turns the watermark off for one download (DownloadDialog)
+  const [unlocked, setUnlocked] = useState(false);
+  const freePlan = quota.data?.watermarkPdf ?? user?.subscription?.plan !== "premium";
+  const watermark = freePlan && !unlocked;
   const hasContent = useMemo(() => SECTION_IDS.some((id) => id !== "languages" && id !== "personalDetails" && sectionHasContent(id, doc.content)), [doc.content]);
   const sectionProps = { content: doc.content, setContent, language: doc.language };
 
@@ -561,6 +564,15 @@ function Editor({ resume }: { resume: Resume }) {
         title={doc.title}
         watermark={watermark}
         saveNow={draft.saveNow}
+        freePlan={freePlan}
+        credits={quota.data?.pdfCredits ?? 0}
+        unlocked={unlocked}
+        onUnlock={async () => {
+          await api.post("/payments/watermark-free", { resumeId: resume._id });
+          setUnlocked(true);
+          void quota.refetch();
+        }}
+        onRelock={() => setUnlocked(false)}
       />
     </div>
   );

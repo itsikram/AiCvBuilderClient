@@ -16,6 +16,11 @@ export interface AiQuota {
   usedThisMonth: number;
   resetsAt: string;
   watermarkPdf: boolean;
+  /** Extra requests from an AI pack, used once the limits above are reached */
+  bonusRequests?: number;
+  bonusExpiresAt?: string;
+  /** Watermark-free PDF downloads bought one at a time */
+  pdfCredits?: number;
 }
 
 export const AI_QUOTA_KEY = ["ai-quota"] as const;
@@ -36,7 +41,7 @@ export const requestsLeft = (q: AiQuota | undefined): number | null => {
     q.monthlyLimit === -1 ? Infinity : q.monthlyLimit - q.usedThisMonth,
   ];
   const left = Math.min(...caps);
-  return Number.isFinite(left) ? Math.max(0, left) : null;
+  return Number.isFinite(left) ? Math.max(0, left) + (q.bonusRequests ?? 0) : null;
 };
 
 /**

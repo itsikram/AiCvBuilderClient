@@ -22,6 +22,10 @@ export interface User {
     resumesCreated: number;
     aiRequestsThisMonth: number;
   };
+  /** Bought one at a time (Extras): watermark-free PDFs, AI pack requests, CV screenings */
+  credits?: { pdf: number; ai: number; aiExpiresAt?: string; screening: number };
+  /** Invite progress; every rewardEvery friends who make a CV earn rewardDays of Premium */
+  referral?: { code: string; signups: number; qualified: number; rewardEvery: number; rewardDays: number; toNextReward: number };
 }
 
 interface AuthState {

@@ -1,5 +1,5 @@
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
-import { Bot, ChevronRight, CreditCard, FileText, Languages, LayoutDashboard, LogOut, Mail, Menu, MessagesSquare, Settings, Shield, Sparkles, Target, X } from "lucide-react";
+import { Bot, Briefcase, ChevronRight, CreditCard, FileText, Languages, LayoutDashboard, LogOut, Mail, Menu, MessagesSquare, Package, Settings, Shield, ShoppingBag, Sparkles, Target, X } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useAuthStore } from "@/store/authStore";
@@ -19,6 +19,9 @@ const navItems = [
   { to: "/dashboard/coach", icon: Bot, key: "coach" },
   { to: "/dashboard/interview", icon: MessagesSquare, key: "interview" },
   { to: "/dashboard/billing", icon: CreditCard, key: "billing" },
+  { to: "/dashboard/shop", icon: ShoppingBag, key: "shop" },
+  { to: "/dashboard/orders", icon: Package, key: "orders" },
+  { to: "/dashboard/screening", icon: Briefcase, key: "screening" },
   { to: "/dashboard/settings", icon: Settings, key: "settings" },
 ] as const;
 
