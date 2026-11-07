@@ -69,7 +69,7 @@
     "forgotPassword": "Forgot password?",
     "noAccount": "Don't have an account?",
     "hasAccount": "Already have an account?",
-    "orContinueWith": "Or continue with",
+    "orEmail": "or use your email",
     "registerSubtitle": "Start free. Your first CVs are included.",
     "loginSubtitle": "Log in to continue building your CV.",
     "photo": "Profile picture (optional)",
@@ -81,7 +81,8 @@
     "registerFailed": "Couldn't create your account. Please try again.",
     "welcome": "Welcome back!",
     "loginFailed": "Couldn't log you in. Check your email and password.",
-    "googleFailed": "Google sign-in failed. Please try again."
+    "googleFailed": "Google sign-in failed. Please try again.",
+    "googleCreated": "Account created. Welcome!"
   },
   "dashboard": {
     "welcome": "Welcome back",

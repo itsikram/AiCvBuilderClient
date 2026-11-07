@@ -13,6 +13,7 @@ import { useAuthStore } from "@/store/authStore";
 import { useToast } from "@/components/ui/toast";
 import { localNumber, useStartTrial } from "@/lib/trial";
 import { trackEvent } from "@/lib/analytics";
+import { GoogleSignIn, type GoogleSignInResult } from "@/components/auth/GoogleSignIn";
 import type { SubscriptionPlan } from "@/types";
 
 export default function RegisterPage() {
@@ -37,6 +38,33 @@ export default function RegisterPage() {
   const [profilePicture, setProfilePicture] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
+  /** After sign-up by either method: analytics, the free trial when asked for, then the dashboard. */
+  const welcomeNewUser = async (method: "email" | "google", createdMessage: string) => {
+    trackEvent("sign_up", { method, referred: Boolean(form.referralCode), trial: trialDays > 0 });
+    if (trialDays > 0) {
+      // The account exists either way; a refused trial (e.g. email not verified yet) is only a notice
+      try {
+        await startTrial.mutateAsync();
+        trackEvent("trial_start");
+        toast.add(t("trial.started", { days }), "success");
+      } catch (trialError) {
+        toast.add(createdMessage, "success");
+        toast.add(getErrorMessage(trialError, t("trial.failed")), "info");
+      }
+    } else {
+      toast.add(createdMessage, "success");
+    }
+    navigate("/dashboard");
+  };
+
+  const handleGoogle = async ({ user, accessToken, isNewUser }: GoogleSignInResult) => {
+    setAuth(user, accessToken);
+    if (isNewUser) return welcomeNewUser("google", t("auth.googleCreated"));
+    // This Google account already has an account here, so it was a log-in
+    toast.add(t("auth.welcome"), "success");
+    navigate(wantsTrial ? "/dashboard/billing" : "/dashboard");
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -54,20 +82,7 @@ export default function RegisterPage() {
 
       const { data } = await api.post("/auth/register", formData);
       setAuth(data.data.user, data.data.accessToken);
-      trackEvent("sign_up", { method: "email", referred: Boolean(form.referralCode), trial: trialDays > 0 });
-      if (trialDays > 0) {
-        // The account exists either way; a refused trial (e.g. email not verified yet) is only a notice
-        try {
-          await startTrial.mutateAsync();
-          toast.add(t("trial.started", { days }), "success");
-        } catch (trialError) {
-          toast.add(t("auth.created"), "success");
-          toast.add(getErrorMessage(trialError, t("trial.failed")), "info");
-        }
-      } else {
-        toast.add(t("auth.created"), "success");
-      }
-      navigate("/dashboard");
+      await welcomeNewUser("email", t("auth.created"));
     } catch (err: unknown) {
       toast.add(getErrorMessage(err, t("auth.registerFailed")), "error");
     } finally {
@@ -104,6 +119,9 @@ export default function RegisterPage() {
                 {t("trial.registerNote", { days })}
               </p>
             )}
+            <div className="mb-4">
+              <GoogleSignIn mode="signup" referralCode={form.referralCode} onSignedIn={handleGoogle} />
+            </div>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <p className="text-sm font-medium">{t("auth.photo")}</p>

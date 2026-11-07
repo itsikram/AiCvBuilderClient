@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { GoogleLogin, GoogleOAuthProvider } from "@react-oauth/google";
 import { Button } from "@/components/ui/button";
 import { TextField } from "@/components/editor/fields";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -9,7 +8,8 @@ import { SEO } from "@/components/seo/SEO";
 import api, { getErrorMessage } from "@/lib/api";
 import { useAuthStore } from "@/store/authStore";
 import { useToast } from "@/components/ui/toast";
-import { usePublicConfig } from "@/lib/publicConfig";
+import { trackEvent } from "@/lib/analytics";
+import { GoogleSignIn, type GoogleSignInResult } from "@/components/auth/GoogleSignIn";
 
 export default function LoginPage() {
   const { t } = useTranslation();
@@ -17,7 +17,6 @@ export default function LoginPage() {
   const location = useLocation();
   const { setAuth } = useAuthStore();
   const toast = useToast();
-  const { googleClientId } = usePublicConfig();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -39,14 +38,12 @@ export default function LoginPage() {
     }
   };
 
-  const handleGoogle = async (credential: string) => {
-    try {
-      const { data } = await api.post("/auth/google", { credential });
-      setAuth(data.data.user, data.data.accessToken);
-      navigate(from);
-    } catch {
-      toast.add(t("auth.googleFailed"), "error");
-    }
+  // Google signs people up too: a new Google account gets an account here straight away
+  const handleGoogle = ({ user, accessToken, isNewUser }: GoogleSignInResult) => {
+    setAuth(user, accessToken);
+    if (isNewUser) trackEvent("sign_up", { method: "google" });
+    toast.add(isNewUser ? t("auth.googleCreated") : t("auth.welcome"), "success");
+    navigate(from);
   };
 
   return (
@@ -59,6 +56,7 @@ export default function LoginPage() {
             <CardDescription>{t("auth.loginSubtitle")}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
+            <GoogleSignIn mode="signin" onSignedIn={handleGoogle} />
             <form onSubmit={handleSubmit} className="space-y-4">
               <TextField label={t("auth.email")} type="email" value={email} onChange={setEmail} required autoComplete="email" inputMode="email" />
               <TextField label={t("auth.password")} type="password" value={password} onChange={setPassword} required autoComplete="current-password" />
@@ -71,19 +69,6 @@ export default function LoginPage() {
                 {loading ? t("common.loading") : t("nav.login")}
               </Button>
             </form>
-
-            {/* The provider loads Google's script, so it lives here (the only place Google Sign-In
-                is used) rather than around the app, where every page would download it. */}
-            {googleClientId && (
-              <GoogleOAuthProvider clientId={googleClientId}>
-                <p className="text-center text-sm text-muted">{t("auth.orContinueWith")}</p>
-                <GoogleLogin
-                  onSuccess={(res) => res.credential && handleGoogle(res.credential)}
-                  onError={() => toast.add("Google login failed", "error")}
-                  width="100%"
-                />
-              </GoogleOAuthProvider>
-            )}
 
             <p className="text-center text-sm">
               {t("auth.noAccount")}{" "}

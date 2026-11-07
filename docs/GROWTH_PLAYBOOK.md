@@ -8,6 +8,7 @@ isn't code. Prices below are the seeded defaults; they are starting points to te
 | What | Where | Why |
 |---|---|---|
 | SMTP email | Admin → Settings → Email (SMTP), then **Send test email** | Reminders, receipts, order deliveries and admin alerts are silent without it |
+| Google sign-in | Google Cloud Console → Credentials → OAuth client ID (Web), with `https://aicvbuilderbd.online` and `https://www.aicvbuilderbd.online` as authorised JavaScript origins; paste the client ID in Admin → Settings → Google Sign-In | "Sign up with Google" on the sign-up and login pages: one tap, no password, email already verified |
 | bKash number | Admin → bKash payments | Manual bKash checkout for passes and extras |
 | SSLCommerz | Admin → Settings → SSLCommerz (after approval, see §3) | Card and mobile banking without manual review |
 | Google Analytics | `VITE_GA_MEASUREMENT_ID` in `.env.production`, rebuild | Mark `sign_up`, `trial_start`, `purchase_request` as key events in GA4 |

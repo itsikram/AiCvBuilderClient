@@ -66,7 +66,7 @@ to the API on http://localhost:5000 (override with `API_PROXY_TARGET`), so run t
 |----------|---------|
 | `VITE_API_URL` | API base URL. Absolute in production (`.env.production`), `/api/v1` in dev |
 | `VITE_SITE_URL` | Canonical public origin for canonical, hreflang, Open Graph and sitemap URLs |
-| `VITE_GOOGLE_CLIENT_ID` | Optional Google Sign-In web client ID |
+| `VITE_GOOGLE_CLIENT_ID` | Optional Google Sign-In web client ID. Admin → Settings → Google Sign-In overrides it; with neither, the "Sign in/up with Google" buttons are hidden |
 | `VITE_GA_MEASUREMENT_ID` | Optional GA4 ID, loaded only after analytics consent |
 | `VITE_ADSENSE_CLIENT`, `VITE_ADSENSE_SLOT` | Optional AdSense publisher ID (`ca-pub-…`) and ad slot: ads on guides and job pages after consent; the build adds `ads.txt` and the CSP hosts |
 
