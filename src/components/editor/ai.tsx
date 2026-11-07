@@ -8,6 +8,21 @@ import { contentForAi, type CvLang } from "@/lib/resume/model";
 import { cn } from "@/lib/utils";
 import type { ResumeContent } from "@/types";
 
+/** Circular score; `max` is 100 for match scores, 10 for interview answers. */
+export function ScoreRing({ score, max = 100 }: { score: number; max?: number }) {
+  const ratio = Math.max(0, Math.min(1, score / max));
+  const color = ratio >= 0.75 ? "#16a34a" : ratio >= 0.5 ? "#d97706" : "#dc2626";
+  return (
+    <div className="relative h-20 w-20 shrink-0" role="img" aria-label={`${score}/${max}`}>
+      <svg viewBox="0 0 36 36" className="h-20 w-20 -rotate-90">
+        <circle cx="18" cy="18" r="15.9" fill="none" stroke="currentColor" className="text-secondary" strokeWidth="3.5" />
+        <circle cx="18" cy="18" r="15.9" fill="none" stroke={color} strokeWidth="3.5" strokeDasharray={`${ratio * 100} 100`} strokeLinecap="round" />
+      </svg>
+      <span className="absolute inset-0 flex items-center justify-center text-xl font-bold">{score}</span>
+    </div>
+  );
+}
+
 /** "AI requests left today: 7 of 10" */
 export function QuotaNote({ className }: { className?: string }) {
   const { t } = useTranslation();

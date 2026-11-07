@@ -48,6 +48,12 @@ export const useAuthStore = create<AuthState>()(
         })),
       logout: () => {
         localStorage.removeItem("accessToken");
+        // AI coach chats and interview practice are kept for the tab only; clear them on a shared computer
+        try {
+          sessionStorage.clear();
+        } catch {
+          /* storage unavailable */
+        }
         set({ user: null, accessToken: null, isAuthenticated: false });
       },
     }),
