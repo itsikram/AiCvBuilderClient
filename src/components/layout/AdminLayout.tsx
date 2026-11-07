@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type ComponentType } from "react";
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import {
+  Activity,
   ArrowLeft,
   CreditCard,
   DollarSign,
@@ -40,6 +41,7 @@ const navGroups: Array<{ title: string; items: NavItem[] }> = [
     title: "Customers",
     items: [
       { to: "/admin/users", label: "Users", icon: Users },
+      { to: "/admin/activity", label: "User activity", icon: Activity },
       { to: "/admin/bkash-payments", label: "bKash payments", icon: CreditCard, pendingPayments: true },
       { to: "/admin/plans", label: "Subscription plans", icon: DollarSign },
     ],

@@ -35,6 +35,7 @@ interface DashboardStats {
 const quickActions = [
   { to: "/admin/blog", title: "Manage blog", text: "Create and edit blog posts", icon: FileText },
   { to: "/admin/users", title: "Manage users", text: "View users and change plans", icon: Users },
+  { to: "/admin/activity", title: "User activity", text: "Sign-ups, CVs, AI use and payments", icon: Activity },
   { to: "/admin/content-manager", title: "Page content", text: "Edit page content", icon: Edit3 },
   { to: "/admin/templates", title: "Templates", text: "Manage CV templates", icon: Palette },
 ];
@@ -102,7 +103,12 @@ export default function OverviewPage() {
             ) : data?.recentUsers?.length ? (
               <div className="space-y-3">
                 {data.recentUsers.map((user) => (
-                  <div key={user._id} className="flex items-center justify-between gap-3 p-3 rounded-lg border border-border">
+                  <Link
+                    key={user._id}
+                    to={`/admin/activity?userId=${encodeURIComponent(user._id)}`}
+                    title="View this user's activity"
+                    className="flex items-center justify-between gap-3 p-3 rounded-lg border border-border transition-colors hover:border-primary"
+                  >
                     <div className="flex min-w-0 items-center gap-3">
                       <div className="h-10 w-10 shrink-0 rounded-full bg-primary/10 flex items-center justify-center">
                         <Users className="h-5 w-5 text-primary" />
@@ -124,7 +130,7 @@ export default function OverviewPage() {
                         {new Date(user.createdAt).toLocaleDateString()}
                       </p>
                     </div>
-                  </div>
+                  </Link>
                 ))}
               </div>
             ) : (
@@ -187,7 +193,7 @@ export default function OverviewPage() {
           <CardTitle>Quick Actions</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-4">
+          <div className="grid gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-5">
             {quickActions.map((action) => (
               <Link
                 key={action.to}

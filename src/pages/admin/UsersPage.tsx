@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -154,13 +155,18 @@ export default function UsersPage() {
                             </Button>
                           </div>
                         ) : (
-                          <Button size="sm" variant="outline" onClick={() => {
-                            setEditingUser(u._id);
-                            setSelectedPlan(u.subscription?.plan || "free");
-                            setExpiresAt(u.subscription?.expiresAt ? new Date(u.subscription.expiresAt).toISOString().split('T')[0] : "");
-                          }}>
-                            Change Plan
-                          </Button>
+                          <div className="flex gap-2">
+                            <Button size="sm" variant="outline" onClick={() => {
+                              setEditingUser(u._id);
+                              setSelectedPlan(u.subscription?.plan || "free");
+                              setExpiresAt(u.subscription?.expiresAt ? new Date(u.subscription.expiresAt).toISOString().split('T')[0] : "");
+                            }}>
+                              Change Plan
+                            </Button>
+                            <Button size="sm" variant="ghost" asChild>
+                              <Link to={`/admin/activity?userId=${encodeURIComponent(u._id)}`}>Activity</Link>
+                            </Button>
+                          </div>
                         )}
                       </td>
                     </tr>

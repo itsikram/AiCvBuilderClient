@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Save, AlertCircle, Eye, EyeOff, RotateCcw, X } from "lucide-react";
+import { Save, AlertCircle, Eye, EyeOff, RotateCcw, X, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -10,6 +10,7 @@ import { useToast } from "@/components/ui/toast";
 import { Skeleton } from "@/components/ui/skeleton";
 import { confirmAction } from "@/lib/confirm";
 import api from "@/lib/api";
+import { useAuthStore } from "@/store/authStore";
 
 interface Setting {
   key: string;
@@ -128,6 +129,66 @@ function GeminiStatus({ unsaved }: { unsaved: boolean }) {
             </li>
           ))}
         </ul>
+      )}
+    </div>
+  );
+}
+
+/** Sends a real email with the saved SMTP settings, to the admin or another address. */
+function EmailTest({ unsaved }: { unsaved: boolean }) {
+  const ownEmail = useAuthStore((state) => state.user?.email) ?? "";
+  const [to, setTo] = useState("");
+  const test = useMutation({
+    mutationFn: async () =>
+      (await api.post("/admin/settings/test-email", { to: to.trim() || undefined }, { timeout: 60_000 })).data as {
+        message: string;
+        data: { to: string; host: string; port: number; from: string };
+      },
+  });
+  const failure = test.isError ? errorMessage(test.error) || "Could not send the test email" : "";
+
+  return (
+    <div className="space-y-3 rounded-lg border border-border p-4">
+      <div>
+        <p className="text-sm font-medium">Send a test email</p>
+        <p className="text-sm text-muted">
+          Checks the saved settings by sending a real email. Admin notifications and verification emails use the same settings.
+        </p>
+      </div>
+      <form
+        className="flex flex-col gap-2 sm:flex-row"
+        onSubmit={(event) => {
+          event.preventDefault();
+          test.mutate();
+        }}
+      >
+        <Input
+          type="email"
+          value={to}
+          onChange={(event) => setTo(event.target.value)}
+          placeholder={ownEmail ? `${ownEmail} (you)` : "you@example.com"}
+          aria-label="Send the test email to"
+          autoComplete="email"
+          className="min-w-0 flex-1"
+        />
+        <Button type="submit" variant="outline" disabled={unsaved || test.isPending} title={unsaved ? "Save your changes first" : undefined}>
+          <Send className="h-4 w-4" />
+          {test.isPending ? "Sending..." : "Send test email"}
+        </Button>
+      </form>
+      {unsaved && <p className="text-xs text-amber-600">Save your email changes before sending a test.</p>}
+      {test.isSuccess && (
+        <p className="text-sm text-green-700 dark:text-green-400" role="status">
+          {test.data.message}{" "}
+          <span className="text-muted">
+            (via {test.data.data.host}:{test.data.data.port}, from {test.data.data.from})
+          </span>
+        </p>
+      )}
+      {failure && (
+        <p className="break-words text-sm text-red-600" role="alert">
+          {failure}
+        </p>
       )}
     </div>
   );
@@ -430,6 +491,11 @@ export default function AdminSettingsPage() {
             {group.id === "ai" && (
               <div className="pt-4">
                 <GeminiStatus unsaved={group.settings.some((setting) => setting.key in edits)} />
+              </div>
+            )}
+            {group.id === "email" && (
+              <div className="pt-4">
+                <EmailTest unsaved={group.settings.some((setting) => setting.key in edits)} />
               </div>
             )}
           </CardContent>

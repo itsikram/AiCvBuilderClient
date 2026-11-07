@@ -28,6 +28,10 @@ Bangla/English CV builder for Bangladeshi job seekers. The API is a separate rep
   preview (`src/lib/resume/pdf.ts`), so it looks exactly like the preview, Bangla included, and its pages
   break where the preview's "Page N ends here" lines show (`src/lib/resume/pages.ts`). The pages carry an
   invisible text layer for English text, so it can be selected and read by ATS. Printing is still offered.
+- **Admin panel** (`/admin`): users and plans, bKash payment review, **user activity**
+  (`/admin/activity`: sign-ups, logins, CVs, AI use, purchase requests and payments, filterable by user
+  and type), page content, menus, templates, blog, and settings, where admins pick who gets email
+  notifications (new user, purchase request, new CV) and can **send a test email**.
 
 ## Development
 
