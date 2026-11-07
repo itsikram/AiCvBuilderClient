@@ -56,6 +56,9 @@ export function PageContentProvider({ children }: { children: ReactNode }) {
     },
     staleTime: 30000, // 30 seconds
     refetchOnWindowFocus: false,
+    // Prerendered pages embed this data (scripts/prerender.mjs), so they hydrate with the same
+    // text the static HTML has. Check once in the background for edits made since the build.
+    refetchOnMount: "always",
   });
 
   const { i18n } = useTranslation();

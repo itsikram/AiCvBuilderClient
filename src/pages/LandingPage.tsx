@@ -29,7 +29,7 @@ const stepIcons = [ClipboardList, Wand2, Download];
 export default function LandingPage() {
   const { t } = useTranslation();
   const { lang, lp } = useLang();
-  const { getPageContent } = usePageContent();
+  const { getPageContent, headerFooterContent } = usePageContent();
   const homeContent = getPageContent("home");
 
   // Admin CMS overrides, with translated defaults
@@ -57,7 +57,7 @@ export default function LandingPage() {
       <SEO
         title={t("landing.seoTitle")}
         description={t("landing.seoDescription")}
-        jsonLd={[organizationLd(), websiteLd(lang), webApplicationLd(lang), faqLd(faqs)]}
+        jsonLd={[organizationLd(headerFooterContent.socialLinks), websiteLd(lang), webApplicationLd(lang), faqLd(faqs)]}
       />
 
       <section className="relative overflow-hidden">

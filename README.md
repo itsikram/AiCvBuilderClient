@@ -75,13 +75,23 @@ npm run build
 This type-checks, builds the SPA, then `scripts/prerender.mjs`:
 
 - prerenders every public marketing page (English and Bangla) to static HTML, with the API data
-  (plans, templates, blog list) the page shows, embedded for hydration
-- prerenders published blog posts fetched from `VITE_API_URL`
-- writes `sitemap.xml`, `robots.txt`, `404.html`, `spa.html` and an Apache `.htaccess`
+  the page shows embedded for hydration: the Admin → Page Content text (hero, menu, footer, about,
+  contact and pricing copy) on every page, plus plans, templates or the blog list where shown
+- prerenders published blog posts fetched from the API
+- writes `sitemap.xml`, `robots.txt`, `404.html`, `spa.html` and an Apache `.htaccess` (its
+  Content-Security-Policy allows the inline theme script in `index.html` by hash)
 - adds a font preload for each page's language
 
 The API must be reachable during the build for API-backed pages and blog posts to be complete; if it is
-not, the build still succeeds and logs warnings. Rebuild after publishing new posts.
+not, the build still succeeds and logs warnings. **Rebuild after publishing new posts or editing Page
+Content.** Visitors see page-content edits straight away (the page re-checks it in the background), but
+the static HTML that Google indexes keeps the old text until the next build, and the page visibly
+switches from the old text to the new one when it loads.
+
+Nothing on a public page should change after it loads, or visitors see content jump and crawlers index
+text that differs from what people read. So: put any API data a public page renders into the prerender
+(`PAGE_DATA` in `scripts/prerender.mjs`), keep the provider tree in `src/App.tsx` fixed, and show
+visitor-specific UI (sign-in state, theme) only after hydration with `useHydrated`.
 
 Note: `vite preview` serves `/some-page` (no trailing slash) from the root `index.html`, which causes a
 harmless hydration warning locally. Apache serves `/some-page/index.html` via the generated `.htaccess`.

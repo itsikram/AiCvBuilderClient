@@ -12,7 +12,7 @@ const featureIcons = [Target, Lightbulb, Award, Heart, Globe, Shield];
 export default function AboutPage() {
   const { t } = useTranslation();
   const { lp } = useLang();
-  const { getPageContent } = usePageContent();
+  const { getPageContent, headerFooterContent } = usePageContent();
   const aboutContent = getPageContent("about");
 
   // Admin CMS overrides, with translated defaults
@@ -31,7 +31,7 @@ export default function AboutPage() {
       <SEO
         title={t("about.seoTitle")}
         description={t("about.seoDescription")}
-        jsonLd={[organizationLd(), breadcrumbLd([{ name: t("nav.home"), path: lp("/") }, { name: t("nav.about"), path: lp("/about") }])]}
+        jsonLd={[organizationLd(headerFooterContent.socialLinks), breadcrumbLd([{ name: t("nav.home"), path: lp("/") }, { name: t("nav.about"), path: lp("/about") }])]}
       />
 
       <section className="bg-gradient-to-b from-primary/5 to-transparent py-14 md:py-20">

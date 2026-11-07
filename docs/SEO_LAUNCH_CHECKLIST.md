@@ -62,6 +62,11 @@ Only create one if you have a real business address or service area in Banglades
 - [ ] Every new blog post: one primary keyword from `SEO_KEYWORDS.md`, a title of 60 characters or fewer, a meta description of 155 or fewer,
       and links to the builder and to 2–3 guides. Write Bangla posts with the language set to `bn`, so they're served at `/bn/blog/…`.
 - [ ] Update the guide dates (`src/content/guides/meta.ts → updated`) when you make meaningful edits.
+- [ ] After publishing a blog post or editing **Admin → Page Content**, rebuild the site: GitHub → Actions → *Deploy to
+      GoDaddy* → **Run workflow** (or push to `main`). Until then, Google indexes the old text, new posts aren't in the sitemap,
+      and visitors see the page switch from the old text to the new one as it loads.
+- [ ] Add the site's real social profiles (Facebook first) under Admin → Page Content → home → social links. They appear in the
+      footer and in the Organization structured data (`sameAs`), which helps Google link the brand to those profiles.
 - [ ] Watch Search Console for queries with many impressions but low CTR, and rewrite those titles and descriptions.
 
 ## 6. Backlink ideas for the Bangladesh market

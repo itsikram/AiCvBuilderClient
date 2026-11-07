@@ -3,6 +3,11 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- Applies a saved light/dark choice before the first paint, so prerendered pages don't flash
+         the other theme while the app's JavaScript loads (the "system" setting is handled by CSS).
+         Same storage key as src/store/themeStore.ts. The CSP allows this exact script by its hash
+         (scripts/prerender.mjs computes it), so any edit here is picked up on the next build. -->
+    <script>try{var t=JSON.parse(localStorage.getItem("aicvbuilderbd-theme")).state.theme;if(t==="dark"||t==="light")document.documentElement.classList.add(t)}catch(e){}</script>
     <link rel="icon" href="/favicon.ico" sizes="48x48" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />

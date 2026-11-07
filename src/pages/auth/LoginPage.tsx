@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { GoogleLogin } from "@react-oauth/google";
+import { GoogleLogin, GoogleOAuthProvider } from "@react-oauth/google";
 import { Button } from "@/components/ui/button";
 import { TextField } from "@/components/editor/fields";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -72,15 +72,17 @@ export default function LoginPage() {
               </Button>
             </form>
 
+            {/* The provider loads Google's script, so it lives here (the only place Google Sign-In
+                is used) rather than around the app, where every page would download it. */}
             {googleClientId && (
-              <>
+              <GoogleOAuthProvider clientId={googleClientId}>
                 <p className="text-center text-sm text-muted">{t("auth.orContinueWith")}</p>
                 <GoogleLogin
                   onSuccess={(res) => res.credential && handleGoogle(res.credential)}
                   onError={() => toast.add("Google login failed", "error")}
                   width="100%"
                 />
-              </>
+              </GoogleOAuthProvider>
             )}
 
             <p className="text-center text-sm">

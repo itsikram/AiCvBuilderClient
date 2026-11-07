@@ -4,24 +4,32 @@ import type { Lang } from "@/lib/i18nRouting";
 const ORG_ID = `${SITE_URL}/#organization`;
 const SITE_ID = `${SITE_URL}/#website`;
 
-export const organizationLd = () => ({
-  "@context": "https://schema.org",
-  "@type": "Organization",
-  "@id": ORG_ID,
-  name: SITE_NAME,
-  alternateName: SITE_NAME_BN,
-  url: SITE_URL,
-  logo: absoluteUrl("/icon-512.png"),
-  email: SUPPORT_EMAIL,
-  areaServed: { "@type": "Country", name: "Bangladesh" },
-  contactPoint: {
-    "@type": "ContactPoint",
-    contactType: "customer support",
+/**
+ * `socialLinks` are the profiles set in Admin -> Page Content (home page). As `sameAs` they tell
+ * Google these profiles (Facebook above all, in Bangladesh) belong to this organisation.
+ */
+export const organizationLd = (socialLinks: Array<{ url: string }> = []) => {
+  const sameAs = [...new Set(socialLinks.map((link) => link.url?.trim()).filter((url) => /^https?:\/\//i.test(url ?? "")))];
+  return {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "@id": ORG_ID,
+    name: SITE_NAME,
+    alternateName: SITE_NAME_BN,
+    url: SITE_URL,
+    logo: absoluteUrl("/icon-512.png"),
     email: SUPPORT_EMAIL,
-    areaServed: "BD",
-    availableLanguage: ["en", "bn"],
-  },
-});
+    areaServed: { "@type": "Country", name: "Bangladesh" },
+    contactPoint: {
+      "@type": "ContactPoint",
+      contactType: "customer support",
+      email: SUPPORT_EMAIL,
+      areaServed: "BD",
+      availableLanguage: ["en", "bn"],
+    },
+    ...(sameAs.length ? { sameAs } : {}),
+  };
+};
 
 // No SearchAction: the site has no on-site search results page to point it at.
 export const websiteLd = (lang: Lang) => ({

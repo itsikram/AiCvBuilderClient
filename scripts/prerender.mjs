@@ -6,6 +6,7 @@
 // any static host (cPanel) with no server-side rendering.
 //
 // Run after `vite build` and `vite build --ssr src/entry-server.tsx --outDir dist-ssr`.
+import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
@@ -25,6 +26,12 @@ if (!template.includes("<!--head:start-->")) {
 
 // Unrendered shell for app routes (dashboard, editor, auth); .htaccess falls back to it.
 fs.writeFileSync(path.join(dist, "spa.html"), template);
+
+// Inline scripts in the shell (the theme script in index.html) run before the first paint, which
+// a separate file can't do without an extra request. The CSP allows exactly these by hash.
+const inlineScriptHashes = [...template.matchAll(/<script>([\s\S]*?)<\/script>/g)].map(
+  ([, body]) => `'sha256-${crypto.createHash("sha256").update(body, "utf8").digest("base64")}'`
+);
 
 const { render, PRERENDER_ROUTES, GUIDE_DATES } = await import(pathToFileURL(ssrEntry).href);
 
@@ -149,6 +156,30 @@ async function fetchPageData(basePath, lang) {
   }
 }
 
+/**
+ * Admin-edited text (Admin -> Page Content: hero, menu, footer, about/contact/pricing copy) that
+ * the navbar, footer and several pages show. It is embedded in every page so the static HTML
+ * already has it; otherwise pages are built with the default text and visibly swap to the
+ * admin's version once the browser fetches it, and crawlers index different text than visitors see.
+ */
+async function fetchPageContents() {
+  if (!apiAvailable) return [];
+  try {
+    const contents = await getJson("/page-content");
+    // Inactive entries are never shown, so they don't belong in the HTML
+    return [[["page-contents-all"], contents.filter((content) => content.isActive)]];
+  } catch (error) {
+    console.warn(`warn  could not fetch page content (${error.message}); prerendering with the default text`);
+    return [];
+  }
+}
+
+/** Data every page gets, plus the page's own; undefined when there is none. */
+const withSharedData = (pageData = []) => {
+  const all = [...sharedData, ...pageData];
+  return all.length ? all : undefined;
+};
+
 async function fetchBlogPosts() {
   if (!apiAvailable) return [];
   try {
@@ -172,11 +203,12 @@ async function fetchBlogPosts() {
 
 const today = new Date().toISOString().slice(0, 10);
 const manifest = [];
+const sharedData = await fetchPageContents();
 
 for (const url of PRERENDER_ROUTES) {
   const basePath = url.replace(/^\/bn(?=\/|$)/, "") || "/";
   const lang = url === "/bn" || url.startsWith("/bn/") ? "bn" : "en";
-  const initialData = await fetchPageData(basePath, lang);
+  const initialData = withSharedData(await fetchPageData(basePath, lang));
   const result = await render(url, initialData);
   const outFile = url === "/" ? path.join(dist, "index.html") : path.join(dist, url.slice(1), "index.html");
   writePage(url, outFile, result, { initialData });
@@ -217,7 +249,7 @@ for (const entry of routesByBase.values()) {
 let blogCount = 0;
 for (const post of await fetchBlogPosts()) {
   const urlPath = `${post.language === "bn" ? "/bn" : ""}/blog/${post.slug}`;
-  const initialData = [[["blog", post.slug], post]];
+  const initialData = withSharedData([[["blog", post.slug], post]]);
   try {
     const result = await render(urlPath, initialData);
     writePage(urlPath, path.join(dist, urlPath.slice(1), "index.html"), result, { initialData, lenient: true });
@@ -251,7 +283,8 @@ fs.writeFileSync(
 fs.writeFileSync(path.join(dist, ".htaccess"), htaccess());
 
 // A page for unknown URLs, served with HTTP 404 by the .htaccess ErrorDocument.
-writePage("/404", path.join(dist, "404.html"), await render("/__not-found__"));
+const notFoundData = withSharedData();
+writePage("/404", path.join(dist, "404.html"), await render("/__not-found__", notFoundData), { initialData: notFoundData });
 
 fs.writeFileSync(path.join(dist, "prerender-manifest.json"), JSON.stringify({ generatedAt: today, routes: manifest }, null, 2));
 
@@ -311,7 +344,7 @@ function htaccess() {
   const appRoutes = "dashboard|admin|login|register|forgot-password|reset-password|verify-email|r";
   const csp = [
     "default-src 'self'",
-    "script-src 'self' https://www.googletagmanager.com https://accounts.google.com/gsi/client",
+    ["script-src 'self'", ...inlineScriptHashes, "https://www.googletagmanager.com https://accounts.google.com/gsi/client"].join(" "),
     ["connect-src 'self'", apiOrigin, "https://accounts.google.com https://www.googletagmanager.com https://*.google-analytics.com https://*.analytics.google.com"]
       .filter(Boolean)
       .join(" "),

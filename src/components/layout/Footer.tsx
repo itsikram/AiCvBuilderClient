@@ -106,7 +106,9 @@ export function Footer() {
         </div>
 
         <div className="mt-8 flex flex-col items-center justify-between gap-2 border-t border-border pt-6 text-sm text-muted md:flex-row">
-          <p>{copyrightText}</p>
+          {/* The year is the build's; a page built last December would otherwise fail hydration on
+              1 January and React would rebuild the whole page. The next build updates it. */}
+          <p suppressHydrationWarning>{copyrightText}</p>
           <p>{t("footer.payments")}: {paymentMethods}</p>
         </div>
       </div>
