@@ -29,6 +29,12 @@ const LOCALIZED_PREFIXES = [
   "/templates",
   "/blog",
   "/contact",
+  "/jobs",
+  "/photo-signature-resizer",
+  "/marriage-biodata-maker",
+  "/privacy",
+  "/terms",
+  "/refund-policy",
   // Every guide exists in both languages; deriving the list keeps new guides localized
   ...GUIDE_META.map((guide) => `/${guide.slug}`),
 ];

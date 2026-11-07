@@ -10,7 +10,21 @@ import { preloadRoute } from "@/lib/lazyPage";
 
 /** Every public URL to prerender, in both languages, plus the 404 page. */
 export const PRERENDER_ROUTES: string[] = (() => {
-  const base = ["/", "/about", "/pricing", "/templates", "/blog", "/contact", ...GUIDES.map((g) => `/${g.slug}`)];
+  const base = [
+    "/",
+    "/about",
+    "/pricing",
+    "/templates",
+    "/blog",
+    "/contact",
+    "/jobs",
+    "/photo-signature-resizer",
+    "/marriage-biodata-maker",
+    "/privacy",
+    "/terms",
+    "/refund-policy",
+    ...GUIDES.map((g) => `/${g.slug}`),
+  ];
   return [...base, ...base.map((path) => (path === "/" ? "/bn" : `/bn${path}`))];
 })();
 

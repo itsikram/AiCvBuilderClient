@@ -28,6 +28,13 @@ Bangla/English CV builder for Bangladeshi job seekers. The API is a separate rep
   preview (`src/lib/resume/pdf.ts`), so it looks exactly like the preview, Bangla included, and its pages
   break where the preview's "Page N ends here" lines show (`src/lib/resume/pages.ts`). The pages carry an
   invisible text layer for English text, so it can be selected and read by ATS. Printing is still offered.
+- **Free tools and pages** (prerendered, English and Bangla): photo & signature resizer for Teletalk-style forms
+  (`/photo-signature-resizer`, in the browser, nothing uploaded), marriage biodata maker (`/marriage-biodata-maker`,
+  PDF made in the browser), job circulars (`/jobs`, written in Admin → Job circulars, with JobPosting data), and
+  privacy, terms and refund pages.
+- **Earning** (`/dashboard/billing`, `/dashboard/shop`): 7-day, 30-day and 1-year Premium passes that stack and don't
+  auto-renew, a free trial, access codes for organisations, invite rewards, and one-time extras (watermark-free PDF
+  credit, AI pack, employer CV screening at `/dashboard/screening`, and services an admin delivers).
 - **Admin panel** (`/admin`): users and plans, bKash payment review, **user activity**
   (`/admin/activity`: sign-ups, logins, CVs, AI use, purchase requests and payments, filterable by user
   and type), page content, menus, templates, blog, and settings, where admins pick who gets email
@@ -61,6 +68,7 @@ to the API on http://localhost:5000 (override with `API_PROXY_TARGET`), so run t
 | `VITE_SITE_URL` | Canonical public origin for canonical, hreflang, Open Graph and sitemap URLs |
 | `VITE_GOOGLE_CLIENT_ID` | Optional Google Sign-In web client ID |
 | `VITE_GA_MEASUREMENT_ID` | Optional GA4 ID, loaded only after analytics consent |
+| `VITE_ADSENSE_CLIENT`, `VITE_ADSENSE_SLOT` | Optional AdSense publisher ID (`ca-pub-…`) and ad slot: ads on guides and job pages after consent; the build adds `ads.txt` and the CSP hosts |
 
 No secrets belong in these files: everything prefixed `VITE_` ends up in the public JavaScript.
 
@@ -81,7 +89,7 @@ This type-checks, builds the SPA, then `scripts/prerender.mjs`:
 - prerenders every public marketing page (English and Bangla) to static HTML, with the API data
   the page shows embedded for hydration: the Admin → Page Content text (hero, menu, footer, about,
   contact and pricing copy) on every page, plus plans, templates or the blog list where shown
-- prerenders published blog posts fetched from the API
+- prerenders published blog posts and job circulars fetched from the API
 - writes `sitemap.xml`, `robots.txt`, `404.html`, `spa.html` and an Apache `.htaccess` (its
   Content-Security-Policy allows the inline theme script in `index.html` by hash)
 - adds a font preload for each page's language
@@ -102,7 +110,8 @@ harmless hydration warning locally. Apache serves `/some-page/index.html` via th
 
 ## Deploy
 
-See [docs/DEPLOY_GODADDY.md](docs/DEPLOY_GODADDY.md) for the full GoDaddy (cPanel) guide and
+See [docs/GROWTH_PLAYBOOK.md](docs/GROWTH_PLAYBOOK.md) for what to switch on to start earning, and
+[docs/DEPLOY_GODADDY.md](docs/DEPLOY_GODADDY.md) for the full GoDaddy (cPanel) guide and
 [docs/SEO_LAUNCH_CHECKLIST.md](docs/SEO_LAUNCH_CHECKLIST.md) for Search Console, sitemap and
 Lighthouse. In short:
 

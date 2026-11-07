@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { ArrowRight, CheckCircle2, ChevronRight } from "lucide-react";
 import { SEO } from "@/components/seo/SEO";
+import { AdSlot } from "@/components/AdSlot";
 import { Button } from "@/components/ui/button";
 import { getGuide, getLoadedGuideBody, loadGuideBody } from "@/content/guides";
 import { useLang } from "@/lib/useLang";
@@ -137,6 +138,8 @@ export default function GuidePage({ slug }: { slug: string }) {
               </div>
             </section>
           )}
+
+          <AdSlot className="mt-10" />
 
           <section className="mt-12 rounded-2xl bg-gradient-to-br from-blue-600 to-violet-600 p-6 text-white md:p-8">
             <h2 className="text-2xl font-semibold">{copy.cta.title}</h2>

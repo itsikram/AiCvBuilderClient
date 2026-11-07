@@ -197,6 +197,19 @@ Copy changes in this round: home title/description/hero and four FAQs (really fr
 app), pricing title/description/badge for the free trial, "Free CV templates" title on the templates page, and the new
 guide listed third so it appears in every page footer.
 
+## Update 2026-11-08: free tools for traffic
+
+Tool pages answer frequent, practical searches and lead to the CV builder:
+
+| Page | Primary keyword | Secondary keywords | Intent |
+|---|---|---|---|
+| `/photo-signature-resizer`, `/bn/...` | photo resize 300x300 / ছবি রিসাইজ ৩০০×৩০০ | signature resize 300x80, টেলিটক ছবি স্বাক্ষর সাইজ, photo size for government job | T |
+| `/marriage-biodata-maker`, `/bn/...` | বিয়ের বায়োডাটা / marriage biodata format | বায়োডাটা ফরমেট বিয়ের জন্য, biodata for marriage pdf, বায়োডাটা লেখার নিয়ম | T/I |
+| `/jobs`, `/bn/jobs`, each circular | চাকরির খবর / job circular 2026 | সরকারি চাকরির খবর, bank job circular, govt job circular | I |
+
+Job circulars carry JobPosting structured data (open circulars with a deadline only) so they can appear in Google's
+job search. Write summaries in your own words and always link the official circular.
+
 ## After launch
 
 - Check Search Console every week for queries with impressions but CTR under 2%, and rewrite those

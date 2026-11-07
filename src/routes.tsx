@@ -19,6 +19,11 @@ const BlogPostPage = lazyPage(() => import("@/pages/BlogPostPage"));
 const ContactPage = lazyPage(() => import("@/pages/ContactPage"));
 const GuidePage = lazyPage(() => import("@/pages/GuidePage"));
 const NotFoundPage = lazyPage(() => import("@/pages/NotFoundPage"));
+const JobsPage = lazyPage(() => import("@/pages/JobsPage"));
+const JobPage = lazyPage(() => import("@/pages/JobPage"));
+const PhotoResizerPage = lazyPage(() => import("@/pages/PhotoResizerPage"));
+const BiodataMakerPage = lazyPage(() => import("@/pages/BiodataMakerPage"));
+const LegalPage = lazyPage(() => import("@/pages/LegalPage"));
 
 // Public pages the prerenderer and hydration preload, keyed by path without /bn
 registerRoutePreloads({
@@ -28,9 +33,16 @@ registerRoutePreloads({
     "/templates": TemplatesPage.preload,
     "/blog": BlogPage.preload,
     "/contact": ContactPage.preload,
+    "/jobs": JobsPage.preload,
+    "/photo-signature-resizer": PhotoResizerPage.preload,
+    "/marriage-biodata-maker": BiodataMakerPage.preload,
+    "/privacy": LegalPage.preload,
+    "/terms": LegalPage.preload,
+    "/refund-policy": LegalPage.preload,
   },
   guide: GuidePage.preload,
   blogPost: BlogPostPage.preload,
+  jobPost: JobPage.preload,
   notFound: NotFoundPage.preload,
 });
 const PublicResumePage = lazy(() => import("@/pages/PublicResumePage"));
@@ -117,6 +129,13 @@ function publicPages() {
       <Route path="blog" element={page(<BlogPage />)} />
       <Route path="blog/:slug" element={page(<BlogPostPage />)} />
       <Route path="contact" element={page(<ContactPage />)} />
+      <Route path="jobs" element={page(<JobsPage />)} />
+      <Route path="jobs/:slug" element={page(<JobPage />)} />
+      <Route path="photo-signature-resizer" element={page(<PhotoResizerPage />)} />
+      <Route path="marriage-biodata-maker" element={page(<BiodataMakerPage />)} />
+      <Route path="privacy" element={page(<LegalPage slug="privacy" />)} />
+      <Route path="terms" element={page(<LegalPage slug="terms" />)} />
+      <Route path="refund-policy" element={page(<LegalPage slug="refund-policy" />)} />
       {GUIDES.map((guide) => (
         <Route key={guide.slug} path={guide.slug} element={page(<GuidePage slug={guide.slug} />)} />
       ))}

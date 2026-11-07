@@ -12,8 +12,8 @@ const port = process.env.PORT || 3000;
 const dist = path.join(path.dirname(fileURLToPath(import.meta.url)), "dist");
 
 const APP_ROUTE = /^\/(dashboard|admin|login|register|forgot-password|reset-password|verify-email|r)(\/.*)?$/;
-// Blog posts published since the last build
-const NEW_BLOG_POST = /^\/(bn\/)?blog\/[A-Za-z0-9-]+$/;
+// Blog posts and job circulars published since the last build
+const NEW_BLOG_POST = /^\/(bn\/)?(blog|jobs)\/[A-Za-z0-9-]+$/;
 
 const TYPES = {
   ".html": "text/html; charset=utf-8",

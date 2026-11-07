@@ -30,6 +30,7 @@ export function Navbar() {
     { label: t("nav.templates"), href: "/templates" },
     { label: t("nav.cvFormat"), href: "/cv-format-bangladesh" },
     { label: t("nav.guides"), href: "/blog" },
+    { label: t("nav.jobs"), href: "/jobs" },
     { label: t("nav.pricing"), href: "/pricing" },
   ]).map((link) => ({ ...link, href: lp(link.href) }));
 

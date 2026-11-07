@@ -18,7 +18,8 @@
     "darkMode": "Switch to dark mode",
     "lightMode": "Switch to light mode",
     "openMenu": "Open menu",
-    "closeMenu": "Close menu"
+    "closeMenu": "Close menu",
+    "jobs": "Job circulars"
   },
   "hero": {
     "title": "Build Your Dream Career with AI",
@@ -256,7 +257,13 @@
     "company": "Company",
     "createCv": "Create a CV",
     "payments": "Payments",
-    "copyright": "© {{year}} {{name}}. All rights reserved."
+    "copyright": "© {{year}} {{name}}. All rights reserved.",
+    "resizer": "Photo & signature resizer",
+    "biodata": "Marriage biodata maker",
+    "privacy": "Privacy",
+    "terms": "Terms",
+    "refunds": "Refund policy",
+    "legal": "Legal"
   },
   "notFound": {
     "title": "Page not found",
@@ -1147,5 +1154,186 @@
     "open": "Open",
     "deleteTitle": "Delete this screening?",
     "deleteText": "Its scores are deleted for good."
+  },
+  "legal": {
+    "updated": "Last updated {{date}}",
+    "related": "Related pages"
+  },
+  "resizer": {
+    "seoTitle": "Photo & Signature Resizer 300x300, 300x80 (Teletalk)",
+    "seoDescription": "Free tool: resize your photo to 300×300 px and signature to 300×80 px under the KB limit for Teletalk and government job forms. Nothing is uploaded.",
+    "h1": "Photo & signature resizer for job applications",
+    "intro": "Make your photo 300×300 pixels and your signature 300×80 pixels, under the size limit government job forms on Teletalk ask for. It works in your browser: your images are never uploaded.",
+    "photoTitle": "Photo",
+    "signatureTitle": "Signature",
+    "preset": "Size",
+    "presets": {
+      "teletalk": "Teletalk job application",
+      "passport": "Passport-size photo (35×45 mm)",
+      "admission": "University admission",
+      "custom": "Custom size"
+    },
+    "width": "Width (px)",
+    "height": "Height (px)",
+    "maxKB": "Max KB",
+    "choose_photo": "Choose your photo",
+    "choose_signature": "Choose a photo of your signature",
+    "change": "Choose another image",
+    "private": "Stays on your device; nothing is uploaded.",
+    "zoom": "Zoom",
+    "left_right": "Left / right",
+    "up_down": "Up / down",
+    "clean": "Clean background (white paper, dark ink)",
+    "previewAlt": "Resized image preview",
+    "download": "Download JPG",
+    "badFile": "That file isn’t an image we can open. Try a JPG or PNG.",
+    "howTitle": "How to resize a photo and signature for Teletalk",
+    "steps": [
+      {
+        "name": "Pick the size",
+        "text": "Keep Teletalk job application, or choose the size your circular asks for."
+      },
+      {
+        "name": "Choose your images",
+        "text": "Use a clear, recent photo with a plain background, and a photo of your signature in black or blue ink on white paper."
+      },
+      {
+        "name": "Frame them",
+        "text": "Zoom and move until your face, or the whole signature, fits the frame."
+      },
+      {
+        "name": "Download",
+        "text": "Check the size shows a tick, then download the JPG and upload it to the application form."
+      }
+    ],
+    "faqs": [
+      {
+        "q": "What photo and signature size does Teletalk need?",
+        "a": "Most government job applications on Teletalk ask for a 300×300 pixel photo up to 100 KB and a 300×80 pixel signature up to 60 KB. Always check your circular, as some differ."
+      },
+      {
+        "q": "Are my photos uploaded?",
+        "a": "No. The resizing happens in your browser, so your images never leave your phone or computer."
+      },
+      {
+        "q": "Why does my signature look grey?",
+        "a": "Turn on Clean background: it makes the paper pure white and the ink darker. Sign with a black or blue pen on plain white paper and take the photo in good light."
+      },
+      {
+        "q": "Can I use it on my phone?",
+        "a": "Yes. It works in Chrome on Android and Safari on iPhone. Choose a photo from your gallery or take one with the camera."
+      }
+    ],
+    "ctaTitle": "Applying for a job? Make your CV too",
+    "ctaText": "Build a Bangladeshi or ATS CV for free in Bangla or English, and download it as a PDF."
+  },
+  "jobs": {
+    "seoTitle": "Job Circulars in Bangladesh 2026 – Govt, Bank & Private",
+    "seoDescription": "Latest job circulars in Bangladesh: government, bank, NGO and private jobs with deadlines, apply links and photo and signature sizes. Make your CV free.",
+    "h1": "Job circulars",
+    "intro": "Recent circulars in plain words, with the deadline, the official link and the photo and signature sizes. Always check the official circular before you apply.",
+    "filter": "Filter by category",
+    "all": "All",
+    "categories": {
+      "government": "Government",
+      "bank": "Bank",
+      "private": "Private",
+      "ngo": "NGO",
+      "international": "Abroad",
+      "other": "Other"
+    },
+    "openOnly": "Open only",
+    "empty": "No circulars here yet. Check back soon.",
+    "closed": "Closed",
+    "open": "Open",
+    "vacancies": "{{n}} posts",
+    "deadline": "Deadline: {{date}}",
+    "resizerTitle": "Photo & signature resizer",
+    "resizerText": "Make your photo 300×300 and signature 300×80 under the KB limit, free.",
+    "cvGuideTitle": "CV for government jobs",
+    "cvGuideText": "What to include and which format to use.",
+    "browse": "Browse job circulars",
+    "organization": "Organisation",
+    "vacanciesLabel": "Posts",
+    "education": "Education",
+    "salary": "Salary",
+    "location": "Location",
+    "applyStart": "Applications open",
+    "deadlineLabel": "Deadline",
+    "apply": "Apply on the official site",
+    "source": "Official circular",
+    "disclaimer": "We summarise circulars to help you find them. The official circular is final: check every detail there before you apply.",
+    "cvTitle": "Make your CV for this job",
+    "cvText": "Use our free Bangladeshi CV format with SSC/HSC, GPA and personal details, then download a PDF.",
+    "share": "Share:"
+  },
+  "biodata": {
+    "seoTitle": "Marriage Biodata Maker – Free Bangla & English PDF",
+    "seoDescription": "Make a marriage biodata in Bangla or English with a photo, pick a design and download a PDF free. Works on mobile; your details stay on your device.",
+    "h1": "Marriage biodata maker",
+    "intro": "Fill in your details, add a photo, choose a design and download your biodata as a PDF. Write it in Bangla or English. Everything stays in your browser.",
+    "language": "Biodata language",
+    "design": "Design",
+    "designs": {
+      "elegant": "Elegant",
+      "classic": "Classic",
+      "modern": "Modern"
+    },
+    "colour": "Colour",
+    "addPhoto": "Add a photo",
+    "changePhoto": "Change photo",
+    "removePhoto": "Remove photo",
+    "privacy": "Your details are saved only in this browser, so you can come back later. Nothing is sent to our server.",
+    "download": "Download PDF",
+    "watermarkNote": "Free PDFs have a small ‘made with’ line at the bottom. Premium removes it.",
+    "failed": "The PDF couldn’t be made. Please try again.",
+    "tipsTitle": "What to include in a marriage biodata",
+    "tips": [
+      "Personal details: name, date of birth, height, religion, marital status and blood group.",
+      "Education and work: your highest degrees, occupation and workplace. Income is optional.",
+      "Family: your parents’ names and occupations, and your brothers and sisters.",
+      "A short, honest paragraph about yourself and what you hope for in a partner.",
+      "A recent, clear photo and a guardian’s phone number for contact.",
+      "Share only what you’re comfortable with; leave out your NID and full address until you know the family."
+    ],
+    "howTitle": "How to make your biodata",
+    "steps": [
+      {
+        "name": "Choose the language and design",
+        "text": "Pick Bangla or English, a design and a colour."
+      },
+      {
+        "name": "Fill in your details",
+        "text": "Empty fields are left out of the biodata, so fill in only what you want to share."
+      },
+      {
+        "name": "Add a photo",
+        "text": "A recent photo with a plain background looks best."
+      },
+      {
+        "name": "Download the PDF",
+        "text": "Check the preview and download a one-page A4 PDF to share or print."
+      }
+    ],
+    "faqs": [
+      {
+        "q": "Is the biodata maker free?",
+        "a": "Yes. Make and download your biodata as a PDF for free. Free PDFs carry a small line at the bottom; Premium removes it."
+      },
+      {
+        "q": "Can I write my biodata in Bangla?",
+        "a": "Yes. Choose বাংলা and the headings switch to Bangla; type your details in Bangla too."
+      },
+      {
+        "q": "Are my details safe?",
+        "a": "They stay in your browser on this device and aren’t uploaded to our server."
+      },
+      {
+        "q": "Is this the same as a job biodata?",
+        "a": "No, this one is for marriage. For jobs, use a CV or the job biodata format."
+      }
+    ],
+    "jobNote": "Need a biodata for a job instead?",
+    "jobLink": "See the job biodata format"
   }
 }

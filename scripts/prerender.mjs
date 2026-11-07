@@ -140,6 +140,7 @@ const PAGE_DATA = {
   "/pricing": () => [[["plans"], "/payments/plans"]],
   "/templates": () => [[["templates"], "/templates"]],
   "/blog": (lang) => [[["blogs", lang], `/blogs?language=${lang}`]],
+  "/jobs": () => [[["jobs"], "/jobs?limit=100"]],
 };
 
 const apiAvailable = /^https?:\/\//.test(apiUrl);
@@ -246,6 +247,45 @@ for (const entry of routesByBase.values()) {
   }
 }
 
+/** Published job circulars (Admin -> Job circulars), each prerendered at its own language's path. */
+async function fetchJobCirculars() {
+  if (!apiAvailable) return [];
+  try {
+    const jobs = [];
+    for (let page = 1; page <= 50; page++) {
+      const data = await getJson(`/jobs?limit=100&page=${page}`);
+      jobs.push(...data.jobs);
+      if (!data.jobs.length || jobs.length >= data.total) break;
+    }
+    const full = [];
+    for (const job of jobs) {
+      if (/^[a-z0-9-]+$/i.test(job.slug)) full.push(await getJson(`/jobs/${job.slug}`));
+    }
+    return full;
+  } catch (error) {
+    console.warn(`warn  could not fetch job circulars (${error.message}); skipping their prerender`);
+    return [];
+  }
+}
+
+for (const job of await fetchJobCirculars()) {
+  const urlPath = `${job.language === "bn" ? "/bn" : ""}/jobs/${job.slug}`;
+  const initialData = withSharedData([[["job", job.slug], job]]);
+  try {
+    const result = await render(urlPath, initialData);
+    writePage(urlPath, path.join(dist, urlPath.slice(1), "index.html"), result, { initialData, lenient: true });
+  } catch (error) {
+    console.warn(`warn  skipped ${urlPath}: ${error.message}`);
+    continue;
+  }
+  const lastmod = new Date(job.updatedAt || job.publishedAt || Date.now()).toISOString().slice(0, 10);
+  sitemapUrls.push(`  <url>
+    <loc>${xmlEscape(`${siteUrl}${urlPath}`)}</loc>
+    <lastmod>${lastmod}</lastmod>
+  </url>`);
+  console.log(`prerendered ${urlPath}`);
+}
+
 let blogCount = 0;
 for (const post of await fetchBlogPosts()) {
   const urlPath = `${post.language === "bn" ? "/bn" : ""}/blog/${post.slug}`;
@@ -281,6 +321,12 @@ fs.writeFileSync(
 );
 
 fs.writeFileSync(path.join(dist, ".htaccess"), htaccess());
+
+// AdSense (optional) checks ads.txt to confirm the site may show this publisher's ads
+const adsenseClient = (env.VITE_ADSENSE_CLIENT || "").trim();
+if (/^ca-pub-\d+$/.test(adsenseClient)) {
+  fs.writeFileSync(path.join(dist, "ads.txt"), `google.com, ${adsenseClient.replace(/^ca-/, "")}, DIRECT, f08c47fec0942fa0\n`);
+}
 
 // A page for unknown URLs, served with HTTP 404 by the .htaccess ErrorDocument.
 const notFoundData = withSharedData();
@@ -342,16 +388,20 @@ function htaccess() {
   const apiOrigin = /^https?:\/\//.test(apiUrl) ? new URL(apiUrl).origin : "";
   const apexHost = site.hostname.replace(/^www\./, "").replace(/\./g, "\\.");
   const appRoutes = "dashboard|admin|login|register|forgot-password|reset-password|verify-email|r";
+  // Google AdSense needs these hosts, only when VITE_ADSENSE_CLIENT is set (see AdSlot.tsx)
+  const ads = /^ca-pub-\d+$/.test((env.VITE_ADSENSE_CLIENT || "").trim())
+    ? "https://pagead2.googlesyndication.com https://*.googlesyndication.com https://*.doubleclick.net https://*.google.com https://adservice.google.com https://*.adtrafficquality.google"
+    : "";
   const csp = [
     "default-src 'self'",
-    ["script-src 'self'", ...inlineScriptHashes, "https://www.googletagmanager.com https://accounts.google.com/gsi/client"].join(" "),
-    ["connect-src 'self'", apiOrigin, "https://accounts.google.com https://www.googletagmanager.com https://*.google-analytics.com https://*.analytics.google.com"]
+    ["script-src 'self'", ...inlineScriptHashes, "https://www.googletagmanager.com https://accounts.google.com/gsi/client", ads].filter(Boolean).join(" "),
+    ["connect-src 'self'", apiOrigin, "https://accounts.google.com https://www.googletagmanager.com https://*.google-analytics.com https://*.analytics.google.com", ads]
       .filter(Boolean)
       .join(" "),
     "img-src 'self' data: blob: https:",
     "style-src 'self' 'unsafe-inline' https://accounts.google.com/gsi/style",
     "font-src 'self' data:",
-    "frame-src https://accounts.google.com",
+    ["frame-src https://accounts.google.com", ads].filter(Boolean).join(" "),
     "object-src 'none'",
     "base-uri 'self'",
     "frame-ancestors 'self'",
@@ -402,8 +452,9 @@ ${httpsRules}
   # Client-rendered app sections and shared CVs: SPA shell, kept out of the index
   RewriteRule ^(${appRoutes})(/.*)?$ /spa.html [E=NOINDEX:1,L]
 
-  # Blog posts published since the last build
+  # Blog posts and job circulars published since the last build
   RewriteRule ^(bn/)?blog/[A-Za-z0-9-]+$ /spa.html [L]
+  RewriteRule ^(bn/)?jobs/[A-Za-z0-9-]+$ /spa.html [L]
 
   # Anything else falls through to ErrorDocument 404
 </IfModule>

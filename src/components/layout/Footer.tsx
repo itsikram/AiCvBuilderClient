@@ -43,7 +43,15 @@ export function Footer() {
   const productLinks = [
     { label: t("footer.createCv"), href: "/register" },
     { label: t("nav.templates"), href: lp("/templates") },
+    { label: t("nav.jobs"), href: lp("/jobs") },
+    { label: t("footer.resizer"), href: lp("/photo-signature-resizer") },
+    { label: t("footer.biodata"), href: lp("/marriage-biodata-maker") },
     { label: t("nav.guides"), href: lp("/blog") },
+  ];
+  const legalLinks = [
+    { label: t("footer.privacy"), href: lp("/privacy") },
+    { label: t("footer.terms"), href: lp("/terms") },
+    { label: t("footer.refunds"), href: lp("/refund-policy") },
   ];
 
   const socialLinks = headerFooterContent.socialLinks || [];
@@ -109,6 +117,13 @@ export function Footer() {
           {/* The year is the build's; a page built last December would otherwise fail hydration on
               1 January and React would rebuild the whole page. The next build updates it. */}
           <p suppressHydrationWarning>{copyrightText}</p>
+          <nav aria-label={t("footer.legal")} className="flex flex-wrap justify-center gap-x-4 gap-y-1">
+            {legalLinks.map((link) => (
+              <Link key={link.href} to={link.href} className="transition-colors hover:text-primary">
+                {link.label}
+              </Link>
+            ))}
+          </nav>
           <p>{t("footer.payments")}: {paymentMethods}</p>
         </div>
       </div>
