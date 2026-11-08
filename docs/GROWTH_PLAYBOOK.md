@@ -9,6 +9,7 @@ isn't code. Prices below are the seeded defaults; they are starting points to te
 |---|---|---|
 | SMTP email | Admin → Settings → Email (SMTP), then **Send test email** | Reminders, receipts, order deliveries and admin alerts are silent without it |
 | Google sign-in | Google Cloud Console → Credentials → OAuth client ID (Web), with `https://aicvbuilderbd.online` and `https://www.aicvbuilderbd.online` as authorised JavaScript origins; paste the client ID in Admin → Settings → Google Sign-In | "Sign up with Google" on the sign-up and login pages: one tap, no password, email already verified |
+| Search Console in the admin | Service account JSON key in Admin → Settings → Google Search Console (steps on Admin → SEO & keywords) | Searches, positions, quick wins and keyword tracking without leaving the admin panel |
 | bKash number | Admin → bKash payments | Manual bKash checkout for passes and extras |
 | SSLCommerz | Admin → Settings → SSLCommerz (after approval, see §3) | Card and mobile banking without manual review |
 | Google Analytics | `VITE_GA_MEASUREMENT_ID` in `.env.production`, rebuild | Mark `sign_up`, `trial_start`, `purchase_request` as key events in GA4 |
@@ -126,6 +127,7 @@ Post 3 a week. Put the link in the bio and the first comment.
 
 - **Daily:** publish 2–3 job circulars (Admin → Job circulars) with the official link and photo rules, and share the
   best one in Facebook groups.
-- **Weekly:** check Admin → User activity (sign-ups, trials, purchase requests) and Search Console (queries with
-  impressions but low CTR); rebuild the site so new circulars reach the sitemap.
+- **Weekly:** check Admin → Analytics (sign-ups, the sign-up-to-paid funnel, what sells) and Admin → SEO & keywords
+  (work through "Quick wins": rewrite titles for low click rate, improve pages almost on page 1, and write guides for
+  the job titles in "Keyword ideas"); rebuild the site so new circulars reach the sitemap.
 - **Monthly:** contact 10 university clubs and 5 coaching centres; review prices of the 30-day pass and the extras.

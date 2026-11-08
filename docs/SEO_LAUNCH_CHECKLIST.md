@@ -29,8 +29,12 @@ Items marked **(you)** need your Google/Microsoft account; nothing here can be a
    Repeat for the most important guides (cv-format-bangladesh, cv-format-pdf-download, fresher-cv-format and their `/bn` twins),
    then the 2026-11 additions: bank-job-cv, abroad-job-cv and ats-friendly-cv, and best-free-cv-maker (plus `/bn/best-free-cv-maker`), then the free tools: `/jobs`, `/photo-signature-resizer` and
    `/marriage-biodata-maker` and their `/bn` twins.
-7. **Settings → International targeting** is retired. Language targeting comes from the hreflang tags, which are already in place.
-8. After 2–4 weeks, check **Pages** (indexing errors), **Core Web Vitals** and **Performance → Queries**, filtered to country = Bangladesh.
+7. **See it in the admin panel (Admin → SEO & keywords).** In Google Cloud Console, enable the *Google Search Console API*,
+   create a service account (no roles) and download a JSON key. In Search Console → Settings → Users and permissions, add
+   the service account's email as a **Restricted** user. Paste the whole JSON file into Admin → Settings → Google Search
+   Console. The page then shows clicks, positions and quick wins for every search, and the positions of your tracked keywords.
+8. **Settings → International targeting** is retired. Language targeting comes from the hreflang tags, which are already in place.
+9. After 2–4 weeks, check **Pages** (indexing errors), **Core Web Vitals** and **Performance → Queries**, filtered to country = Bangladesh.
 
 ## 2. Bing Webmaster Tools (you)
 

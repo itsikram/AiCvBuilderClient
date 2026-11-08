@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { Users, FileText, DollarSign, TrendingUp, Activity, ShoppingCart, CreditCard, Edit3, Palette } from "lucide-react";
+import { Users, FileText, DollarSign, TrendingUp, Activity, ShoppingCart, CreditCard, Edit3, Palette, BarChart3, Search, Briefcase } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import api from "@/lib/api";
@@ -33,6 +33,9 @@ interface DashboardStats {
 }
 
 const quickActions = [
+  { to: "/admin/analytics", title: "Analytics", text: "Sign-ups, revenue, funnel and trends", icon: BarChart3 },
+  { to: "/admin/seo", title: "SEO & keywords", text: "Google searches, positions and keyword ideas", icon: Search },
+  { to: "/admin/jobs", title: "Job circulars", text: "Publish today's circulars", icon: Briefcase },
   { to: "/admin/blog", title: "Manage blog", text: "Create and edit blog posts", icon: FileText },
   { to: "/admin/users", title: "Manage users", text: "View users and change plans", icon: Users },
   { to: "/admin/activity", title: "User activity", text: "Sign-ups, CVs, AI use and payments", icon: Activity },
@@ -193,7 +196,7 @@ export default function OverviewPage() {
           <CardTitle>Quick Actions</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-5">
+          <div className="grid gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-4">
             {quickActions.map((action) => (
               <Link
                 key={action.to}

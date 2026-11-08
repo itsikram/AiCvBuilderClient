@@ -30,10 +30,24 @@
 
 :root {
   color-scheme: light;
+  /* Admin charts (components/charts): categorical slots 1-3, validated for colour-blind
+     separation on the light and dark card surfaces; deltas use status colours with an arrow. */
+  --chart-1: #2a78d6;
+  --chart-2: #eb6834;
+  --chart-3: #1baf7a;
+  --chart-quiet: #94a3b8;
+  --delta-good: #006300;
+  --delta-bad: #c53030;
 }
 
 .dark {
   color-scheme: dark;
+  --chart-1: #3987e5;
+  --chart-2: #d95926;
+  --chart-3: #199e70;
+  --chart-quiet: #64748b;
+  --delta-good: #22c55e;
+  --delta-bad: #f87171;
   /* slate-400: 4.5:1+ contrast on the dark background and cards */
   --color-muted: #94a3b8;
   --color-secondary: #1e293b;
@@ -46,6 +60,12 @@
 @media (prefers-color-scheme: dark) {
   :root:not(.light) {
     color-scheme: dark;
+    --chart-1: #3987e5;
+    --chart-2: #d95926;
+    --chart-3: #199e70;
+    --chart-quiet: #64748b;
+    --delta-good: #22c55e;
+    --delta-bad: #f87171;
     --color-muted: #94a3b8;
     --color-secondary: #1e293b;
     --color-border: #334155;

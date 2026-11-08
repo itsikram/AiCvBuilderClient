@@ -4,6 +4,8 @@ import { useQuery } from "@tanstack/react-query";
 import {
   Activity,
   ArrowLeft,
+  BarChart3,
+  Search,
   Briefcase,
   KeyRound,
   Package,
@@ -42,7 +44,14 @@ interface NavItem {
 }
 
 const navGroups: Array<{ title: string; items: NavItem[] }> = [
-  { title: "General", items: [{ to: "/admin", label: "Overview", icon: LayoutDashboard }] },
+  {
+    title: "General",
+    items: [
+      { to: "/admin", label: "Overview", icon: LayoutDashboard },
+      { to: "/admin/analytics", label: "Analytics", icon: BarChart3 },
+      { to: "/admin/seo", label: "SEO & keywords", icon: Search },
+    ],
+  },
   {
     title: "Customers",
     items: [

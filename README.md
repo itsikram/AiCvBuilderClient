@@ -35,7 +35,10 @@ Bangla/English CV builder for Bangladeshi job seekers. The API is a separate rep
 - **Earning** (`/dashboard/billing`, `/dashboard/shop`): 7-day, 30-day and 1-year Premium passes that stack and don't
   auto-renew, a free trial, access codes for organisations, invite rewards, and one-time extras (watermark-free PDF
   credit, AI pack, employer CV screening at `/dashboard/screening`, and services an admin delivers).
-- **Admin panel** (`/admin`): users and plans, bKash payment review, **user activity**
+- **Admin panel** (`/admin`): **analytics** (`/admin/analytics`: revenue, sign-ups, active users, CVs, AI use
+  and trials against the previous period, trend charts, the sign-up-to-paid funnel, what sells, CSV export),
+  **SEO & keywords** (`/admin/seo`: Google Search Console searches and pages, quick wins, a keyword tracker and
+  keyword ideas from users' CVs), users and plans, bKash payment review, **user activity**
   (`/admin/activity`: sign-ups, logins, CVs, AI use, purchase requests and payments, filterable by user
   and type), page content, menus, templates, blog, and settings, where admins pick who gets email
   notifications (new user, purchase request, new CV) and can **send a test email**.

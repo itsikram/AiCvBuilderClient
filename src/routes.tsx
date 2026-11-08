@@ -72,6 +72,8 @@ const AdminJobCircularsPage = lazy(() => import("@/pages/admin/JobCircularsPage"
 const OverviewPage = lazy(() => import("@/pages/admin/OverviewPage"));
 const UsersPage = lazy(() => import("@/pages/admin/UsersPage"));
 const ActivityPage = lazy(() => import("@/pages/admin/ActivityPage"));
+const AnalyticsPage = lazy(() => import("@/pages/admin/AnalyticsPage"));
+const SeoPage = lazy(() => import("@/pages/admin/SeoPage"));
 const PlansPage = lazy(() => import("@/pages/admin/PlansPage"));
 const PageContentManagerPage = lazy(() => import("@/pages/admin/PageContentManagerPage"));
 const MenuManagerPage = lazy(() => import("@/pages/admin/MenuManagerPage"));
@@ -187,6 +189,8 @@ export function AppRoutes() {
           <Route index element={page(<OverviewPage />)} />
           <Route path="users" element={page(<UsersPage />)} />
           <Route path="activity" element={page(<ActivityPage />)} />
+          <Route path="analytics" element={page(<AnalyticsPage />)} />
+          <Route path="seo" element={page(<SeoPage />)} />
           <Route path="orders" element={page(<AdminOrdersPage />)} />
           <Route path="products" element={page(<AdminProductsPage />)} />
           <Route path="access-codes" element={page(<AdminAccessCodesPage />)} />
