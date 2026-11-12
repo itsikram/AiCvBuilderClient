@@ -48,7 +48,7 @@ export default function LoginPage() {
 
   return (
     <>
-      <SEO title="Log in to AI CV Builder BD" description="Access your AI CV Builder BD account to build resumes, check ATS scores, and generate cover letters." noIndex />
+      <SEO title="Log in to AI CV Builder BD" description="Access your AI CV Builder BD account to build resumes, check ATS scores, and generate cover letters." />
       <div className="min-h-[80vh] flex items-center justify-center px-4 py-12">
         <Card className="w-full max-w-md">
           <CardHeader className="text-center">

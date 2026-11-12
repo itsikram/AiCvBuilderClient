@@ -24,6 +24,9 @@ const JobPage = lazyPage(() => import("@/pages/JobPage"));
 const PhotoResizerPage = lazyPage(() => import("@/pages/PhotoResizerPage"));
 const BiodataMakerPage = lazyPage(() => import("@/pages/BiodataMakerPage"));
 const LegalPage = lazyPage(() => import("@/pages/LegalPage"));
+// Prerendered (English only) so search engines can index the sign-in and sign-up pages
+const LoginPage = lazyPage(() => import("@/pages/auth/LoginPage"));
+const RegisterPage = lazyPage(() => import("@/pages/auth/RegisterPage"));
 
 // Public pages the prerenderer and hydration preload, keyed by path without /bn
 registerRoutePreloads({
@@ -39,6 +42,8 @@ registerRoutePreloads({
     "/privacy": LegalPage.preload,
     "/terms": LegalPage.preload,
     "/refund-policy": LegalPage.preload,
+    "/login": LoginPage.preload,
+    "/register": RegisterPage.preload,
   },
   guide: GuidePage.preload,
   blogPost: BlogPostPage.preload,
@@ -46,8 +51,6 @@ registerRoutePreloads({
   notFound: NotFoundPage.preload,
 });
 const PublicResumePage = lazy(() => import("@/pages/PublicResumePage"));
-const LoginPage = lazy(() => import("@/pages/auth/LoginPage"));
-const RegisterPage = lazy(() => import("@/pages/auth/RegisterPage"));
 const ForgotPasswordPage = lazy(() => import("@/pages/auth/ForgotPasswordPage"));
 const ResetPasswordPage = lazy(() => import("@/pages/auth/ResetPasswordPage"));
 const VerifyEmailPage = lazy(() => import("@/pages/auth/VerifyEmailPage"));

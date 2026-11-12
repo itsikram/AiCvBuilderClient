@@ -387,7 +387,7 @@ function htaccess() {
   const site = new URL(siteUrl);
   const apiOrigin = /^https?:\/\//.test(apiUrl) ? new URL(apiUrl).origin : "";
   const apexHost = site.hostname.replace(/^www\./, "").replace(/\./g, "\\.");
-  const appRoutes = "dashboard|admin|login|register|forgot-password|reset-password|verify-email|r";
+  const appRoutes = "dashboard|admin|forgot-password|reset-password|verify-email|r";
   // Google AdSense needs these hosts, only when VITE_ADSENSE_CLIENT is set (see AdSlot.tsx)
   const ads = /^ca-pub-\d+$/.test((env.VITE_ADSENSE_CLIENT || "").trim())
     ? "https://pagead2.googlesyndication.com https://*.googlesyndication.com https://*.doubleclick.net https://*.google.com https://adservice.google.com https://*.adtrafficquality.google"

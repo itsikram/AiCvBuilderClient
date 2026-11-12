@@ -104,7 +104,6 @@ export default function RegisterPage() {
       <SEO
         title="Create your AI CV Builder BD account"
         description="Sign up for AI CV Builder BD and build AI-powered resumes, cover letters, and ATS-ready documents in minutes."
-        noIndex
       />
       <div className="min-h-[80vh] flex items-center justify-center px-4 py-12">
         <Card className="w-full max-w-md">

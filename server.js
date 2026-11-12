@@ -11,7 +11,7 @@ import { fileURLToPath } from "node:url";
 const port = process.env.PORT || 3000;
 const dist = path.join(path.dirname(fileURLToPath(import.meta.url)), "dist");
 
-const APP_ROUTE = /^\/(dashboard|admin|login|register|forgot-password|reset-password|verify-email|r)(\/.*)?$/;
+const APP_ROUTE = /^\/(dashboard|admin|forgot-password|reset-password|verify-email|r)(\/.*)?$/;
 // Blog posts and job circulars published since the last build
 const NEW_BLOG_POST = /^\/(bn\/)?(blog|jobs)\/[A-Za-z0-9-]+$/;
 

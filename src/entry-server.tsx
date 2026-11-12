@@ -25,7 +25,9 @@ export const PRERENDER_ROUTES: string[] = (() => {
     "/refund-policy",
     ...GUIDES.map((g) => `/${g.slug}`),
   ];
-  return [...base, ...base.map((path) => (path === "/" ? "/bn" : `/bn${path}`))];
+  // Auth pages exist only in English (no /bn version)
+  const englishOnly = ["/login", "/register"];
+  return [...base, ...base.map((path) => (path === "/" ? "/bn" : `/bn${path}`)), ...englishOnly];
 })();
 
 export const GUIDE_DATES: Record<string, string> = Object.fromEntries(
