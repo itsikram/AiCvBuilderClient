@@ -58,6 +58,9 @@ jobs:
               case $code in
                 2??) return 0 ;;
                 000|409|429|5??) echo "POST $1: HTTP $code (attempt $attempt), retrying in 30s"; sleep 30 ;;
+                401|403)
+                  echo "::error::GoDaddy rejected the GODADDY_PAT secret (HTTP $code), so nothing was deployed. The token has probably expired, been revoked or lost a scope. Create a new GoDaddy Personal Access Token with hosting.application:read, hosting.source:write and hosting.deployment:execute, replace GODADDY_PAT under Settings > Secrets and variables > Actions, then re-run this workflow. Response: $(cat "$RESP")"
+                  exit 1 ;;
                 *) echo "::error::POST $1 failed with HTTP $code: $(cat "$RESP")"; exit 1 ;;
               esac
             done
