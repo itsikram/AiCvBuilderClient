@@ -34,7 +34,13 @@ jobs:
           API=https://api.godaddy.com/v1/hosting
           RESP="$RUNNER_TEMP/godaddy-response.json"
 
-          if [ -z "${GODADDY_PAT:-}" ]; then
+          # A pasted token often carries a trailing newline, spaces or a "Bearer " prefix; any of
+          # these makes GoDaddy answer 401, so strip them before use.
+          GODADDY_PAT=$(printf '%s' "${GODADDY_PAT:-}" | tr -d '[:space:]')
+          GODADDY_PAT=${GODADDY_PAT#Bearer}
+          GODADDY_PAT=${GODADDY_PAT#bearer}
+
+          if [ -z "$GODADDY_PAT" ]; then
             echo "::error::Missing secret GODADDY_PAT. Create a GoDaddy Personal Access Token with the scopes hosting.application:read, hosting.source:write and hosting.deployment:execute, then add it under Settings > Secrets and variables > Actions."
             exit 1
           fi
@@ -59,7 +65,7 @@ jobs:
                 2??) return 0 ;;
                 000|409|429|5??) echo "POST $1: HTTP $code (attempt $attempt), retrying in 30s"; sleep 30 ;;
                 401|403)
-                  echo "::error::GoDaddy rejected the GODADDY_PAT secret (HTTP $code), so nothing was deployed. The token has probably expired, been revoked or lost a scope. Create a new GoDaddy Personal Access Token with hosting.application:read, hosting.source:write and hosting.deployment:execute, replace GODADDY_PAT under Settings > Secrets and variables > Actions, then re-run this workflow. Response: $(cat "$RESP")"
+                  echo "::error::GoDaddy refused POST $1 (HTTP $code), so nothing was deployed. If the read check above passed, the token is valid but lacks a write scope: it needs hosting.application:read, hosting.source:write and hosting.deployment:execute. Otherwise the token has expired or been revoked. Replace GODADDY_PAT under Settings > Secrets and variables > Actions, then re-run this workflow. Response: $(cat "$RESP")"
                   exit 1 ;;
                 *) echo "::error::POST $1 failed with HTTP $code: $(cat "$RESP")"; exit 1 ;;
               esac
@@ -87,6 +93,14 @@ jobs:
             done
             echo "::error::$2 did not finish within 40 minutes."; return 1
           }
+
+          # Read-only check first: tells a bad or missing secret apart from a token without write scopes
+          code=$(call GET "/apps/$APP_ID")
+          case $code in
+            2??) echo "Token accepted for app $APP_ID (read)." ;;
+            401) echo "::error::GoDaddy rejected GODADDY_PAT even for reading app $APP_ID (HTTP 401). The secret GitHub passes is not a valid token: re-paste only the token under Settings > Secrets and variables > Actions > Secrets (not Variables or an Environment), name GODADDY_PAT."; exit 1 ;;
+            *) echo "::warning::Reading app $APP_ID returned HTTP $code: $(cat "$RESP")" ;;
+          esac
 
           echo "Importing $GITHUB_REPOSITORY@$BRANCH into GoDaddy app $APP_ID"
           post "/apps/$APP_ID/imports" "$(jq -nc --arg r "$GITHUB_REPOSITORY" --arg b "$BRANCH" '{repositoryFullName:$r, branch:$b}')"
