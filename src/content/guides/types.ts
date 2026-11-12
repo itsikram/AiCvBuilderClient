@@ -28,6 +28,8 @@ export interface GuideBodyLocale {
   sections: GuideSection[];
   faqs: Array<{ q: string; a: string }>;
   cta: { title: string; text: string; button: string };
+  /** Set on pages about one tool in the app; adds WebApplication structured data. */
+  app?: { name: string; features: string[] };
 }
 
 export interface GuideMeta extends Record<Lang, GuideMetaLocale> {

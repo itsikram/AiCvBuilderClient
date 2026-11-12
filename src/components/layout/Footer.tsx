@@ -42,6 +42,7 @@ export function Footer() {
 
   const productLinks = [
     { label: t("footer.createCv"), href: "/register" },
+    { label: t("footer.atsChecker"), href: lp("/ai-ats-checker") },
     { label: t("nav.templates"), href: lp("/templates") },
     { label: t("nav.jobs"), href: lp("/jobs") },
     { label: t("footer.resizer"), href: lp("/photo-signature-resizer") },

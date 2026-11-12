@@ -210,6 +210,32 @@ Tool pages answer frequent, practical searches and lead to the CV builder:
 Job circulars carry JobPosting structured data (open circulars with a deadline only) so they can appear in Google's
 job search. Write summaries in your own words and always link the official circular.
 
+## Update 2026-11-12: "AI CV builder", "CV maker online" and "AI ATS checker"
+
+Target keywords from the owner: **AI CV builder**, **cv builder bd**, **cv maker online**, **ai cv builder online**,
+**ai ats checker**. Same limits as before: no volume numbers.
+
+- **The home page owns the brand and "builder" terms.** "AI CV Builder BD" is the brand, so the home title now leads
+  with it: "AI CV Builder BD – Free Online CV Maker for Bangladesh". That one title covers "ai cv builder", "cv
+  builder bd", "online cv maker" and "free cv maker". There is no separate `/ai-cv-builder` page, because it would
+  compete with the home page for the same queries. H1, badge, subtitle and two new FAQs repeat the terms naturally.
+- **"AI ATS checker" had no public page.** The checker lived only at `/dashboard/ats`, which is behind login and
+  disallowed in robots.txt, so Google could never rank it. → new page `/ai-ats-checker` (EN + BN): what the score
+  shows, how to check, how to raise a low score, and FAQs. Copy is honest that the checker is a Premium feature with
+  a free no-card trial. It carries WebApplication + HowTo + FAQ structured data and is linked from the footer on
+  every page and from `/ats-friendly-cv`.
+- **Structured data:** Organization and WebSite list brand spellings as `alternateName` ("AI CV Builder",
+  "AICVBuilderBD", "CV Builder BD"); the home WebApplication has a `featureList`.
+- **Admin CMS overrides the home hero.** Admin → Page Content → Home sets `heroTitle`, `heroSubtitle` and
+  `footerDescription`, which replace the keyworded defaults. Keep the keywords in them, or clear them.
+
+| Page | Lang | Primary keyword | Secondary keywords | Intent |
+|---|---|---|---|---|
+| `/` | EN | ai cv builder bd | ai cv builder online, cv builder bd, cv maker online, free cv maker bd | T |
+| `/bn` | BN | এআই সিভি বিল্ডার | ফ্রি সিভি মেকার, অনলাইন সিভি মেকার, এআই ATS চেকার | T |
+| `/ai-ats-checker` | EN | ai ats checker | ats checker free, cv ats score, ats resume checker, cv checker online | T |
+| `/bn/ai-ats-checker` | BN | এআই ATS চেকার | সিভির ATS স্কোর, সিভি চেক, ATS স্কোর চেক | T |
+
 ## After launch
 
 - Check Search Console every week for queries with impressions but CTR under 2%, and rewrite those

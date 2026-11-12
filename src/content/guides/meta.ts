@@ -141,6 +141,29 @@ export const GUIDE_META: GuideMeta[] = [
     }
   },
   {
+    "slug": "ai-ats-checker",
+    "updated": "2026-11-12",
+    "ctaHref": "/register",
+    "related": [
+      "ats-friendly-cv",
+      "cv-writing-tips",
+      "bdjobs-cv-format",
+      "best-free-cv-maker"
+    ],
+    "en": {
+      "title": "AI ATS Checker – Check Your CV's ATS Score Online",
+      "description": "Check your CV's ATS score with AI. See missing keywords for a job circular, strengths, weaknesses and fixes. Upload a PDF or DOCX. Try it free, no card.",
+      "h1": "AI ATS Checker: Check Your CV's ATS Score Online",
+      "label": "AI ATS checker"
+    },
+    "bn": {
+      "title": "এআই ATS চেকার – অনলাইনে সিভির ATS স্কোর চেক করুন",
+      "description": "এআই দিয়ে সিভির ATS স্কোর চেক করুন। চাকরির বিজ্ঞপ্তি অনুযায়ী অনুপস্থিত কিওয়ার্ড, শক্তি, দুর্বলতা ও সমাধান দেখুন। পিডিএফ বা DOCX আপলোড করুন।",
+      "h1": "এআই ATS চেকার: অনলাইনে সিভির ATS স্কোর দেখুন",
+      "label": "এআই ATS চেকার"
+    }
+  },
+  {
     "slug": "bank-job-cv",
     "updated": "2026-11-05",
     "ctaHref": "/register",
@@ -213,6 +236,7 @@ export const GUIDE_META: GuideMeta[] = [
     "updated": "2026-11-05",
     "ctaHref": "/register",
     "related": [
+      "ai-ats-checker",
       "cv-writing-tips",
       "bdjobs-cv-format",
       "cv-format-pdf-download"

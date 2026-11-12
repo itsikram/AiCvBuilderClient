@@ -43,13 +43,13 @@ export interface HeadCollector {
 export const HeadCollectorContext = createContext<HeadCollector | null>(null);
 
 const DEFAULT_DESCRIPTION: Record<Lang, string> = {
-  en: "Make a free ATS-friendly CV in Bangla or English. BD CV formats, AI writing help and instant PDF download for jobs in Bangladesh.",
-  bn: "বাংলা বা ইংরেজিতে ফ্রি প্রফেশনাল সিভি তৈরি করুন। বাংলাদেশি সিভি ফরমেট, এআই লেখার সাহায্য ও সাথে সাথে পিডিএফ ডাউনলোড।",
+  en: "Free AI CV builder online for Bangladesh. Make an ATS-friendly CV in Bangla or English, check it with our AI ATS checker and download a free PDF.",
+  bn: "বাংলা বা ইংরেজিতে ফ্রি এআই সিভি বিল্ডার: অনলাইনে ATS-বান্ধব সিভি তৈরি করুন, এআই ATS চেকারে স্কোর দেখুন ও ফ্রি পিডিএফ ডাউনলোড করুন।",
 };
 
 const DEFAULT_TITLE: Record<Lang, string> = {
-  en: "Free CV Maker BD – AI CV Builder for Bangladesh Jobs",
-  bn: "ফ্রি সিভি তৈরি করুন – এআই সিভি বিল্ডার বিডি",
+  en: "AI CV Builder BD – Free Online CV Maker for Bangladesh",
+  bn: "এআই সিভি বিল্ডার বিডি – ফ্রি অনলাইন সিভি মেকার",
 };
 
 const withBrand = (title: string, lang: Lang) => {

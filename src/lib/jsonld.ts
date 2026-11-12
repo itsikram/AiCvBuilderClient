@@ -4,6 +4,32 @@ import type { Lang } from "@/lib/i18nRouting";
 const ORG_ID = `${SITE_URL}/#organization`;
 const SITE_ID = `${SITE_URL}/#website`;
 
+/** Other names people search for the brand; Google may use them as the site name in results. */
+const ALTERNATE_NAMES = [SITE_NAME_BN, "AI CV Builder", "AICVBuilderBD", "CV Builder BD"];
+
+const FEATURES: Record<Lang, string[]> = {
+  en: [
+    "AI CV builder",
+    "Online CV maker",
+    "AI ATS checker with score and missing keywords",
+    "AI writing help for career objective and experience",
+    "AI cover letter generator",
+    "Bangladeshi, ATS and international CV templates",
+    "CV in Bangla and English",
+    "PDF download",
+  ],
+  bn: [
+    "এআই সিভি বিল্ডার",
+    "অনলাইন সিভি মেকার",
+    "স্কোর ও অনুপস্থিত কিওয়ার্ডসহ এআই ATS চেকার",
+    "ক্যারিয়ার অবজেক্টিভ ও অভিজ্ঞতা লিখতে এআই সাহায্য",
+    "এআই কভার লেটার জেনারেটর",
+    "বাংলাদেশি, ATS ও আন্তর্জাতিক সিভি টেমপ্লেট",
+    "বাংলা ও ইংরেজিতে সিভি",
+    "পিডিএফ ডাউনলোড",
+  ],
+};
+
 /**
  * `socialLinks` are the profiles set in Admin -> Page Content (home page). As `sameAs` they tell
  * Google these profiles (Facebook above all, in Bangladesh) belong to this organisation.
@@ -15,7 +41,7 @@ export const organizationLd = (socialLinks: Array<{ url: string }> = []) => {
     "@type": "Organization",
     "@id": ORG_ID,
     name: SITE_NAME,
-    alternateName: SITE_NAME_BN,
+    alternateName: ALTERNATE_NAMES,
     url: SITE_URL,
     logo: absoluteUrl("/icon-512.png"),
     email: SUPPORT_EMAIL,
@@ -37,18 +63,25 @@ export const websiteLd = (lang: Lang) => ({
   "@type": "WebSite",
   "@id": SITE_ID,
   name: SITE_NAME,
-  alternateName: SITE_NAME_BN,
+  alternateName: ALTERNATE_NAMES,
   url: SITE_URL,
   inLanguage: ["en-BD", "bn-BD"],
   publisher: { "@id": ORG_ID },
-  ...(lang === "bn" ? { description: "বাংলা ও ইংরেজিতে ফ্রি এআই সিভি মেকার" } : { description: "Free AI CV maker for Bangladesh" }),
+  ...(lang === "bn" ? { description: "বাংলা ও ইংরেজিতে ফ্রি এআই সিভি বিল্ডার ও অনলাইন সিভি মেকার" } : { description: "Free AI CV builder and online CV maker for Bangladesh" }),
 });
 
 export const webApplicationLd = (lang: Lang) => ({
   "@context": "https://schema.org",
   "@type": "WebApplication",
   name: lang === "bn" ? SITE_NAME_BN : SITE_NAME,
+  alternateName: lang === "bn" ? SITE_NAME : SITE_NAME_BN,
+  description:
+    lang === "bn"
+      ? "বাংলাদেশের চাকরিপ্রার্থীদের জন্য ফ্রি এআই সিভি বিল্ডার, অনলাইন সিভি মেকার ও এআই ATS চেকার।"
+      : "Free AI CV builder, online CV maker and AI ATS checker for job seekers in Bangladesh.",
   url: absoluteUrl(lang === "bn" ? "/bn" : "/"),
+  image: absoluteUrl("/og-image.jpg"),
+  featureList: FEATURES[lang],
   applicationCategory: "BusinessApplication",
   operatingSystem: "Any (web browser)",
   inLanguage: lang === "bn" ? "bn-BD" : "en-BD",
@@ -60,6 +93,23 @@ export const webApplicationLd = (lang: Lang) => ({
     priceCurrency: "BDT",
     availability: "https://schema.org/InStock",
   },
+});
+
+/** A single tool inside the app (such as the ATS checker), for its landing page. */
+export const toolLd = (input: { name: string; description: string; path: string; features: string[]; lang: Lang }) => ({
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  name: input.name,
+  description: input.description,
+  url: absoluteUrl(input.path),
+  image: absoluteUrl("/og-image.jpg"),
+  inLanguage: input.lang === "bn" ? "bn-BD" : "en-BD",
+  applicationCategory: "BusinessApplication",
+  operatingSystem: "Any (web browser)",
+  browserRequirements: "Requires JavaScript",
+  featureList: input.features,
+  isPartOf: { "@id": SITE_ID },
+  publisher: { "@id": ORG_ID },
 });
 
 /** The builder with one Offer per paid/free plan price, for the pricing page. */

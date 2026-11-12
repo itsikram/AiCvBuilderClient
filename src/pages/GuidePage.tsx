@@ -7,7 +7,7 @@ import { AdSlot } from "@/components/AdSlot";
 import { Button } from "@/components/ui/button";
 import { getGuide, getLoadedGuideBody, loadGuideBody } from "@/content/guides";
 import { useLang } from "@/lib/useLang";
-import { breadcrumbLd, faqLd, howToLd, articleLd } from "@/lib/jsonld";
+import { breadcrumbLd, faqLd, howToLd, articleLd, toolLd } from "@/lib/jsonld";
 
 export default function GuidePage({ slug }: { slug: string }) {
   const { t } = useTranslation();
@@ -36,6 +36,9 @@ export default function GuidePage({ slug }: { slug: string }) {
       { name: copy.label, path },
     ]),
   ];
+  if (copy.app) {
+    jsonLd.push(toolLd({ name: copy.app.name, description: copy.description, path, features: copy.app.features, lang }));
+  }
   if (copy.faqs.length) jsonLd.push(faqLd(copy.faqs));
   if (stepSection?.steps) {
     jsonLd.push(

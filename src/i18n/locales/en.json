@@ -132,11 +132,11 @@
     "new": "New"
   },
   "landing": {
-    "seoTitle": "Free CV Maker BD – AI CV & Resume Builder for Bangladesh",
-    "seoDescription": "Make a free CV in Bangla or English: BD formats, ATS templates, AI writing help and free PDF download. Works on mobile, no app or card needed.",
-    "badge": "Free · Bangla + English · AI writing help",
-    "heroTitle": "Free CV Maker for Jobs in Bangladesh",
-    "heroSubtitle": "Build a professional, ATS-friendly CV in minutes. Bangladeshi formats with SSC/HSC and personal details, AI help for your objective and experience, and a free PDF download.",
+    "seoTitle": "AI CV Builder BD – Free Online CV Maker for Bangladesh",
+    "seoDescription": "Free AI CV builder online for Bangladesh. Make an ATS-friendly CV in Bangla or English, check it with our AI ATS checker and download a free PDF.",
+    "badge": "Free AI CV builder · Bangla + English · AI ATS checker",
+    "heroTitle": "Free AI CV Builder for Jobs in Bangladesh",
+    "heroSubtitle": "Make a professional, ATS-friendly CV online in minutes. Bangladeshi formats with SSC/HSC and personal details, AI writing help, an AI ATS checker to score your CV, and a free PDF download.",
     "heroCta": "Create my CV free",
     "heroCtaSecondary": "See CV templates",
     "heroTrust": [
@@ -166,8 +166,8 @@
         "text": "Generate or improve your career objective, summary and experience bullets, and choose a formal, confident or friendly tone."
       },
       "tailor": {
-        "title": "Tailor to a job circular",
-        "text": "Paste a job post, including bdjobs-style circulars, to see a match score, missing keywords and suggested edits."
+        "title": "AI ATS checker",
+        "text": "Get an ATS score for your CV, plus the missing keywords and fixes for any job post, including bdjobs-style circulars."
       },
       "coverLetter": {
         "title": "Cover letter generator",
@@ -201,6 +201,14 @@
       {
         "q": "Is AI CV Builder BD really free?",
         "a": "Yes. The Free plan has no time limit: create a CV, use the free templates and download it as a PDF without paying, and no card or bKash payment is needed. Premium adds unlimited CVs, every template, watermark-free PDFs and more AI help, and you can try it free first."
+      },
+      {
+        "q": "How does the AI CV builder work?",
+        "a": "Fill in your details in a simple online form and the AI suggests a stronger career objective, bullet points and skills. You approve every change, pick a template and download a PDF. It works in any browser, so there is nothing to install."
+      },
+      {
+        "q": "Is there an AI ATS checker?",
+        "a": "Yes. The AI ATS checker scores your CV out of 100 and lists the missing keywords, strengths, weaknesses and fixes for a job post. It is part of Premium, which new accounts can try free without payment details."
       },
       {
         "q": "What is the best free CV maker in Bangladesh?",
@@ -252,7 +260,7 @@
     "noPosts": "New articles are coming soon."
   },
   "footer": {
-    "description": "Free AI CV maker for jobs in Bangladesh. Build ATS-friendly CVs in Bangla and English.",
+    "description": "Free AI CV builder and online CV maker for jobs in Bangladesh. Build ATS-friendly CVs in Bangla and English.",
     "guides": "CV guides",
     "product": "Product",
     "company": "Company",
@@ -264,7 +272,8 @@
     "privacy": "Privacy",
     "terms": "Terms",
     "refunds": "Refund policy",
-    "legal": "Legal"
+    "legal": "Legal",
+    "atsChecker": "AI ATS checker"
   },
   "notFound": {
     "title": "Page not found",
