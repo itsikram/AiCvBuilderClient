@@ -18,6 +18,7 @@ import {
   LayoutDashboard,
   Link as LinkIcon,
   LogOut,
+  Mail,
   Menu,
   Palette,
   PanelLeftClose,
@@ -41,6 +42,8 @@ interface NavItem {
   pendingPayments?: boolean;
   /** Shows the number of paid service orders waiting to be delivered */
   waitingOrders?: boolean;
+  /** Shows the number of contact-form messages not yet handled */
+  openMessages?: boolean;
 }
 
 const navGroups: Array<{ title: string; items: NavItem[] }> = [
@@ -57,6 +60,7 @@ const navGroups: Array<{ title: string; items: NavItem[] }> = [
     items: [
       { to: "/admin/users", label: "Users", icon: Users },
       { to: "/admin/activity", label: "User activity", icon: Activity },
+      { to: "/admin/contact-messages", label: "Contact messages", icon: Mail, openMessages: true },
       { to: "/admin/bkash-payments", label: "bKash payments", icon: CreditCard, pendingPayments: true },
       { to: "/admin/plans", label: "Subscription plans", icon: DollarSign },
     ],
@@ -127,6 +131,12 @@ export function AdminLayout() {
     refetchInterval: 60_000,
   });
   const waitingCount = orders.data?.waiting ?? 0;
+  const messages = useQuery({
+    queryKey: ["admin-contact-messages", "open-count"],
+    queryFn: async () => (await api.get("/admin/contact-messages?limit=1")).data.data as { open: number },
+    refetchInterval: 60_000,
+  });
+  const openMessagesCount = messages.data?.open ?? 0;
 
   const current = allItems.find((item) => isActive(location.pathname, item.to));
 
@@ -217,7 +227,7 @@ export function AdminLayout() {
                 <ul className="space-y-1">
                   {group.items.map((item) => {
                     const active = isActive(location.pathname, item.to);
-                    const badge = item.pendingPayments ? pendingCount : item.waitingOrders ? waitingCount : 0;
+                    const badge = item.pendingPayments ? pendingCount : item.waitingOrders ? waitingCount : item.openMessages ? openMessagesCount : 0;
                     return (
                       <li key={item.to}>
                         <Link
