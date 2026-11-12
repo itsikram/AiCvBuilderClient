@@ -96,7 +96,7 @@ export default function TemplatesPage() {
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {Array.from({ length: 6 }).map((_, i) => (
                 <SkeletonCard key={i} className="overflow-hidden">
-                  <Skeleton className="h-40 w-full mb-4" />
+                  <Skeleton className="aspect-[20/13] w-full mb-4" />
                   <Skeleton className="h-5 w-3/4 mb-2" />
                   <Skeleton className="h-4 w-full mb-2" />
                   <Skeleton className="h-4 w-1/2" />
@@ -110,12 +110,12 @@ export default function TemplatesPage() {
 
                 return (
                   <Card key={template._id} className="overflow-hidden hover:shadow-lg transition-shadow">
-                    <div className="h-40 overflow-hidden bg-gradient-to-br from-blue-100 to-violet-100 dark:from-blue-900/30 dark:to-violet-900/30">
+                    <div className="aspect-[20/13] overflow-hidden bg-gradient-to-br from-blue-100 to-violet-100 dark:from-blue-900/30 dark:to-violet-900/30">
                       <img
                         src={imageSrc}
                         alt={t("templatesPage.previewAlt", { name: template.name })}
-                        width="400"
-                        height="160"
+                        width="800"
+                        height="520"
                         className="h-full w-full object-cover"
                         loading="lazy"
                         onError={(event) => {

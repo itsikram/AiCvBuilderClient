@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Save, AlertCircle, Eye, EyeOff, RotateCcw, X, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -10,6 +11,7 @@ import { useToast } from "@/components/ui/toast";
 import { Skeleton } from "@/components/ui/skeleton";
 import { confirmAction } from "@/lib/confirm";
 import api from "@/lib/api";
+import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/store/authStore";
 
 interface Setting {
@@ -194,6 +196,13 @@ function EmailTest({ unsaved }: { unsaved: boolean }) {
   );
 }
 
+/** UTF-8 safe base64 (settings can hold Bangla text, which btoa alone rejects). */
+const toBase64 = (value: string) => {
+  let binary = "";
+  for (const byte of new TextEncoder().encode(value)) binary += String.fromCharCode(byte);
+  return btoa(binary);
+};
+
 export default function AdminSettingsPage() {
   const toast = useToast();
   const queryClient = useQueryClient();
@@ -201,17 +210,36 @@ export default function AdminSettingsPage() {
   const [edits, setEdits] = useState<Record<string, string>>({});
   const [revealed, setRevealed] = useState<Set<string>>(new Set());
 
-  const { data: groups, isLoading } = useQuery({
+  const { data: settingsData, isLoading } = useQuery({
     queryKey: ["admin-settings"],
     queryFn: async () => {
       const { data } = await api.get("/admin/settings");
-      return data.data.groups as SettingGroup[];
+      return {
+        groups: data.data.groups as SettingGroup[],
+        acceptsBase64: Array.isArray(data.data.valueEncodings) && data.data.valueEncodings.includes("base64"),
+      };
     },
   });
+  const groups = settingsData?.groups;
+  const [params, setParams] = useSearchParams();
+  const activeGroup = groups?.find((group) => group.id === params.get("tab")) ?? groups?.[0];
+  const selectTab = (id: string) => {
+    const next = new URLSearchParams(params);
+    next.set("tab", id);
+    setParams(next, { replace: true });
+  };
 
   const saveMutation = useMutation({
     mutationFn: async (settings: Record<string, string>) => {
-      const { data } = await api.put("/admin/settings", { settings });
+      // Firewalls in front of the API drop requests carrying a private key (a service account
+      // JSON key), so send values base64-encoded once the server says it can decode them.
+      const body = settingsData?.acceptsBase64
+        ? {
+            encoding: "base64",
+            settings: Object.fromEntries(Object.entries(settings).map(([key, value]) => [key, toBase64(value)])),
+          }
+        : { settings };
+      const { data } = await api.put("/admin/settings", body);
       return data;
     },
     onSuccess: (data) => {
@@ -419,24 +447,57 @@ export default function AdminSettingsPage() {
       </Card>
 
       {groups && groups.length > 1 && (
-        <nav aria-label="Settings sections" className="-mx-4 overflow-x-auto px-4 sm:mx-0 sm:px-0">
-          <ul className="flex w-max gap-2 sm:w-auto sm:flex-wrap">
-            {groups.map((group) => (
-              <li key={group.id}>
-                <a
-                  href={`#settings-${group.id}`}
-                  className="inline-flex whitespace-nowrap rounded-full border border-border bg-card px-3 py-1.5 text-sm hover:bg-secondary"
+        <div className="-mx-4 overflow-x-auto px-4 sm:mx-0 sm:px-0">
+          <div
+            role="tablist"
+            aria-label="Settings sections"
+            className="flex w-max gap-1 rounded-xl bg-secondary p-1 sm:w-auto sm:flex-wrap"
+            onKeyDown={(event) => {
+              if (event.key !== "ArrowRight" && event.key !== "ArrowLeft") return;
+              event.preventDefault();
+              const index = groups.findIndex((group) => group.id === activeGroup?.id);
+              const step = event.key === "ArrowRight" ? 1 : -1;
+              const next = groups[(index + step + groups.length) % groups.length];
+              selectTab(next.id);
+              document.getElementById(`settings-tab-${next.id}`)?.focus();
+            }}
+          >
+            {groups.map((group) => {
+              const selected = group.id === activeGroup?.id;
+              const unsaved = group.settings.filter((setting) => setting.key in edits).length;
+              return (
+                <button
+                  key={group.id}
+                  id={`settings-tab-${group.id}`}
+                  type="button"
+                  role="tab"
+                  aria-selected={selected}
+                  aria-controls={`settings-${group.id}`}
+                  tabIndex={selected ? 0 : -1}
+                  onClick={() => selectTab(group.id)}
+                  className={cn(
+                    "inline-flex items-center gap-1.5 whitespace-nowrap rounded-lg px-3 py-1.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary",
+                    selected ? "bg-card text-foreground shadow-sm" : "text-muted hover:text-foreground"
+                  )}
                 >
                   {group.title}
-                </a>
-              </li>
-            ))}
-          </ul>
-        </nav>
+                  {unsaved > 0 && (
+                    <span
+                      className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-amber-500 px-1 text-[11px] font-semibold text-white"
+                      aria-label={`${unsaved} unsaved`}
+                    >
+                      {unsaved}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        </div>
       )}
 
-      {groups?.map((group) => (
-        <Card key={group.id} id={`settings-${group.id}`} className="scroll-mt-24">
+      {activeGroup && [activeGroup].map((group) => (
+        <Card key={group.id} id={`settings-${group.id}`} role="tabpanel" aria-labelledby={`settings-tab-${group.id}`}>
           <CardHeader>
             <CardTitle>{group.title}</CardTitle>
             <CardDescription>{group.description}</CardDescription>
