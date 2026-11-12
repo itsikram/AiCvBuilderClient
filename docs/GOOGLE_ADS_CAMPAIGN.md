@@ -4,6 +4,31 @@ Drafted 2026-11-12 for https://aicvbuilderbd.online. Budget: **US$30/day** (abou
 Google's 30.4-day average). CPC estimates below are typical ranges for Bangladesh, not Keyword Planner data; check them in
 Keyword Planner before launch and after the first week.
 
+## 0. Build status (Google Ads account "Tri", 393-909-3625)
+
+**Published 2026-11-12**, campaign ID 24464367595, **starts 2026-11-13** (account time zone: Pacific), no end date.
+
+- Campaign **`AICVBD | Search | Bangladesh`**: US$30/day, Search only (no Search Partners, no Display), Bangladesh
+  (presence), Maximize clicks with a US$0.20 CPC cap, AI Max / text customization / final URL expansion off, UTM final
+  URL suffix, business name "AI CV Builder BD" and the site logo (`public/icon-512.png`), 6 sitelinks, 6 callouts,
+  1 structured snippet, 27 negative keywords (section 5, without "visa").
+- Ad groups, each with 1 RSA (15 headlines, 4 descriptions):
+
+  | Ad group | Keywords | Final URL |
+  |---|---|---|
+  | AI & Free CV Maker (EN) = AG1 + AG2 below | 26 | `/` |
+  | CV Format BD (EN) = AG3 | 12 | `/cv-format-bangladesh` |
+  | Bangla CV (BN) = AG4 | 12 | `/bn` |
+  | ATS Checker (EN) = AG5 | 9 | `/ai-ats-checker` |
+
+- Google's estimate for the first ad group alone was ~516 clicks and ~US$103 per week, so spend will stay under
+  US$30/day until the other ad groups gather volume. That is expected, not a problem.
+- Account-level callouts, logo and business name from the account's other (US signage) business are overridden by this
+  campaign's own assets. No location, call or image assets are attached to this campaign.
+- Two abandoned new-campaign drafts (`AICVBD | Search | BD | EN+BN` and an untitled one) may remain in the account;
+  they don't serve and can be deleted.
+- Conversion tracking (section 2) is still to do.
+
 ## 1. Strategy in one paragraph
 
 Spend the whole budget on **one Search campaign** aimed at people who are typing "make a CV" right now, in English,
@@ -29,13 +54,13 @@ a month are being recorded.
 
 | Setting | Value | Why |
 |---|---|---|
-| Campaign name | `AICVBD | Search | BD | EN+BN` | |
+| Campaign name | `AICVBD | Search | Bangladesh` | |
 | Objective | Website traffic (switch the goal to Leads/sign-up once tracking exists) | No conversion data yet |
 | Type | Search | Highest intent |
 | Networks | **Untick** Google Search Partners and Google Display Network | Partner/display clicks are low quality at this budget |
 | Locations | Bangladesh | |
 | Location option | **Presence**: people in or regularly in Bangladesh | Avoids paying for interest-only clicks from abroad |
-| Languages | Bengali, English | Most BD users have English Google UI but search in both |
+| Languages | Not set (the 2026 Search campaign flow has no language setting; Google matches the query's language) | Bangla and English ad groups cover both |
 | Budget | US$30.00/day | |
 | Bidding | Maximize clicks, **max CPC bid limit US$0.20** | Stops a few expensive terms eating the budget |
 | Ad schedule | All day to start; after 2 weeks lower bids 01:00–07:00 if CTR/sign-ups are weak there | BD searches peak evenings |
@@ -164,8 +189,9 @@ tutorial pdf
 teletalk
 nid
 passport
-visa
 ```
+
+("visa" was left out on purpose: "cv for visa" searchers are abroad-job prospects.)
 
 Review **Insights → Search terms** every 2–3 days for the first two weeks and add anything irrelevant.
 
@@ -194,7 +220,7 @@ Headlines:
 14. AI Cover Letter Writer
 15. No App Install Needed
 
-Pin headline 1 to position 1 (brand); leave the rest unpinned.
+All headlines unpinned (pinning lowers ad strength; the brand headline still shows often).
 
 Descriptions:
 
@@ -203,8 +229,18 @@ Descriptions:
 3. AI writes your objective, polishes job duties and tailors your CV to a job post.
 4. Try Premium free for 7 days, no card needed. Works on any phone, no app install.
 
-AG3 swap headlines 1–2 for: `CV Format for Job in BD 2026` / `Bangladeshi CV Format + Builder`.
-AG5 swap headlines 1–2 for: `Free AI ATS Checker` / `Check Your CV's ATS Score`.
+AG3 (as built) replaces headlines 1, 2, 11, 13 and 14 with `CV Format for Job in BD 2026`, `BD CV Format + Free Builder`,
+`Fresher & Bank Job CV Format`, `Govt Job CV Format Guide`, `CV Format With Photo`, and description 1 with "See the CV
+format BD employers expect, then build yours free with AI. PDF download." and description 3 with "Formats for fresher,
+bank, govt and abroad jobs. Bangla or English, ATS-friendly."
+
+AG5 (as built) headlines: AI ATS Checker for Your CV, Check Your CV's ATS Score, Find Missing Job Keywords, ATS-Friendly
+CV Templates, Fix Your CV Before You Apply, Tailor Your CV to Any Job, Bangla & English CV Builder, Free PDF Download,
+Free Premium Trial, No Card, AI CV Builder BD, Match Score for Each Job Post, 40+ ATS-Friendly Templates, AI Writes Your
+Objective, Make Your CV on Your Phone, Start Your CV Free Today. Descriptions: "See your CV's ATS score and the job
+keywords it is missing, then fix them with AI." / "Paste a job post to get a match score and edits you accept one by
+one." / "ATS-friendly templates in Bangla or English with BD sections. Free PDF download." / "The ATS checker is
+Premium: try it free for 7 days, no card needed." The ATS checker is a Premium feature, so no ad calls it free.
 
 ### Bangla ad (AG4)
 
@@ -233,7 +269,7 @@ Descriptions:
 3. এআই লিখে দেবে ক্যারিয়ার অবজেক্টিভ। চাকরির পোস্ট অনুযায়ী সিভি সাজান।
 4. ৭ দিনের ফ্রি প্রিমিয়াম ট্রায়াল, কোনো কার্ড লাগবে না। আজই সিভি বানান।
 
-Display path: `aicvbuilderbd.online/cv/maker` (EN), `aicvbuilderbd.online/bangla/cv` (BN).
+Display paths: `/cv/maker` (AI & Free CV Maker), `/cv/format` (CV Format), `/bangla/cv` (Bangla), `/ats/checker` (ATS).
 
 ## 7. Assets (campaign level)
 

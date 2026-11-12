@@ -12,7 +12,7 @@ import api, { getErrorMessage } from "@/lib/api";
 import { useAuthStore } from "@/store/authStore";
 import { useToast } from "@/components/ui/toast";
 import { localNumber, useStartTrial } from "@/lib/trial";
-import { trackEvent } from "@/lib/analytics";
+import { trackEvent, trackLead } from "@/lib/analytics";
 import { GoogleSignIn, type GoogleSignInResult } from "@/components/auth/GoogleSignIn";
 import type { SubscriptionPlan } from "@/types";
 
@@ -41,6 +41,7 @@ export default function RegisterPage() {
   /** After sign-up by either method: analytics, the free trial when asked for, then the dashboard. */
   const welcomeNewUser = async (method: "email" | "google", createdMessage: string) => {
     trackEvent("sign_up", { method, referred: Boolean(form.referralCode), trial: trialDays > 0 });
+    trackLead();
     if (trialDays > 0) {
       // The account exists either way; a refused trial (e.g. email not verified yet) is only a notice
       try {

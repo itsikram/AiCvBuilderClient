@@ -392,16 +392,19 @@ function htaccess() {
   const ads = /^ca-pub-\d+$/.test((env.VITE_ADSENSE_CLIENT || "").trim())
     ? "https://pagead2.googlesyndication.com https://*.googlesyndication.com https://*.doubleclick.net https://*.google.com https://adservice.google.com https://*.adtrafficquality.google"
     : "";
+  // Google Ads conversion tracking (the Google tag in index.html, src/lib/analytics.ts)
+  const googleAds =
+    "https://www.googleadservices.com https://googleads.g.doubleclick.net https://www.google.com https://google.com https://www.google.com.bd";
   const csp = [
     "default-src 'self'",
-    ["script-src 'self'", ...inlineScriptHashes, "https://www.googletagmanager.com https://accounts.google.com/gsi/client", ads].filter(Boolean).join(" "),
-    ["connect-src 'self'", apiOrigin, "https://accounts.google.com https://www.googletagmanager.com https://*.google-analytics.com https://*.analytics.google.com", ads]
+    ["script-src 'self'", ...inlineScriptHashes, "https://www.googletagmanager.com https://accounts.google.com/gsi/client", googleAds, ads].filter(Boolean).join(" "),
+    ["connect-src 'self'", apiOrigin, "https://accounts.google.com https://www.googletagmanager.com https://*.google-analytics.com https://*.analytics.google.com", googleAds, "https://pagead2.googlesyndication.com", ads]
       .filter(Boolean)
       .join(" "),
     "img-src 'self' data: blob: https:",
     "style-src 'self' 'unsafe-inline' https://accounts.google.com/gsi/style",
     "font-src 'self' data:",
-    ["frame-src https://accounts.google.com", ads].filter(Boolean).join(" "),
+    ["frame-src https://accounts.google.com https://www.googletagmanager.com https://td.doubleclick.net", ads].filter(Boolean).join(" "),
     "object-src 'none'",
     "base-uri 'self'",
     "frame-ancestors 'self'",

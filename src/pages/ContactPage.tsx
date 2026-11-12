@@ -8,6 +8,7 @@ import { SEO } from "@/components/seo/SEO";
 import { useToast } from "@/components/ui/toast";
 import { usePageContent } from "@/context/PageContentContext";
 import api, { getErrorMessage } from "@/lib/api";
+import { trackEvent, trackLead } from "@/lib/analytics";
 import { SUPPORT_EMAIL } from "@/lib/site";
 import { useLang } from "@/lib/useLang";
 import { breadcrumbLd } from "@/lib/jsonld";
@@ -33,6 +34,8 @@ export default function ContactPage() {
     setSending(true);
     try {
       await api.post("/contact", form);
+      trackEvent("generate_lead", { form: "contact" });
+      trackLead();
       toast.add(t("contact.sent"), "success");
       setForm({ name: "", email: "", message: "", website: "" });
     } catch (error) {

@@ -8,7 +8,7 @@ import { SEO } from "@/components/seo/SEO";
 import api, { getErrorMessage } from "@/lib/api";
 import { useAuthStore } from "@/store/authStore";
 import { useToast } from "@/components/ui/toast";
-import { trackEvent } from "@/lib/analytics";
+import { trackEvent, trackLead } from "@/lib/analytics";
 import { GoogleSignIn, type GoogleSignInResult } from "@/components/auth/GoogleSignIn";
 
 export default function LoginPage() {
@@ -41,7 +41,10 @@ export default function LoginPage() {
   // Google signs people up too: a new Google account gets an account here straight away
   const handleGoogle = ({ user, accessToken, isNewUser }: GoogleSignInResult) => {
     setAuth(user, accessToken);
-    if (isNewUser) trackEvent("sign_up", { method: "google" });
+    if (isNewUser) {
+      trackEvent("sign_up", { method: "google" });
+      trackLead();
+    }
     toast.add(isNewUser ? t("auth.googleCreated") : t("auth.welcome"), "success");
     navigate(from);
   };

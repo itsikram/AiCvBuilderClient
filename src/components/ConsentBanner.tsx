@@ -25,27 +25,24 @@ const readConsent = (): Consent => {
 };
 
 let gaLoaded = false;
+/** Adds GA4 to the Google tag that index.html already loads. */
 function loadGa() {
-  if (gaLoaded || !GA_ID) return;
+  if (gaLoaded || !GA_ID || !window.gtag) return;
   gaLoaded = true;
-  window.dataLayer = window.dataLayer || [];
-  window.gtag = function gtag() {
-    // gtag.js expects the arguments object itself
-    // eslint-disable-next-line prefer-rest-params
-    window.dataLayer!.push(arguments);
-  };
-  window.gtag("js", new Date());
   // Page views are sent manually on route changes (SPA)
   window.gtag("config", GA_ID, { send_page_view: false, anonymize_ip: true });
-  const script = document.createElement("script");
-  script.async = true;
-  script.src = `https://www.googletagmanager.com/gtag/js?id=${encodeURIComponent(GA_ID)}`;
-  document.head.appendChild(script);
 }
 
+const consentState = (value: Exclude<Consent, null>) => ({
+  ad_storage: value,
+  ad_user_data: value,
+  ad_personalization: value,
+  analytics_storage: value,
+});
+
 /**
- * GA4 loads only after the visitor accepts analytics cookies. Without
- * VITE_GA_MEASUREMENT_ID nothing is shown or loaded.
+ * Cookie choice for the Google tag (index.html sets the consent-mode defaults from it before
+ * anything loads). GA4 is added only after the visitor accepts, and only with VITE_GA_MEASUREMENT_ID.
  */
 export function ConsentBanner() {
   const { t } = useTranslation();
@@ -57,13 +54,12 @@ export function ConsentBanner() {
     if (consent === "granted") loadGa();
   }, [consent]);
 
+  // Google Ads (and GA4 once added) count page views; consent mode decides what they may store
   useEffect(() => {
-    if (consent === "granted" && window.gtag) {
-      window.gtag("event", "page_view", { page_path: pathname, page_location: window.location.href });
-    }
-  }, [consent, pathname]);
+    window.gtag?.("event", "page_view", { page_path: pathname, page_location: window.location.href, page_title: document.title });
+  }, [pathname]);
 
-  if (!GA_ID || !hydrated || consent !== null) return null;
+  if (!hydrated || consent !== null) return null;
 
   const choose = (value: Exclude<Consent, null>) => {
     try {
@@ -71,6 +67,7 @@ export function ConsentBanner() {
     } catch {
       /* storage unavailable */
     }
+    window.gtag?.("consent", "update", consentState(value));
     setConsent(value);
   };
 

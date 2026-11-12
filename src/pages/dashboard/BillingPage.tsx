@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Link } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Link, useSearchParams } from "react-router-dom";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { Gift, KeyRound, ShoppingBag } from "lucide-react";
@@ -15,7 +15,7 @@ import { useToast } from "@/components/ui/toast";
 import { cn, formatCurrency } from "@/lib/utils";
 import type { SubscriptionPlan } from "@/types";
 import { daysLeft, localNumber, TRIAL_KEY, useStartTrial, useTrial } from "@/lib/trial";
-import { trackEvent } from "@/lib/analytics";
+import { forgetCheckout, reportReturnedCheckout, trackEvent } from "@/lib/analytics";
 import { useQueryClient } from "@tanstack/react-query";
 
 type Cycle = "weekly" | "monthly" | "yearly";
@@ -30,6 +30,14 @@ export default function BillingPage() {
   const [cycle, setCycle] = useState<Cycle | null>(null);
   const [couponCode, setCouponCode] = useState("");
   const [code, setCode] = useState("");
+  const [params] = useSearchParams();
+  const paymentResult = params.get("payment");
+
+  // Card and Nagad payments come back here from the gateway: report a paid checkout to Google Ads once
+  useEffect(() => {
+    if (paymentResult === "success") reportReturnedCheckout();
+    else if (paymentResult === "failed" || paymentResult === "cancelled") forgetCheckout();
+  }, [paymentResult]);
 
   const { data: plans } = useQuery({
     queryKey: ["plans"],

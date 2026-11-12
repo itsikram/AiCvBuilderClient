@@ -8,6 +8,13 @@
          Same storage key as src/store/themeStore.ts. The CSP allows this exact script by its hash
          (scripts/prerender.mjs computes it), so any edit here is picked up on the next build. -->
     <script>try{var t=JSON.parse(localStorage.getItem("aicvbuilderbd-theme")).state.theme;if(t==="dark"||t==="light")document.documentElement.classList.add(t)}catch(e){}</script>
+    <!-- Google tag (gtag.js) for Google Ads AW-18454059893. On every page, so Google Ads finds it and
+         measures conversions (src/lib/analytics.ts). Consent mode: denied by default in the EEA, UK and
+         Switzerland until the visitor accepts in ConsentBanner, granted elsewhere unless they declined
+         (same storage key as ConsentBanner). Page views are sent by ConsentBanner on each route change.
+         The CSP allows the inline part by its hash (scripts/prerender.mjs), so edits are picked up on build. -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=AW-18454059893"></script>
+    <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}window.gtag=gtag;(function(){var c=null;try{c=localStorage.getItem("analytics-consent")}catch(e){}var v=function(s){return{ad_storage:s,ad_user_data:s,ad_personalization:s,analytics_storage:s}};if(c==="granted"||c==="denied"){gtag("consent","default",v(c))}else{var r=v("denied");r.region=["AT","BE","BG","HR","CY","CZ","DK","EE","FI","FR","DE","GR","HU","IS","IE","IT","LV","LI","LT","LU","MT","NL","NO","PL","PT","RO","SK","SI","ES","SE","GB","CH"];r.wait_for_update=500;gtag("consent","default",r);gtag("consent","default",v("granted"))}})();gtag("js",new Date());gtag("config","AW-18454059893",{send_page_view:false});</script>
     <link rel="icon" href="/favicon.ico" sizes="48x48" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />

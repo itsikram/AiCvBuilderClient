@@ -42,7 +42,7 @@ export const LEGAL: Record<LegalSlug, Record<Lang, LegalDoc>> = {
             "What you write in your CVs, cover letters and biodata, including personal details you choose to add, such as date of birth, address, NID, religion or a photo.",
             "Payments: the plan or product, amount, payment method and transaction ID. Card and mobile banking payments are handled by SSLCommerz; we never receive your card number. For manual bKash payments we keep the bKash number you send from.",
             "Activity: actions such as signing in, creating or downloading a CV and using AI tools, with the IP address and browser used. We use this for security, support and improving the service.",
-            "Cookies and browser storage: a cookie that keeps you signed in, and local storage for your settings and drafts. Google Analytics loads only if you accept analytics cookies.",
+            "Cookies and browser storage: a cookie that keeps you signed in, and local storage for your settings and drafts. Google Analytics loads only if you accept analytics cookies. The Google tag measures visits and sign-ups or purchases that come from our Google Ads; it uses cookies only if you accept them (in the EU, UK and Switzerland) or don't decline them (elsewhere).",
           ],
         },
         {
@@ -57,7 +57,7 @@ export const LEGAL: Record<LegalSlug, Record<Lang, LegalDoc>> = {
         {
           heading: "Who else processes your data",
           paragraphs: [
-            "We don't sell your personal information. We share it only with services that help us run the site, for the purposes above: Google (Gemini AI, Sign-In and, with your consent, Analytics), Cloudinary (photos and uploaded files), SSLCommerz, bKash and Nagad (payments), our email provider and our hosting providers.",
+            "We don't sell your personal information. We share it only with services that help us run the site, for the purposes above: Google (Gemini AI, Sign-In, Ads conversion measurement and, with your consent, Analytics), Cloudinary (photos and uploaded files), SSLCommerz, bKash and Nagad (payments), our email provider and our hosting providers.",
             "Your CV is public only if you create a share link. Anyone with that link can see it until you turn sharing off.",
           ],
         },
@@ -104,7 +104,7 @@ export const LEGAL: Record<LegalSlug, Record<Lang, LegalDoc>> = {
             "সিভি, কভার লেটার ও বায়োডাটায় আপনি যা লেখেন, আপনার দেওয়া ব্যক্তিগত তথ্যসহ, যেমন জন্ম তারিখ, ঠিকানা, এনআইডি, ধর্ম বা ছবি।",
             "পেমেন্ট: প্ল্যান বা পণ্য, পরিমাণ, পেমেন্টের মাধ্যম ও ট্রানজেকশন আইডি। কার্ড ও মোবাইল ব্যাংকিং পেমেন্ট SSLCommerz সামলায়; আপনার কার্ড নম্বর আমরা কখনো পাই না। বিকাশে নিজে পাঠানো পেমেন্টের ক্ষেত্রে আপনি যে নম্বর থেকে পাঠান সেটি রাখি।",
             "কার্যকলাপ: সাইন ইন, সিভি তৈরি বা ডাউনলোড, এআই টুল ব্যবহারের মতো কাজ, ব্যবহৃত আইপি ঠিকানা ও ব্রাউজারসহ। নিরাপত্তা, সহায়তা ও সেবা উন্নত করতে এগুলো ব্যবহার করি।",
-            "কুকি ও ব্রাউজার স্টোরেজ: সাইন ইন রাখতে একটি কুকি, আর আপনার সেটিংস ও খসড়ার জন্য লোকাল স্টোরেজ। অ্যানালিটিক্স কুকি মেনে নিলে তবেই গুগল অ্যানালিটিক্স চালু হয়।",
+            "কুকি ও ব্রাউজার স্টোরেজ: সাইন ইন রাখতে একটি কুকি, আর আপনার সেটিংস ও খসড়ার জন্য লোকাল স্টোরেজ। অ্যানালিটিক্স কুকি মেনে নিলে তবেই গুগল অ্যানালিটিক্স চালু হয়। গুগল ট্যাগ আমাদের গুগল বিজ্ঞাপন থেকে আসা ভিজিট, সাইন-আপ ও কেনাকাটা মাপে; কুকি ব্যবহার করে শুধু আপনি মেনে নিলে (ইইউ, যুক্তরাজ্য ও সুইজারল্যান্ডে) বা বাতিল না করলে (অন্য সব জায়গায়)।",
           ],
         },
         {
@@ -119,7 +119,7 @@ export const LEGAL: Record<LegalSlug, Record<Lang, LegalDoc>> = {
         {
           heading: "আর কারা আপনার তথ্য প্রক্রিয়া করে",
           paragraphs: [
-            "আমরা আপনার ব্যক্তিগত তথ্য বিক্রি করি না। শুধু উপরের কাজগুলোর জন্য সাইট চালাতে সাহায্যকারী সেবাগুলোর সাথে শেয়ার করি: গুগল (Gemini এআই, সাইন-ইন এবং আপনার সম্মতিতে অ্যানালিটিক্স), Cloudinary (ছবি ও আপলোড করা ফাইল), SSLCommerz, বিকাশ ও নগদ (পেমেন্ট), আমাদের ইমেইল ও হোস্টিং সেবাদাতা।",
+            "আমরা আপনার ব্যক্তিগত তথ্য বিক্রি করি না। শুধু উপরের কাজগুলোর জন্য সাইট চালাতে সাহায্যকারী সেবাগুলোর সাথে শেয়ার করি: গুগল (Gemini এআই, সাইন-ইন, বিজ্ঞাপনের কনভার্সন পরিমাপ এবং আপনার সম্মতিতে অ্যানালিটিক্স), Cloudinary (ছবি ও আপলোড করা ফাইল), SSLCommerz, বিকাশ ও নগদ (পেমেন্ট), আমাদের ইমেইল ও হোস্টিং সেবাদাতা।",
             "শেয়ার লিংক তৈরি করলে তবেই আপনার সিভি পাবলিক হয়। শেয়ারিং বন্ধ না করা পর্যন্ত লিংকটি যার কাছে আছে সে সিভি দেখতে পারবে।",
           ],
         },

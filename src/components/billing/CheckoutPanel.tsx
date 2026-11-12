@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { TextField } from "@/components/editor/fields";
 import { useToast } from "@/components/ui/toast";
 import api, { getErrorMessage } from "@/lib/api";
-import { trackEvent } from "@/lib/analytics";
+import { rememberCheckout, trackEvent, trackPurchase } from "@/lib/analytics";
 
 /** What is being bought: a Premium pass, or a one-time product. */
 export interface CheckoutItem {
@@ -51,10 +51,12 @@ export function CheckoutPanel({ item, disabled, onSubmitted }: { item: CheckoutI
     mutationFn: async () => {
       begin();
       const endpoint = provider === "sslcommerz" ? "/payments/sslcommerz" : "/payments/nagad";
-      return (await api.post(endpoint, purchase)).data.data as { gatewayUrl?: string; message?: string };
+      return (await api.post(endpoint, purchase)).data.data as { gatewayUrl?: string; transactionId?: string; message?: string };
     },
     onSuccess: (data) => {
       if (data.gatewayUrl) {
+        // The Google Ads Purchase conversion is sent when the gateway returns to the billing page
+        if (data.transactionId) rememberCheckout(data.transactionId, amount);
         window.location.href = data.gatewayUrl;
       } else {
         toast.add(data.message || t("billing.initiated"), "info");
@@ -66,10 +68,12 @@ export function CheckoutPanel({ item, disabled, onSubmitted }: { item: CheckoutI
   const submitBkashMutation = useMutation({
     mutationFn: async () => {
       begin();
-      return (await api.post("/payments/bkash", { ...purchase, bkashNumber, transactionId })).data.data as { message?: string };
+      return (await api.post("/payments/bkash", { ...purchase, bkashNumber, transactionId })).data.data as { message?: string; transactionId?: string; amount?: number };
     },
     onSuccess: (data) => {
       trackEvent("purchase_request", { currency: "BDT", value: amount, item_name: label, payment_type: "bkash" });
+      // Counted when the bKash payment is submitted (an admin then checks the transaction ID)
+      trackPurchase({ value: data.amount ?? amount, transactionId: data.transactionId || transactionId.trim() });
       toast.add(data.message || t("billing.bkashSubmitted"), "success");
       setBkashNumber("");
       setTransactionId("");
