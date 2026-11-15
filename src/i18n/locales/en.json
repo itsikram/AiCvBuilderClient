@@ -498,6 +498,7 @@
       "jobTitlePlaceholder": "e.g. Junior Accountant",
       "phone": "Mobile number",
       "phonePlaceholder": "01XXXXXXXXX",
+      "phoneHint": "Saved as +880 1XXX-XXXXXX, the format employers and ATS read best.",
       "email": "Email",
       "location": "Present address",
       "locationPlaceholder": "e.g. Mirpur 10, Dhaka",

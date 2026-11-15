@@ -58,7 +58,7 @@ export function Navbar() {
           ) : (
             <>
               <img src="/favicon.svg" alt="" width="32" height="32" className="h-8 w-8 shrink-0" />
-              <span className="truncate text-lg font-bold gradient-text sm:text-xl">{siteName(lang)}</span>
+              <span className="truncate text-base font-bold gradient-text sm:text-xl">{siteName(lang)}</span>
             </>
           )}
         </Link>
@@ -80,7 +80,7 @@ export function Navbar() {
             title={t("nav.switchLanguage")}
             lang={otherLang === "bn" ? "bn" : "en"}
           >
-            <Languages className="h-4 w-4" aria-hidden="true" />
+            <Languages className="hidden h-4 w-4 sm:block" aria-hidden="true" />
             <span>{otherLang === "bn" ? "বাংলা" : "English"}</span>
           </Button>
           <Button variant="ghost" size="icon" onClick={toggleTheme} aria-label={t(isDark ? "nav.lightMode" : "nav.darkMode")}>

@@ -210,7 +210,12 @@ function BiodataEditor({ initial }: { initial: Draft }) {
     return (
       <label key={field} htmlFor={common.id} className={cn("block text-sm", MULTILINE.includes(field) && "sm:col-span-2")}>
         <span className="text-muted">{labels[field]}</span>
-        {MULTILINE.includes(field) ? <textarea rows={field === "education" || field === "siblings" ? 3 : 2} {...common} /> : <input {...common} />}
+        {MULTILINE.includes(field) ? (
+          <textarea rows={field === "education" || field === "siblings" ? 3 : 2} {...common} />
+        ) : (
+          // Phone and email get the right keyboard on Android phones
+          <input {...common} {...(field === "contactPhone" ? { type: "tel", inputMode: "tel" as const, autoComplete: "tel" } : field === "contactEmail" ? { type: "email", inputMode: "email" as const, autoComplete: "email" } : {})} />
+        )}
       </label>
     );
   };

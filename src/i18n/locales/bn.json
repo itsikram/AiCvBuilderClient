@@ -498,6 +498,7 @@
       "jobTitlePlaceholder": "যেমন: জুনিয়র অ্যাকাউন্ট্যান্ট",
       "phone": "মোবাইল নম্বর",
       "phonePlaceholder": "01XXXXXXXXX",
+      "phoneHint": "+880 1XXX-XXXXXX ফরম্যাটে নিজে থেকেই সাজানো হবে, যা নিয়োগকর্তা ও ATS সহজে পড়ে।",
       "email": "ইমেইল",
       "location": "বর্তমান ঠিকানা",
       "locationPlaceholder": "যেমন: মিরপুর ১০, ঢাকা",

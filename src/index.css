@@ -86,6 +86,20 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+/*
+ * Hind Siliguri ships 400 and 600 only (see main.tsx), so bold Bangla would be
+ * faked by the browser and smear the conjuncts. Use the real 600 instead of
+ * downloading another weight, and give Bangla's tall matras a little more room.
+ */
+:root:lang(bn) {
+  --font-weight-bold: 600;
+  --font-weight-extrabold: 600;
+}
+
+body:lang(bn) {
+  line-height: 1.6;
+}
+
 .gradient-text {
   background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%);
   -webkit-background-clip: text;
