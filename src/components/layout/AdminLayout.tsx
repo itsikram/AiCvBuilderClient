@@ -15,6 +15,7 @@ import {
   Edit3,
   ExternalLink,
   FileText,
+  FileUser,
   LayoutDashboard,
   Link as LinkIcon,
   LogOut,
@@ -59,6 +60,7 @@ const navGroups: Array<{ title: string; items: NavItem[] }> = [
     title: "Customers",
     items: [
       { to: "/admin/users", label: "Users", icon: Users },
+      { to: "/admin/resumes", label: "All CVs", icon: FileUser },
       { to: "/admin/activity", label: "User activity", icon: Activity },
       { to: "/admin/contact-messages", label: "Contact messages", icon: Mail, openMessages: true },
       { to: "/admin/bkash-payments", label: "bKash payments", icon: CreditCard, pendingPayments: true },

@@ -166,6 +166,9 @@ export default function UsersPage() {
                             <Button size="sm" variant="ghost" asChild>
                               <Link to={`/admin/activity?userId=${encodeURIComponent(u._id)}`}>Activity</Link>
                             </Button>
+                            <Button size="sm" variant="ghost" asChild>
+                              <Link to={`/admin/resumes?userId=${encodeURIComponent(u._id)}`}>CVs</Link>
+                            </Button>
                           </div>
                         )}
                       </td>

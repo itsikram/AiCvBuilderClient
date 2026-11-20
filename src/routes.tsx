@@ -75,6 +75,7 @@ const AdminJobCircularsPage = lazy(() => import("@/pages/admin/JobCircularsPage"
 const AdminContactMessagesPage = lazy(() => import("@/pages/admin/ContactMessagesPage"));
 const OverviewPage = lazy(() => import("@/pages/admin/OverviewPage"));
 const UsersPage = lazy(() => import("@/pages/admin/UsersPage"));
+const AdminResumesPage = lazy(() => import("@/pages/admin/ResumesPage"));
 const ActivityPage = lazy(() => import("@/pages/admin/ActivityPage"));
 const AnalyticsPage = lazy(() => import("@/pages/admin/AnalyticsPage"));
 const SeoPage = lazy(() => import("@/pages/admin/SeoPage"));
@@ -192,6 +193,7 @@ export function AppRoutes() {
         <Route path="admin" element={page(<ProtectedRoute adminOnly><AdminLayout /></ProtectedRoute>)}>
           <Route index element={page(<OverviewPage />)} />
           <Route path="users" element={page(<UsersPage />)} />
+          <Route path="resumes" element={page(<AdminResumesPage />)} />
           <Route path="activity" element={page(<ActivityPage />)} />
           <Route path="contact-messages" element={page(<AdminContactMessagesPage />)} />
           <Route path="analytics" element={page(<AnalyticsPage />)} />
