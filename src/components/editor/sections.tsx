@@ -4,6 +4,7 @@ import { ChevronDown, ImagePlus, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/toast";
 import { cn } from "@/lib/utils";
+import { formatBdMobile } from "@/lib/phone";
 import { EDUCATION_LEVELS, newEducation, newExperience, newTraining, uid, type CvLang } from "@/lib/resume/model";
 import type { Education, ResumeContent } from "@/types";
 import { CheckboxField, EditorSection, Grid, SelectField, TextAreaField, TextField } from "./fields";
@@ -138,7 +139,7 @@ export function PersonalSection(props: SectionProps) {
       <Grid>
         <TextField label={t("editor.personal.fullName")} value={p.fullName} onChange={set("fullName")} autoComplete="name" />
         <TextField label={t("editor.personal.jobTitle")} value={p.jobTitle} onChange={set("jobTitle")} placeholder={t("editor.personal.jobTitlePlaceholder")} autoComplete="organization-title" />
-        <TextField label={t("editor.personal.phone")} value={p.phone} onChange={set("phone")} type="tel" inputMode="tel" autoComplete="tel" placeholder={t("editor.personal.phonePlaceholder")} />
+        <TextField label={t("editor.personal.phone")} value={p.phone} onChange={set("phone")} onBlur={(e) => { const v = formatBdMobile(e.target.value); if (v !== e.target.value) set("phone")(v); }} type="tel" inputMode="tel" autoComplete="tel" placeholder={t("editor.personal.phonePlaceholder")} hint={t("editor.personal.phoneHint")} />
         <TextField label={t("editor.personal.email")} value={p.email} onChange={set("email")} type="email" inputMode="email" autoComplete="email" />
       </Grid>
       <TextField label={t("editor.personal.location")} value={p.location} onChange={set("location")} placeholder={t("editor.personal.locationPlaceholder")} autoComplete="street-address" />
@@ -494,7 +495,7 @@ export function ReferencesSection({ content, setContent }: SectionProps) {
             <TextField label={t("editor.references.position")} value={r.position} onChange={(v) => update({ position: v })} />
             <TextField label={t("editor.references.company")} value={r.company} onChange={(v) => update({ company: v })} />
             <TextField label={t("editor.references.relationship")} value={r.relationship} onChange={(v) => update({ relationship: v })} placeholder={t("editor.references.relationshipPlaceholder")} />
-            <TextField label={t("editor.references.phone")} value={r.phone} onChange={(v) => update({ phone: v })} type="tel" inputMode="tel" />
+            <TextField label={t("editor.references.phone")} value={r.phone} onChange={(v) => update({ phone: v })} onBlur={(e) => { const v = formatBdMobile(e.target.value); if (v !== e.target.value) update({ phone: v }); }} type="tel" inputMode="tel" placeholder={t("editor.personal.phonePlaceholder")} />
             <TextField label={t("editor.references.email")} value={r.email} onChange={(v) => update({ email: v })} type="email" inputMode="email" />
           </Grid>
         )}

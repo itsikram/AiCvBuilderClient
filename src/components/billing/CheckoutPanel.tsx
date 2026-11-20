@@ -7,6 +7,7 @@ import { TextField } from "@/components/editor/fields";
 import { useToast } from "@/components/ui/toast";
 import api, { getErrorMessage } from "@/lib/api";
 import { rememberCheckout, trackEvent, trackPurchase } from "@/lib/analytics";
+import { toAsciiDigits } from "@/lib/phone";
 
 /** What is being bought: a Premium pass, or a one-time product. */
 export interface CheckoutItem {
@@ -112,8 +113,8 @@ export function CheckoutPanel({ item, disabled, onSubmitted }: { item: CheckoutI
             {bkashConfig?.instructions && <p className="mt-2 text-sm text-muted">{bkashConfig.instructions}</p>}
           </div>
           <div className="grid gap-3">
-            <TextField label={t("billing.bkashFrom")} value={bkashNumber} onChange={setBkashNumber} placeholder="01xxxxxxxxx" type="tel" inputMode="tel" />
-            <TextField label={t("billing.trxId")} value={transactionId} onChange={setTransactionId} placeholder={t("billing.trxPlaceholder")} />
+            <TextField label={t("billing.bkashFrom")} value={bkashNumber} onChange={(v) => setBkashNumber(toAsciiDigits(v))} placeholder="01xxxxxxxxx" type="tel" inputMode="tel" />
+            <TextField label={t("billing.trxId")} value={transactionId} onChange={(v) => setTransactionId(toAsciiDigits(v).toUpperCase())} placeholder={t("billing.trxPlaceholder")} />
           </div>
           <Button
             variant="gradient"
