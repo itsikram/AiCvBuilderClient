@@ -72,7 +72,7 @@ export function SectionOrder({ order, onChange, content }: Props) {
   };
 
   return (
-    <EditorSection id="sec-order" title={t("editor.order.title")} hint={t("editor.order.hint")}>
+    <EditorSection id="sec-order" title={t("editor.order.title")} hint={t("editor.order.hint")} collapsible>
       <DndContext
         sensors={sensors}
         collisionDetection={closestCenter}

@@ -1,4 +1,5 @@
-import { useId, type InputHTMLAttributes, type ReactNode, type TextareaHTMLAttributes } from "react";
+import { useId, useState, type InputHTMLAttributes, type ReactNode, type TextareaHTMLAttributes } from "react";
+import { ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const inputClass =
@@ -110,33 +111,57 @@ export function CheckboxField({ label, checked, onChange, className }: { label: 
   );
 }
 
-/** A titled block of the editor form. */
+/** A titled block of the editor form. `collapsible` sections start closed (unless `defaultOpen`) and open from their heading. */
 export function EditorSection({
   title,
   hint,
   actions,
   children,
   id,
+  collapsible,
+  defaultOpen = false,
 }: {
   title: ReactNode;
   hint?: ReactNode;
   actions?: ReactNode;
   children: ReactNode;
   id?: string;
+  collapsible?: boolean;
+  defaultOpen?: boolean;
 }) {
   const headingId = useId();
+  const panelId = useId();
+  const [open, setOpen] = useState(defaultOpen);
+  const isOpen = !collapsible || open;
   return (
     <section id={id} aria-labelledby={headingId} className="scroll-mt-24 rounded-xl border bg-card p-4 sm:p-5">
-      <div className="mb-4 flex flex-wrap items-start justify-between gap-2">
-        <div className="min-w-0">
+      <div className={cn("flex flex-wrap items-start justify-between gap-2", isOpen && "mb-4")}>
+        <div className="min-w-0 flex-1">
           <h2 id={headingId} className="text-base font-semibold">
-            {title}
+            {collapsible ? (
+              <button
+                type="button"
+                className="-m-1 flex w-full items-center gap-2 rounded p-1 text-left focus-visible:outline-2 focus-visible:outline-primary"
+                aria-expanded={open}
+                aria-controls={panelId}
+                onClick={() => setOpen((v) => !v)}
+              >
+                <ChevronDown className={cn("h-4 w-4 shrink-0 text-muted transition-transform", !open && "-rotate-90")} aria-hidden />
+                {title}
+              </button>
+            ) : (
+              title
+            )}
           </h2>
-          {hint && <p className="mt-0.5 text-sm text-muted">{hint}</p>}
+          {hint && <p className={cn("mt-0.5 text-sm text-muted", collapsible && "pl-6")}>{hint}</p>}
         </div>
         {actions && <div className="flex flex-wrap gap-2">{actions}</div>}
       </div>
-      <div className="space-y-4">{children}</div>
+      {isOpen && (
+        <div id={panelId} className="space-y-4">
+          {children}
+        </div>
+      )}
     </section>
   );
 }
